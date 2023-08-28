@@ -1,0 +1,134 @@
+﻿@page "/products"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Services;
+
+@inject SweetAlertService Swal;
+@inject IProductService productService;
+<style>
+    .headerRow {
+        background-color: #000080 !important;
+    }
+
+</style>
+<h3>Productos</h3>
+
+
+<div class="row" style="margin-top:50px">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end">Agregar productos</Button>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="productsGrid" TItem="ProductViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="productList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Productos por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} productos"
+          EmptyText="No se encontraron registros para mostrar">
+
+        <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
+            @context.Code
+        </GridColumn>
+        <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description" SortKeySelector="item => item.Description" HeaderTextAlignment="Alignment.Center">
+            @context.Description
+        </GridColumn>
+        <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost" SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
+            @context.Cost.ToString("N2")
+        </GridColumn>
+        <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price" SortKeySelector="item => item.Price">
+            @context.Price.ToString("N2")
+        </GridColumn>
+        <GridColumn TItem="ProductViewModel" HeaderText="ITBIS" PropertyName="ITBIS" Sortable="false" Filterable="false">
+            @context.ITBIS.ToString("N2")
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<ProductViewModel> productList = new List<ProductViewModel>();
+    Grid<ProductViewModel> productsGrid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await productService.GetProducts();
+            PreloadService.Hide();
+            if (response.Success) 
+            {
+                productList = response.Result ?? new List<ProductViewModel>();
+                await productsGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los productos. " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los productos. " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task RemoveProduct(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Eliminar producto",
+                Text = "¿Esta seguro de eliminar el producto?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true
+            });
+
+        if (result.IsConfirmed)
+        {
+            PreloadService!.Show();
+            var response = await productService.RemoveProduct(id);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                productList = productList!.FindAll(p => p.Id != id);
+                await productsGrid.RefreshDataAsync();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Eliminado",
+                        Text = "Producto eliminado exitosamente",
+                        Icon = SweetAlertIcon.Success
+                    });
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al eliminar el producto. " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+    }
+}

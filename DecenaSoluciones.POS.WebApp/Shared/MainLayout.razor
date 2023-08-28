@@ -1,0 +1,72 @@
+﻿@using BlazorBootstrap
+@inherits LayoutComponentBase
+
+<div class="bb-page">
+    <style>
+        :root {
+            --bb-sidebar-width: 300px;
+            --bb-sidebar-collapsed-width: 50px;
+            --bb-sidebar-background-color: #fff;
+            --bb-sidebar-top-row-background-color: rgba(0,0,0,0.08);
+            --bb-sidebar-top-row-border-color: rgb(194,192,192);
+            --bb-sidebar-title-text-color: #000080;
+            --bb-sidebar-brand-icon-color: #6f42c1;
+            --bb-sidebar-brand-image-width: 35px;
+            --bb-sidebar-brand-image-height: 35px;
+            --bb-sidebar-title-badge-text-color: rgb(255,255,255);
+            --bb-sidebar-title-badge-background-color: rgba(25,135,84,var(--bs-bg-opacity,1));
+            --bb-sidebar-navbar-toggler-icon-color: rgb(0,0,0);
+            --bb-sidebar-navbar-toggler-background-color: rgba(0,0,0,0.08);
+            --bb-sidebar-content-border-color: rgb(194,192,192);
+            --bb-sidebar-nav-item-text-color: #000080;
+            --bb-sidebar-nav-item-text-active-color-rgb: 0,0,0;
+            --bb-sidebar-nav-item-text-hover-color: #fff;
+            --bb-sidebar-nav-item-text-active-color: #fff;
+            --bb-sidebar-nav-item-background-hover-color: #000080;
+            --bb-sidebar-nav-item-group-background-color: #000080;
+        }
+    </style>
+    <Sidebar @ref="sidebar"
+             ImageSrc="/images/logo/Logo-Simple.png"
+             Title="Decena Soluciones Técnicas"
+             DataProvider="SidebarDataProvider" />
+
+    <main>
+        <div class="bb-top-row px-4 d-flex justify-content-end">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            <div class="py-2">
+                @Body
+            </div>
+        </article>
+    </main>
+
+</div>
+
+@code {
+    private Sidebar sidebar = default!;
+    private IEnumerable<NavItem> navItems = default!;
+
+    private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
+    {
+        if (navItems is null)
+            navItems = GetNavItems();
+
+        return await Task.FromResult(request.ApplyTo(navItems));
+    }
+
+    private IEnumerable<NavItem> GetNavItems()
+    {
+        navItems = new List<NavItem>
+        {
+            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Inicio", Match = NavLinkMatch.All},
+            new NavItem { Id = "2", Href = "/products", IconName = IconName.Boxes, Text = "Productos"},
+        };
+
+        return navItems;
+    }
+}
+
+<Preload />
