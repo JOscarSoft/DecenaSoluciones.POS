@@ -86,7 +86,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateNewProduct(AddEditProduct product)
         {
-            var apiResponse = new ApiResponse<int>();
+            var apiResponse = new ApiResponse<ProductViewModel>();
             try
             {
                 apiResponse.Result = await _productService.AddNewProduct(product);

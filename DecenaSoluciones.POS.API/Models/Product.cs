@@ -1,11 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DecenaSoluciones.POS.API.Models
 {
     [Table(name: "Products")]
     public class Product : BaseEntity
     {
+        [MaxLength(15)]
         public required string Code { get; set; }
+        [MaxLength(250)]
         public required string Description { get; set; }
         public int? MaintenancePeriods { get; set; }
         public int? WarrantyTime { get; set; }

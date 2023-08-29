@@ -5,50 +5,50 @@
 @inject SweetAlertService Swal;
 @inject IProductService productService;
 
-<EditForm Model="product" OnValidSubmit="OnValidSubmit">
+<EditForm Model="product" OnValidSubmit="OnValidSubmit" class="row g-3">
     <DataAnnotationsValidator></DataAnnotationsValidator>
 
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">Código:</label>
-        <InputText class="form-control" @bind-Value="product.Code"></InputText>
+        <InputText class="form-control" @bind-Value="product.Code" maxlength="15"></InputText>
         <ValidationMessage For="@(() => product.Code)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-8">
         <label class="form-label">Descripción:</label>
         <InputText class="form-control" @bind-Value="product.Description"></InputText>
         <ValidationMessage For="@(() => product.Description)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">Precio de compra:</label>
         <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="product.Cost"></CurrencyInput>
         <ValidationMessage For="@(() => product.Cost)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">Precio de venta:</label>
         <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="product.Price"></CurrencyInput>
         <ValidationMessage For="@(() => product.Price)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">% ITBIS:</label>
         <NumberInput TValue="decimal" @bind-Value="product.ITBIS" />
         <ValidationMessage For="@(() => product.ITBIS)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">Stock:</label>
         <NumberInput TValue="int" @bind-Value="product.stock" />
         <ValidationMessage For="@(() => product.stock)"></ValidationMessage>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Periodo de mantenimientos (Meses):</label>
-        <NumberInput TValue="int?" @bind-Value="product.MaintenancePeriods" />
-        <ValidationMessage For="@(() => product.MaintenancePeriods)"></ValidationMessage>
-    </div>
-    <div class="mb-3">
+    <div class="col-md-4">
         <label class="form-label">Tiempo de garantía (Meses):</label>
         <NumberInput TValue="int?" @bind-Value="product.WarrantyTime" />
         <ValidationMessage For="@(() => product.WarrantyTime)"></ValidationMessage>
     </div>
-    <div class="mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Periodo de mantenimientos (Meses):</label>
+        <NumberInput TValue="int?" @bind-Value="product.MaintenancePeriods" />
+        <ValidationMessage For="@(() => product.MaintenancePeriods)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
         <Switch @bind-Value="product.Assignable" Label="Asignable a clientes" />
     </div>
 
@@ -105,55 +105,70 @@
     private async Task OnValidSubmit()
     {
         PreloadService!.Show();
-        if (productId == 0)
+        try
         {
-            var response = await productService.AddNewProduct(product);
-            PreloadService.Hide();
-            if (response.Success)
+            if (productId == 0)
             {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Exito",
-                        Text = "Producto agregado exitosamente.",
-                        Icon = SweetAlertIcon.Success
-                    });
+                var response = await productService.AddNewProduct(product);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Producto agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
 
-                product = new AddEditProduct();
+                    product = new AddEditProduct();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al agrager el producto: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
             }
             else
             {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Error",
-                        Text = "Se produjo un error al agrager el producto. " + response.Message,
-                        Icon = SweetAlertIcon.Error
-                    });                
+                var response = await productService.UpdateProduct(productId, product);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Producto modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al modificar el producto: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
             }
+
         }
-        else
+        catch(Exception ex)
         {
-            var response = await productService.UpdateProduct(productId, product);
             PreloadService.Hide();
-            if (response.Success)
-            {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Exito",
-                        Text = "Producto modificado exitosamente.",
-                        Icon = SweetAlertIcon.Success
-                    });
-
-                await OnClose.InvokeAsync();
-            }
-            else
-            {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Error",
-                        Text = "Se produjo un error al modificar el producto. " + response.Message,
-                        Icon = SweetAlertIcon.Error
-                    });
-            }
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
             
         }
 
@@ -162,39 +177,53 @@
 
     private async Task RemoveProduct()
     {
-        var result = await Swal.FireAsync(new SweetAlertOptions
-            {
-                Title = "Eliminar producto",
-                Text = "¿Esta seguro de eliminar el producto?",
-                Icon = SweetAlertIcon.Question,
-                ShowCancelButton = true,
-                CancelButtonText = "Cancelar"
-            });
-
-        if (result.IsConfirmed)
+        try
         {
-            PreloadService!.Show();
-            var response = await productService.RemoveProduct(productId);
-            PreloadService.Hide();
-            if (response.Success)
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar producto",
+                    Text = "¿Esta seguro de eliminar el producto?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
             {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Eliminado",
-                        Text = "Producto eliminado exitosamente",
-                        Icon = SweetAlertIcon.Success
-                    });
-                await OnClose.InvokeAsync();
+                PreloadService!.Show();
+                var response = await productService.RemoveProduct(productId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Producto eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al eliminar el producto: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
             }
-            else
-            {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Error",
-                        Text = "Se produjo un error al eliminar el producto. " + response.Message,
-                        Icon = SweetAlertIcon.Error
-                    });
-            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+            
         }
     }
 }

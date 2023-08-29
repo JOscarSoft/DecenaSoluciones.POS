@@ -7,8 +7,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 {
     public class AddEditProduct
     {
-        [Required(ErrorMessage = "El campo Código es requerido.")]
-        public string Code { get; set; }
+        public string? Code { get; set; }
 
         [Required(ErrorMessage = "El campo Descripción es requerido.")]
         public string Description { get; set; }
@@ -17,12 +16,14 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public int stock { get; set; }
 
         [Required(ErrorMessage = "El campo Precio es requerido.")]
+        [Range(1.0, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
         public decimal Price { get; set; }
 
         [Required(ErrorMessage = "El campo Costo es requerido.")]
+        [Range(1.0, Double.MaxValue, ErrorMessage = "El costo debe ser mayor de 0.")]
         public decimal Cost { get; set; }
         public bool Assignable { get; set; }
-        public decimal ITBIS { get; set; }
+        public decimal ITBIS { get; set; } = 18.0M;
 
         public AddEditProduct()
         {

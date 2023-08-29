@@ -13,13 +13,13 @@ namespace DecenaSoluciones.POS.WebApp.Services
             _httpClient = httpClient;
         }
 
-        public async Task<ApiResponse<int>> AddNewProduct(AddEditProduct product)
+        public async Task<ApiResponse<ProductViewModel>> AddNewProduct(AddEditProduct product)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Product", product);
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
 
                 if (result == null)
                     throw new Exception("No se obtuvo respuesta del servicio de productos.");

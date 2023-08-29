@@ -14,7 +14,7 @@
 </style>
 <h3>Productos</h3>
 
-<Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" />
+<Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
     <div class="col-md-12 text-right">
@@ -67,12 +67,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
         try
         {
             PreloadService!.Show();
             var response = await productService.GetProducts();
             PreloadService.Hide();
-            if (response.Success) 
+            if (response.Success)
             {
                 productList = response.Result ?? new List<ProductViewModel>();
                 await productsGrid.RefreshDataAsync();
@@ -82,7 +87,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener los productos. " + response.Message,
+                        Text = "Se produjo un error al obtener los productos: " + response.Message,
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -92,7 +97,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener los productos. " + ex.Message,
+                    Text = "Se produjo un error al obtener los productos: " + ex.Message,
                     Icon = SweetAlertIcon.Error
                 });
         }
@@ -113,5 +118,10 @@
     private async Task OnRowClick(GridRowEventArgs<ProductViewModel> args)
     {
         await ShowAddEditProductModal(args.Item.Id);
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
     }
 }

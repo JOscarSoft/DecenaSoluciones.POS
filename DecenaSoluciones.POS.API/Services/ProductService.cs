@@ -16,17 +16,20 @@ namespace DecenaSoluciones.POS.API.Services
             _mapper = mapper;
         }
 
-        public async Task<int> AddNewProduct(AddEditProduct productDto)
+        public async Task<ProductViewModel> AddNewProduct(AddEditProduct productDto)
         {
             var existCode = await _dbContext.Products.AnyAsync(p => p.Code == productDto.Code);
             if (existCode)
                 throw new Exception("Ya existe un producto con el código ingresado");
 
+            if(string.IsNullOrEmpty(productDto.Code))
+                productDto.Code = await GenerateCodeFromDescription(productDto.Description);
+
             var product = _mapper.Map<Product>(productDto);
             await _dbContext.Products.AddAsync(product);
             await _dbContext.SaveChangesAsync();
 
-            return product.Id;
+            return _mapper.Map<ProductViewModel>(product);
         }
 
         public async Task<ProductViewModel> GetProductByCode(string code)
@@ -65,7 +68,14 @@ namespace DecenaSoluciones.POS.API.Services
 
         public async Task<ProductViewModel> UpdateProduct(int id, AddEditProduct productDto)
         {
-            var oldProduct = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
+            var existCode = await _dbContext.Products.AnyAsync(p => p.Code == productDto.Code && p.Id != id);
+            if (existCode)
+                throw new Exception("Ya existe un producto con el código ingresado");
+
+            var oldProduct = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
+
+            if (string.IsNullOrEmpty(productDto.Code))
+                productDto.Code = await GenerateCodeFromDescription(productDto.Description);
 
             var newProduct = _mapper.Map<Product>(productDto);
             newProduct.Id = id;
@@ -73,6 +83,19 @@ namespace DecenaSoluciones.POS.API.Services
             await _dbContext.SaveChangesAsync();
 
             return _mapper.Map<ProductViewModel>(newProduct);
+        }
+
+        private async Task<string> GenerateCodeFromDescription(string description)
+        {
+            string init = description.Length > 3 ? description.Substring(0, 3) : description;
+            var existingCodes = await _dbContext.Products.Where(p => p.Code.Contains(init)).ToListAsync();
+            var codeDigits = existingCodes.Select(p => new string(p.Code.Where(Char.IsDigit).ToArray()))
+                                          .Where(p => !string.IsNullOrEmpty(p))
+                                          .Select(p => int.Parse(p)).ToList();
+            if (existingCodes.Any())
+                return $"{init}{(codeDigits.Max() + 1).ToString().PadLeft(4, '0')}".ToUpper();
+
+            return $"{init}0001".ToUpper();
         }
     }
 }
