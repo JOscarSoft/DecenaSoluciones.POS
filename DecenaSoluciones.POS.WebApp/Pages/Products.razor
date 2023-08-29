@@ -14,10 +14,11 @@
 </style>
 <h3>Productos</h3>
 
+<Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" />
 
 <div class="row" style="margin-top:50px">
     <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end">Agregar productos</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(0)">Agregar productos</Button>
     </div>
 </div>
 
@@ -36,7 +37,9 @@
           ItemsPerPageText="Productos por página"
           PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
           PaginationItemsTextFormat="{0} - {1} de {2} productos"
-          EmptyText="No se encontraron registros para mostrar">
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
 
         <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
             @context.Code
@@ -60,6 +63,7 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     List<ProductViewModel> productList = new List<ProductViewModel>();
     Grid<ProductViewModel> productsGrid;
+    private Modal addEditProductModal = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -94,41 +98,20 @@
         }
     }
 
-    private async Task RemoveProduct(int id)
+    private async Task ShowAddEditProductModal(int productId)
     {
-        var result = await Swal.FireAsync(new SweetAlertOptions
-            {
-                Title = "Eliminar producto",
-                Text = "¿Esta seguro de eliminar el producto?",
-                Icon = SweetAlertIcon.Question,
-                ShowCancelButton = true
-            });
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("productId", productId);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
+        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productId > 0 ? "Actualizar producto" : "Agregar nuevo producto", parameters: parameters);
+    }
 
-        if (result.IsConfirmed)
-        {
-            PreloadService!.Show();
-            var response = await productService.RemoveProduct(id);
-            PreloadService.Hide();
-            if (response.Success)
-            {
-                productList = productList!.FindAll(p => p.Id != id);
-                await productsGrid.RefreshDataAsync();
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Eliminado",
-                        Text = "Producto eliminado exitosamente",
-                        Icon = SweetAlertIcon.Success
-                    });
-            }
-            else
-            {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Error",
-                        Text = "Se produjo un error al eliminar el producto. " + response.Message,
-                        Icon = SweetAlertIcon.Error
-                    });
-            }
-        }
+    private async Task HideAddEditProductModal(MouseEventArgs e)
+    {
+        await addEditProductModal.HideAsync();
+    }
+    private async Task OnRowClick(GridRowEventArgs<ProductViewModel> args)
+    {
+        await ShowAddEditProductModal(args.Item.Id);
     }
 }

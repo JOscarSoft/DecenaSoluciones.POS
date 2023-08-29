@@ -23,5 +23,22 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public decimal Cost { get; set; }
         public bool Assignable { get; set; }
         public decimal ITBIS { get; set; }
+
+        public AddEditProduct()
+        {
+        }
+
+        public AddEditProduct(ProductViewModel viewModel)
+        {
+            Code = viewModel.Code;
+            Description = viewModel.Description;
+            MaintenancePeriods = viewModel.MaintenancePeriods;
+            WarrantyTime = viewModel.WarrantyTime;
+            stock = viewModel.stock;
+            Price = viewModel.Price;
+            Cost = viewModel.Cost;
+            Assignable = viewModel.Assignable;
+            ITBIS = viewModel.ITBIS;
+        }
     }
 }
