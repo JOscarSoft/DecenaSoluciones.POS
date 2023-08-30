@@ -25,5 +25,7 @@ namespace DecenaSoluciones.POS.API.Models
         public virtual ICollection<CustomerProduct>? CustomerProducts { get; set; }
 
         public virtual ICollection<Quotation>? CustomerQuotations { get; set; }
+
+        public virtual ICollection<Sale>? CustomerSales { get; set; }
     }
 }

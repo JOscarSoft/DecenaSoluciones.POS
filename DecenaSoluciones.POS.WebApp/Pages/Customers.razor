@@ -1,0 +1,127 @@
+﻿@page "/customers"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Services;
+
+@inject SweetAlertService Swal;
+@inject ICustomerService customerService;
+<style>
+    .headerRow {
+        background-color: #000080 !important;
+    }
+
+</style>
+<h3>Clientes</h3>
+
+<Modal @ref="addEditCustomerModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar clientes</Button>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="customersGrid" TItem="CustomerViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="customerList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Clientes por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} productos"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
+
+        <GridColumn TItem="CustomerViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="CustomerViewModel" HeaderText="Teléfono" PropertyName="PhoneNumber" Sortable="false" HeaderTextAlignment="Alignment.Center">
+            @(context.PhoneNumber == null ? string.Empty : String.Format("{0:(###) ###-####}", context.PhoneNumber))
+        </GridColumn>
+        <GridColumn TItem="CustomerViewModel" HeaderText="Dirección" PropertyName="Direction" SortKeySelector="item => item.Direction" HeaderTextAlignment="Alignment.Center">
+            @context.Direction
+        </GridColumn>
+        <GridColumn TItem="CustomerViewModel" HeaderText="Producto" PropertyName="Product" SortKeySelector="item => item.Product" HeaderTextAlignment="Alignment.Center">
+            @context.Product
+        </GridColumn>
+        <GridColumn TItem="CustomerViewModel" HeaderText="Próximo mantenimiento" PropertyName="NextMaintenance" SortKeySelector="item => item.NextMaintenance" IsDefaultSortColumn="true" SortDirection="SortDirection.Descending" HeaderTextAlignment="Alignment.Center">
+            @(context.NextMaintenance.HasValue ? context.NextMaintenance.Value.ToString("dd/MM/yyyy") : string.Empty)
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<CustomerViewModel> customerList = new List<CustomerViewModel>();
+    Grid<CustomerViewModel> customersGrid = default!;
+    private Modal addEditCustomerModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await customerService.GetCustomerList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                customerList = response.Result ?? new List<CustomerViewModel>();
+                await customersGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los clientes: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los clientes: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task ShowAddEditProductModal(CustomerViewModel? customer)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("CustomerId", customer != null ? customer.Id : 0);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
+        await addEditCustomerModal.ShowAsync<AddEditProductComponent>(title: customer != null ? "Actualizar cliente" : "Agregar nuevo cliente", parameters: parameters);
+    }
+
+    private async Task HideAddEditProductModal(MouseEventArgs e)
+    {
+        await addEditCustomerModal.HideAsync();
+    }
+    private async Task OnRowClick(GridRowEventArgs<CustomerViewModel> args)
+    {
+        await ShowAddEditProductModal(args.Item);
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+    }
+}

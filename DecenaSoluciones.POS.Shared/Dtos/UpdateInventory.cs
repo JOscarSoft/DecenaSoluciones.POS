@@ -10,7 +10,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
     public class UpdateInventory
     {
         [Required(ErrorMessage = "El producto a actualizar es requerido")]
-        public string ProductCode { get; set; }
+        public string? ProductCode { get; set; }
 
         [Required(ErrorMessage = "El campo Precio es requerido.")]
         [Range(1.0, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
