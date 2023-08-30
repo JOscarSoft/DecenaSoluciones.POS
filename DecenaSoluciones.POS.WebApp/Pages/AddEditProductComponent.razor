@@ -5,63 +5,63 @@
 @inject SweetAlertService Swal;
 @inject IProductService productService;
 
-<EditForm Model="product" OnValidSubmit="OnValidSubmit" class="row g-3">
+<EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" class="row g-3">
     <DataAnnotationsValidator></DataAnnotationsValidator>
 
     <div class="col-md-4">
         <label class="form-label">Código:</label>
-        <InputText class="form-control" @bind-Value="product.Code" maxlength="15"></InputText>
-        <ValidationMessage For="@(() => product.Code)"></ValidationMessage>
+        <InputText class="form-control" @bind-Value="newProduct.Code" maxlength="15"></InputText>
+        <ValidationMessage For="@(() => newProduct.Code)"></ValidationMessage>
     </div>
     <div class="col-md-8">
         <label class="form-label">Descripción:</label>
-        <InputText class="form-control" @bind-Value="product.Description"></InputText>
-        <ValidationMessage For="@(() => product.Description)"></ValidationMessage>
+        <InputText class="form-control" @bind-Value="newProduct.Description"></InputText>
+        <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Precio de compra:</label>
-        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="product.Cost"></CurrencyInput>
-        <ValidationMessage For="@(() => product.Cost)"></ValidationMessage>
+        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="newProduct.Cost"></CurrencyInput>
+        <ValidationMessage For="@(() => newProduct.Cost)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Precio de venta:</label>
-        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="product.Price"></CurrencyInput>
-        <ValidationMessage For="@(() => product.Price)"></ValidationMessage>
+        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="newProduct.Price"></CurrencyInput>
+        <ValidationMessage For="@(() => newProduct.Price)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">% ITBIS:</label>
-        <NumberInput TValue="decimal" @bind-Value="product.ITBIS" />
-        <ValidationMessage For="@(() => product.ITBIS)"></ValidationMessage>
+        <NumberInput TValue="decimal" @bind-Value="newProduct.ITBIS" />
+        <ValidationMessage For="@(() => newProduct.ITBIS)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Stock:</label>
-        <NumberInput TValue="int" @bind-Value="product.stock" />
-        <ValidationMessage For="@(() => product.stock)"></ValidationMessage>
+        <NumberInput TValue="int" @bind-Value="newProduct.stock" />
+        <ValidationMessage For="@(() => newProduct.stock)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Tiempo de garantía (Meses):</label>
-        <NumberInput TValue="int?" @bind-Value="product.WarrantyTime" />
-        <ValidationMessage For="@(() => product.WarrantyTime)"></ValidationMessage>
+        <NumberInput TValue="int?" @bind-Value="newProduct.WarrantyTime" />
+        <ValidationMessage For="@(() => newProduct.WarrantyTime)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Periodo de mantenimientos (Meses):</label>
-        <NumberInput TValue="int?" @bind-Value="product.MaintenancePeriods" />
-        <ValidationMessage For="@(() => product.MaintenancePeriods)"></ValidationMessage>
+        <NumberInput TValue="int?" @bind-Value="newProduct.MaintenancePeriods" />
+        <ValidationMessage For="@(() => newProduct.MaintenancePeriods)"></ValidationMessage>
     </div>
     <div class="col-md-4">
-        <Switch @bind-Value="product.Assignable" Label="Asignable a clientes" />
+        <Switch @bind-Value="newProduct.Assignable" Label="Asignable a clientes" />
     </div>
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-    <button type="submit" Class="btn btn-primary">
-        Guardar
-    </button>
+        <button type="submit" Class="btn btn-primary">
+            Guardar
+        </button>
 
-    @if (productId > 0)
-    {
-        <Button Color="ButtonColor.Danger" @onclick="RemoveProduct" style="margin-right:15px">
-            Eliminar
-        </Button>
+        @if (Product.Id > 0)
+        {
+            <Button Color="ButtonColor.Danger" @onclick="RemoveProduct" style="margin-right:15px">
+                Eliminar
+            </Button>
         }
     </div>
 </EditForm>
@@ -69,32 +69,15 @@
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
 
-    [Parameter] public int productId { get; set; } = 0;
+    [Parameter] public ProductViewModel Product { get; set; } = new ProductViewModel();
     [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
 
-    AddEditProduct product = new AddEditProduct();
+    AddEditProduct newProduct = new AddEditProduct();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        if (productId != 0)
-        {
-            PreloadService!.Show();
-            var response = await productService.GetProductById(productId);
-            PreloadService.Hide();
-            if (!response.Success || response.Result == null)
-            {
-                await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Error",
-                        Text = "No se pudieron obtener los datos del producto.",
-                        Icon = SweetAlertIcon.Error
-                    });
-
-                return;
-            }
-
-            product = new AddEditProduct(response.Result);
-        }
+        if (Product.Id > 0)
+            newProduct = new AddEditProduct(Product);
     }
 
     private async Task CloseModal()
@@ -107,9 +90,9 @@
         PreloadService!.Show();
         try
         {
-            if (productId == 0)
+            if (Product.Id == 0)
             {
-                var response = await productService.AddNewProduct(product);
+                var response = await productService.AddNewProduct(newProduct);
                 PreloadService.Hide();
                 if (response.Success)
                 {
@@ -120,7 +103,7 @@
                             Icon = SweetAlertIcon.Success
                         });
 
-                    product = new AddEditProduct();
+                    newProduct = new AddEditProduct();
                 }
                 else
                 {
@@ -134,7 +117,7 @@
             }
             else
             {
-                var response = await productService.UpdateProduct(productId, product);
+                var response = await productService.UpdateProduct(Product.Id, newProduct);
                 PreloadService.Hide();
                 if (response.Success)
                 {
@@ -169,7 +152,7 @@
                     Text = "Se produjo un error al procesar la petición: " + ex.Message,
                     Icon = SweetAlertIcon.Error
                 });
-            
+
         }
 
     }
@@ -191,7 +174,7 @@
             if (result.IsConfirmed)
             {
                 PreloadService!.Show();
-                var response = await productService.RemoveProduct(productId);
+                var response = await productService.RemoveProduct(Product.Id);
                 PreloadService.Hide();
                 if (response.Success)
                 {

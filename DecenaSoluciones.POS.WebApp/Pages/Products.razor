@@ -17,8 +17,9 @@
 <Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
-    <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(0)">Agregar productos</Button>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowStockUpdateModal()">Actualizar stock</Button>
     </div>
 </div>
 
@@ -44,17 +45,17 @@
         <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
             @context.Code
         </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description" SortKeySelector="item => item.Description" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description" SortKeySelector="item => item.Description" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
             @context.Description
         </GridColumn>
         <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost" SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
             @context.Cost.ToString("N2")
         </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price" SortKeySelector="item => item.Price">
+        <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price" SortKeySelector="item => item.Price" HeaderTextAlignment="Alignment.Center">
             @context.Price.ToString("N2")
         </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="ITBIS" PropertyName="ITBIS" Sortable="false" Filterable="false">
-            @context.ITBIS.ToString("N2")
+        <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true" SortKeySelector="item => item.stock" Filterable="false" HeaderTextAlignment="Alignment.Center">
+            @context.stock
         </GridColumn>
     </Grid>
 </div>
@@ -62,7 +63,7 @@
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
     List<ProductViewModel> productList = new List<ProductViewModel>();
-    Grid<ProductViewModel> productsGrid;
+    Grid<ProductViewModel> productsGrid = default!;
     private Modal addEditProductModal = default!;
 
     protected override async Task OnInitializedAsync()
@@ -103,12 +104,21 @@
         }
     }
 
-    private async Task ShowAddEditProductModal(int productId)
+    private async Task ShowAddEditProductModal(ProductViewModel? product)
+    {
+        var productParam = product ?? new ProductViewModel();
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("Product", productParam);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
+        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productParam.Id > 0 ? "Actualizar producto" : "Agregar nuevo producto", parameters: parameters);
+    }
+
+    private async Task ShowStockUpdateModal()
     {
         var parameters = new Dictionary<string, object>();
-        parameters.Add("productId", productId);
+        parameters.Add("ProductList", productList);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
-        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productId > 0 ? "Actualizar producto" : "Agregar nuevo producto", parameters: parameters);
+        await addEditProductModal.ShowAsync<StockUpdate>(title: "Actualizar Stock", parameters: parameters);
     }
 
     private async Task HideAddEditProductModal(MouseEventArgs e)
@@ -117,7 +127,7 @@
     }
     private async Task OnRowClick(GridRowEventArgs<ProductViewModel> args)
     {
-        await ShowAddEditProductModal(args.Item.Id);
+        await ShowAddEditProductModal(args.Item);
     }
 
     private async Task OnModalHiding()

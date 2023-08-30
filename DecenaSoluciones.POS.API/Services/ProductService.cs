@@ -85,6 +85,25 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<ProductViewModel>(newProduct);
         }
 
+        public async Task<bool> UpdateInventary(List<UpdateInventory> inventoryItems)
+        {
+            foreach(var inventoryItem in inventoryItems) 
+            {
+                var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Code == inventoryItem.ProductCode);
+
+                if(product != null) 
+                { 
+                    product.Cost = inventoryItem.Cost;
+                    product.Price = inventoryItem.Price;
+                    product.stock += inventoryItem.Quantity;
+
+                    _dbContext.Products.Update(product);
+                }
+            }
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
         private async Task<string> GenerateCodeFromDescription(string description)
         {
             string init = description.Length > 3 ? description.Substring(0, 3) : description;

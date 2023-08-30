@@ -29,7 +29,7 @@ namespace DecenaSoluciones.POS.WebApp.Services
             else
                 throw new Exception("Se produjo un error al procesar la petición.");
         }
-
+        
         public async Task<ApiResponse<ProductViewModel>> GetProductByCode(string code)
         {
             var result = await _httpClient.GetFromJsonAsync<ApiResponse<ProductViewModel>>($"api/Product/GetByCode/{code}");
@@ -84,6 +84,23 @@ namespace DecenaSoluciones.POS.WebApp.Services
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
+
+                if (result == null)
+                    throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+                return result;
+            }
+            else
+                throw new Exception("Se produjo un error al procesar la petición.");
+        }
+
+        public async Task<ApiResponse<bool>> UpdateInventary(List<UpdateInventory> inventoryItems)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Product/UpdateInventary", inventoryItems);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
                 if (result == null)
                     throw new Exception("No se obtuvo respuesta del servicio de productos.");
