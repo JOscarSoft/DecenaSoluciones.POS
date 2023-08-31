@@ -3,11 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecenaSoluciones.POS.API", "DecenaSoluciones.POS.API\DecenaSoluciones.POS.API.csproj", "{2A5250D1-128D-43CF-B2D9-A611C7881384}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecenaSoluciones.POS.API", "DecenaSoluciones.POS.API\DecenaSoluciones.POS.API.csproj", "{2A5250D1-128D-43CF-B2D9-A611C7881384}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecenaSoluciones.POS.Shared", "DecenaSoluciones.POS.Shared\DecenaSoluciones.POS.Shared.csproj", "{A2599CE4-F024-41D1-9B80-6E21AE2AE90B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecenaSoluciones.POS.Shared", "DecenaSoluciones.POS.Shared\DecenaSoluciones.POS.Shared.csproj", "{A2599CE4-F024-41D1-9B80-6E21AE2AE90B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecenaSoluciones.POS.WebApp", "DecenaSoluciones.POS.WebApp\DecenaSoluciones.POS.WebApp.csproj", "{BFC71CCC-EF4E-4A20-86EC-0574A9BE6977}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecenaSoluciones.POS.WebApp", "DecenaSoluciones.POS.WebApp\DecenaSoluciones.POS.WebApp.csproj", "{BFC71CCC-EF4E-4A20-86EC-0574A9BE6977}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{497C6A64-C7D6-472D-9E34-BBBEA461A412}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -12,6 +12,8 @@ namespace DecenaSoluciones.POS.API.Helper
             CreateMap<Product, ProductViewModel>();
             CreateMap<Product, AddEditProduct>().ReverseMap();
             CreateMap<CustomerProduct, AddEditCustomerProduct>().ReverseMap();
+            CreateMap<SaleProduct, AddEditSaleProduct>().ReverseMap();
+            CreateMap<QuotationProduct, AddEditSaleProduct>().ReverseMap();
             CreateMap<Customer, AddEditCustomer>()
                 .ForMember(dest => dest.CustomerProducts, opt => opt.MapFrom(source => source.CustomerProducts != null ? source.CustomerProducts : new List<CustomerProduct>()))
                 .ReverseMap();
@@ -19,6 +21,14 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(source => $"{source.Name} {source.LastName}"))
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(source => getMaintenanceProduct(source.CustomerProducts)))
                 .ForMember(dest => dest.NextMaintenance, opt => opt.MapFrom(source => getMaintenanceDate(source.CustomerProducts)));
+            CreateMap<Sale, AddEditSale>()
+                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => false))
+                .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.SaleProducts != null ? source.SaleProducts : new List<SaleProduct>()))
+                .ReverseMap();
+            CreateMap<Quotation, AddEditSale>()
+                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
+                .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.QuotationProducts != null ? source.QuotationProducts : new List<QuotationProduct>()))
+                .ReverseMap();
         }
 
         private string getMaintenanceProduct(IEnumerable<CustomerProduct>? customerProducts)

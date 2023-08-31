@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="1.10.0" />
     <PackageReference Include="BlazorInputMask" Version="1.0.20" />
     <PackageReference Include="CurrieTechnologies.Razor.SweetAlert2" Version="5.5.0" />

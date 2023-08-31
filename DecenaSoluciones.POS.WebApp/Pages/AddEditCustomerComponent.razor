@@ -245,6 +245,16 @@
 
     private async Task OnValidSubmit()
     {
+        if(string.IsNullOrEmpty(newCustomer.Name))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el nombre del cliente.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
         PreloadService!.Show();
         try
         {

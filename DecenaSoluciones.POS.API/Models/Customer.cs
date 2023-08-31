@@ -12,7 +12,7 @@ namespace DecenaSoluciones.POS.API.Models
         public required string Name { get; set; }
 
         [MaxLength(50)]
-        public required string LastName { get; set; }
+        public string? LastName { get; set; }
 
         [MaxLength(15)]
         public string? PhoneNumber { get; set; }

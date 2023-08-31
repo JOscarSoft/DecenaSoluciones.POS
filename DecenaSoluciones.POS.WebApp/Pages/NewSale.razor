@@ -1,0 +1,529 @@
+﻿@page "/newsale"
+@page "/newsale/{ModelId:int}"
+
+@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+
+@inject SweetAlertService Swal;
+@inject IProductService productService;
+@inject ICustomerService customerService;
+@inject ISaleService saleService;
+
+
+<h3>@title</h3>
+
+<Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+
+<div class="col-md-3" style="margin-top:45px;margin-bottom:25px;">
+    <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode" placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
+</div>
+<EditForm Model="model" OnValidSubmit="(() => OnValidSubmit(false))" class="row g-3">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="col-lg-8">
+        <table class="table">
+            <thead>
+                <tr class="bg-dark text-white border-bottom-0 headerRow">
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>ITBIS</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var productSale in model.SaleProducts)
+                {
+                    <tr>
+                        <td style="width:45%">
+                            <AutoComplete @bind-Value="productSale.ProductDescription"
+                                          TItem="ProductViewModel"
+                                          DataProvider="ProductsDataProvider"
+                                          PropertyName="Description"
+                                          Placeholder="Ingresa un producto..."
+                                          OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.SaleProducts.ToList().IndexOf(productSale))" />
+                            <InputText hidden="hidden" @bind-Value="productSale.ProductCode" />
+                            <ValidationMessage For="@(() => productSale.ProductCode)"></ValidationMessage>
+                        </td>
+                        <td style="width:5%">
+                            <NumberInput TValue="int" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" />
+                            <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
+                        </td>
+                        <td>
+                            <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="productSale.UnitPrice" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))"></CurrencyInput>
+                            <ValidationMessage For="@(() => productSale.UnitPrice)"></ValidationMessage>
+                        </td>
+                        <td>
+                            @productSale.ITBIS.ToString("N2")
+                        </td>
+                        <td>
+                            @productSale.Total.ToString("N2")
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
+                                <Icon Name="IconName.Trash" />
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-md-flex justify-content-md-end">
+            <div style="margin-top:15px">
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Subtotal:</label>
+                    <div class="col-md-7">
+                        <input type="text" class="form-control" value="@subTotal" disabled />
+                    </div>
+                </div>
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Impuestos:</label>
+                    <div class="col-md-7">
+                        <input type="text" class="form-control" value="@totalTaxes" disabled />
+                    </div>
+                </div>
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Mano de obra:</label>
+                    <div class="col-md-7">
+                        <CurrencyInput TValue="decimal?" Locale="en-US" class="form-control" @bind-Value="model.WorkForceValue"></CurrencyInput>
+                        <ValidationMessage For="@(() => model.WorkForceValue)"></ValidationMessage>
+                    </div>
+                </div>
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Descuento:</label>
+                    <div class="col-md-7">
+                        <CurrencyInput TValue="decimal?" Locale="en-US" class="form-control" @bind-Value="model.Discount"></CurrencyInput>
+                        <ValidationMessage For="@(() => model.Discount)"></ValidationMessage>
+                    </div>
+                </div>
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Total:</label>
+                    <div class="col-md-7">
+                        <input type="text" class="form-control" value="@totalAmount" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <Card Style="width:100%;">
+            <CardHeader>
+                <div class="row g-3">
+                    <div class="col-md-9">
+                        <h5 class="form-label" style="margin-top:15px">Datos del cliente</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+                            @if (disabledClientFields)
+                            {
+                                <Button Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnChangeCustomer(null, true)"><Icon Name="IconName.PlusCircle" /></Button>
+                            }
+                            else
+                            {
+                                <Button Color="ButtonColor.Danger" Class="float-end" @onclick="() => OnChangeCustomer(null, false)"><Icon Name="IconName.XCircle" /></Button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardBody>
+                <div class="row g-3">
+                    @if (disabledClientFields)
+                    {
+                        <div class="col-md-12">
+                            <label class="form-label">Nombre:</label>
+                            <AutoComplete @bind-Value="model.Customer.Name"
+                                          TItem="CustomerViewModel"
+                                          DataProvider="CustomersDataProvider"
+                                          PropertyName="Name"
+                                          Placeholder="Ingresa un cliente..."
+                                          OnChanged="(CustomerViewModel selected) => OnChangeCustomer(selected, false)" />
+                            <NumberInput TValue="int" hidden="hidden" @bind-Value="model.Customer.Id" />
+                            <ValidationMessage For="@(() => model.Customer.Id)"></ValidationMessage>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-12">
+                            <label class="form-label">Nombre:</label>
+                            <InputText class="form-control" @bind-Value="model.Customer.Name" maxlength="50"></InputText>
+                            <ValidationMessage For="@(() => model.Customer.Name)"></ValidationMessage>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Apellido:</label>
+                            <InputText class="form-control" @bind-Value="model.Customer.LastName" maxlength="50"></InputText>
+                            <ValidationMessage For="@(() => model.Customer.LastName)"></ValidationMessage>
+                        </div>
+                    }
+                    <div class="col-md-12">
+                        <label class="form-label">Teléfono:</label>
+                        <InputMask @bind-Value="model.Customer.PhoneNumber" class="form-control" data-mask="(000) 000-0000" disabled="@disabledClientFields" />
+                        <ValidationMessage For="@(() => model.Customer.PhoneNumber)"></ValidationMessage>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección:</label>
+                        <InputText class="form-control" @bind-Value="model.Customer.Direction" maxlength="500" disabled="@disabledClientFields"></InputText>
+                        <ValidationMessage For="@(() => model.Customer.Direction)"></ValidationMessage>
+                    </div>
+                </div>
+            </CardBody>
+        </Card>
+    </div>
+    <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
+    <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
+    @if (TCPayment || DepositPayment)
+    {
+        <div class="col-lg-4">   
+            <div class="col-md-12">
+                <label class="form-label">Monto efectivo:</label>
+                <CurrencyInput TValue="decimal?" Locale="en-US" class="form-control" @bind-Value="model.CashAmount"></CurrencyInput>
+                <ValidationMessage For="@(() => model.CashAmount)"></ValidationMessage>
+            </div>
+        </div>
+    }       
+    @if(TCPayment)
+    {
+        <div class="col-lg-4">
+            <div class="col-md-12">
+                <label class="form-label">Monto TC:</label>
+                <CurrencyInput TValue="decimal?" Locale="en-US" class="form-control" @bind-Value="model.TCAmount"></CurrencyInput>
+                <ValidationMessage For="@(() => model.TCAmount)"></ValidationMessage>
+            </div>
+            <div class="col-md-12" style="margin-top:15px!important">
+                <label class="form-label">Referencia transacción:</label>
+                <InputText class="form-control" @bind-Value="model.TCReference" maxlength="50"></InputText>
+                <ValidationMessage For="@(() => model.TCReference)"></ValidationMessage>
+            </div>        
+        </div>
+    }
+    @if (DepositPayment)
+    {
+        <div class="col-lg-4">
+            <div class="col-md-12">
+                <label class="form-label">Monto deposito:</label>
+                <CurrencyInput TValue="decimal?" Locale="en-US" class="form-control" @bind-Value="model.DepositsAmount"></CurrencyInput>
+                <ValidationMessage For="@(() => model.DepositsAmount)"></ValidationMessage>
+            </div>
+            <div class="col-md-12" style="margin-top:15px!important">
+                <label class="form-label">Referencia transacción:</label>
+                <InputText class="form-control" @bind-Value="model.DepositReference" maxlength="50"></InputText>
+                <ValidationMessage For="@(() => model.DepositReference)"></ValidationMessage>
+            </div>
+        </div>
+    }
+
+    <div class="d-grid gap-2 d-md-flex mt-2" style="margin-top:25px!important">
+        @if(model.Id <= 0 || !model.IsAQuotation)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnValidSubmit(false)">Procesar venta</Button>
+        }
+
+        @if (model.Id <= 0 || !model.IsAQuotation)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => OnValidSubmit(true)">Generar cotización</Button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    [Parameter] public int ModelId { get; set; } = 0;
+
+    List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
+    List<CustomerViewModel> CustomerList { get; set; } = new List<CustomerViewModel>();
+
+    AddEditSale model = new AddEditSale();
+    List<ToastMessage> messages = new List<ToastMessage>();
+    private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Warning, message));
+
+    string newCode = string.Empty;
+    string title = "Nueva venta";
+    bool disabledClientFields = true;
+    bool TCPayment = false;
+    bool DepositPayment = false;
+
+    string totalAmount => ToMoneyString(GetTotalAmount());
+    string totalTaxes => ToMoneyString(model.SaleProducts!.Sum(p => p.ITBIS));
+    string subTotal => ToMoneyString(model.SaleProducts!.Sum(p => p.Total) - model.SaleProducts!.Sum(p => p.ITBIS));
+
+    private string ToMoneyString(decimal value) => $"${value.ToString("N2")}";
+
+    public void EnterCode(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            var newProduct = ProductList.FirstOrDefault(p => p.Code.ToUpper() == newCode.ToUpper());
+            if (newProduct != null)
+            {
+                int lastIndex = model.SaleProducts!.Count - 1;
+                model.SaleProducts.ElementAt(lastIndex).ProductId = newProduct!.Id;
+                model.SaleProducts.ElementAt(lastIndex).ProductCode = newProduct!.Code;
+                model.SaleProducts.ElementAt(lastIndex).ProductDescription = newProduct!.Description;
+                model.SaleProducts.ElementAt(lastIndex).Quantity = 1;
+                model.SaleProducts.ElementAt(lastIndex).UnitPrice = newProduct.Price;
+                model.SaleProducts.ElementAt(lastIndex).ITBIS = newProduct.ITBIS > 0 ? newProduct.Price * (newProduct.ITBIS / 100) : 0M;
+                model.SaleProducts!.Add(new AddEditSaleProduct());
+                return;
+            }
+
+            ShowMessage("Producto no encontrado");
+        }
+    }
+
+    private decimal GetTotalAmount()
+    {
+        decimal calc = 0.0M;
+        calc += model.SaleProducts!.Sum(p => p.Total);
+        calc += model.WorkForceValue ?? 0.0M;
+        calc -= model.Discount ?? 0.0M;
+        return calc;
+    }
+
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(ProductList.OrderBy(prod => prod.Description)));
+    }
+
+    private async Task<AutoCompleteDataProviderResult<CustomerViewModel>> CustomersDataProvider(AutoCompleteDataProviderRequest<CustomerViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(CustomerList.OrderBy(prod => prod.Name)));
+    }
+
+    private void OnChangeCustomer(CustomerViewModel? selected, bool newOne)
+    {
+        if (selected != null)
+        {
+            disabledClientFields = true;
+            model.Customer!.Id = selected.Id;
+            model.Customer.Name = selected.Name;
+            model.Customer.PhoneNumber = selected.PhoneNumber;
+            model.Customer.Direction = selected.Direction;
+            return;
+        }
+        disabledClientFields = !newOne;
+        model.Customer = new AddEditCustomer();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        if (ModelId > 0)
+        {
+            title = "Detalles de la venta";
+            if (model.IsAQuotation)
+                title = "Detalles de la cotización";
+
+            title = $"{title} - {model.Code}";
+        }
+        model.SaleProducts!.Add(new AddEditSaleProduct());
+        await Task.WhenAll(LoadProducts(), LoadCustomers());
+        PreloadService.Hide();
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            var response = await productService.GetProducts();
+            if (response.Success)
+            {
+                ProductList = response.Result ?? new List<ProductViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los productos: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los productos: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            var response = await customerService.GetCustomerList();
+            if (response.Success)
+            {
+                CustomerList = response.Result ?? new List<CustomerViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los clientes: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los clientes: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private string validateSale()
+    {
+        var products = model.SaleProducts.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+        if (!products.Any())
+            return "Favor de ingresar al menos un producto.";
+
+        if (products.Any(p => p.Total <= 0))
+            return "Uno de los productos ingresados no tiene datos. Favor de validar.";
+
+        var total = model.TCAmount ?? 0.00M + model.CashAmount ?? 0.00M + model.DepositsAmount ?? 0.00M;
+        if (!model.IsAQuotation && (TCPayment || DepositPayment) && total != GetTotalAmount())
+            return $"Los montos ingresados no cuadran con el total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
+
+        return string.Empty;
+    }
+
+    private async Task OnValidSubmit(bool isQuotation)
+    {
+        model.IsAQuotation = isQuotation;
+        string validations = validateSale();
+
+        if (string.IsNullOrEmpty(validations))
+        {
+            PreloadService!.Show();
+            try
+            {
+                model.SaleProducts = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+                if (ModelId == 0)
+                {
+                    var response = await saleService.AddNewSale(model);
+                    PreloadService.Hide();
+                    if (response.Success)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = isQuotation ? $"Cotización {response.Result.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                                Icon = SweetAlertIcon.Success
+                            });
+
+                        model = new AddEditSale();
+                        model.SaleProducts.Add(new AddEditSaleProduct());
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Error",
+                                Text = "Se produjo un error al procesar la solicitud: " + response.Message,
+                                Icon = SweetAlertIcon.Error
+                            });
+                    }
+                }
+                else
+                {
+                    var response = await saleService.UpdateSale(ModelId, model);
+                    PreloadService.Hide();
+                    if (response.Success)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = isQuotation ? $"Cotización {response.Result.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                                Icon = SweetAlertIcon.Success
+                            });
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Error",
+                                Text = "Se produjo un error al procesar la solicitud: " + response.Message,
+                                Icon = SweetAlertIcon.Error
+                            });
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                PreloadService.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void removeProduct(int productIndex)
+    {
+        if (productIndex == model.SaleProducts!.Count - 1)
+            return;
+
+        model.SaleProducts.Remove(model.SaleProducts!.ToList().ElementAt(productIndex));
+    }
+
+    private void OnChangeProduct(ProductViewModel selected, int productIndex)
+    {
+        if (selected != null)
+        {
+            if (productIndex == model.SaleProducts!.Count - 1)
+                model.SaleProducts.Add(new AddEditSaleProduct());
+
+            model.SaleProducts.ElementAt(productIndex).ProductId = selected!.Id;
+            model.SaleProducts.ElementAt(productIndex).ProductCode = selected!.Code;
+            model.SaleProducts.ElementAt(productIndex).ProductDescription = selected!.Description;
+            model.SaleProducts.ElementAt(productIndex).Quantity = 1;
+            model.SaleProducts.ElementAt(productIndex).UnitPrice = selected.Price;
+            model.SaleProducts.ElementAt(productIndex).ITBIS = selected.ITBIS > 0 ? selected.Price * (selected.ITBIS / 100) : 0M;
+        }
+    }
+
+    private void OnChangeProductDetail(int productIndex)
+    {
+        var element = model.SaleProducts!.ElementAt(productIndex);
+        if (element != null && !string.IsNullOrEmpty(element.ProductCode))
+        {
+            var product = ProductList.FirstOrDefault(p => p.Code == element.ProductCode);
+            model.SaleProducts!.ElementAt(productIndex).ITBIS = product.ITBIS > 0 ? element.Quantity * element.UnitPrice * (product!.ITBIS / 100) : 0M;
+        }
+    }
+
+    private ToastMessage CreateToastMessage(ToastType toastType, string message)
+    => new ToastMessage
+        {
+            Type = toastType,
+            Title = "Aviso",
+            Message = message,
+        };
+}

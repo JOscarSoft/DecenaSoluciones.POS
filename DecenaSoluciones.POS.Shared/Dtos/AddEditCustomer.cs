@@ -5,9 +5,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
     public class AddEditCustomer
     {
         public int Id { get; set; }
-
-        [Required(ErrorMessage = "El nombre del cliente es requerido.")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public string? LastName { get; set; }
         [RegularExpression(@"^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$", ErrorMessage = "Teléfono Incorrecto.")]
         public string? PhoneNumber { get; set; }
