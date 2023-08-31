@@ -23,16 +23,17 @@
             </tr>
         </thead>
         <tbody>
-            @foreach(var productStock in model)
+            @foreach (var productStock in model)
             {
                 <tr>
                     <td>
-                        <AutoComplete @bind-Value="productStock.ProductCode"
+                        <AutoComplete @bind-Value="productStock.ProductDescription"
                                       TItem="ProductViewModel"
                                       DataProvider="ProductsDataProvider"
                                       PropertyName="Description"
                                       Placeholder="Ingresa un producto..."
                                       OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.IndexOf(productStock))" />
+                        <InputText hidden="hidden" @bind-Value="productStock.ProductCode" />
                         <ValidationMessage For="@(() => productStock.ProductCode)"></ValidationMessage>
                     </td>
                     <td>
@@ -84,6 +85,7 @@
             if (newProduct != null)
             {
                 model.ElementAt(model.Count - 1).ProductCode = newProduct.Code;
+                model.ElementAt(model.Count - 1).ProductDescription = newProduct.Description;
                 model.ElementAt(model.Count - 1).Cost = newProduct.Cost;
                 model.ElementAt(model.Count - 1).Price = newProduct.Price;
                 model.Add(new UpdateInventory());
@@ -128,7 +130,7 @@
     {
         string validations = validateStock();
 
-        if(string.IsNullOrEmpty(validations))
+        if (string.IsNullOrEmpty(validations))
         {
             PreloadService!.Show();
             try
@@ -174,7 +176,7 @@
                     Title = "Error",
                     Text = validations,
                     Icon = SweetAlertIcon.Error
-                });            
+                });
         }
     }
 
@@ -194,6 +196,7 @@
                 model.Add(new UpdateInventory());
 
             model.ElementAt(productIndex).ProductCode = selected!.Code;
+            model.ElementAt(productIndex).ProductDescription = selected!.Description;
             model.ElementAt(productIndex).Cost = selected!.Cost;
             model.ElementAt(productIndex).Price = selected!.Price;
             return;

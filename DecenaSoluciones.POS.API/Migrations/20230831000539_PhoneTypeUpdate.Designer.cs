@@ -4,6 +4,7 @@ using DecenaSoluciones.POS.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DecenaSoluciones.POS.API.Migrations
 {
     [DbContext(typeof(DecenaSolucionesDBContext))]
-    partial class DecenaSolucionesDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230831000539_PhoneTypeUpdate")]
+    partial class PhoneTypeUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,8 +89,7 @@ namespace DecenaSoluciones.POS.API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Serial")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("SoldByUs")
                         .HasColumnType("bit");

@@ -60,6 +60,16 @@ namespace DecenaSoluciones.POS.WebApp.Services
             return result;
         }
 
+        public async Task<ApiResponse<List<ProductViewModel>>> GetAssinablesProducts()
+        {
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<ProductViewModel>>>("api/Product/GetAssignables");
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+            return result;
+        }
+
         public async Task<ApiResponse<int>> RemoveProduct(int id)
         {
             var response = await _httpClient.DeleteAsync($"api/Product/{id}");

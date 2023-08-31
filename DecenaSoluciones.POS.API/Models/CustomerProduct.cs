@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DecenaSoluciones.POS.API.Models
@@ -22,6 +23,7 @@ namespace DecenaSoluciones.POS.API.Models
 
         public bool NeedMaintenance { get; set; }
 
+        [MaxLength(50)]
         public string? Serial { get; set; }
 
         public DateTime? SaleDate { get; set; }

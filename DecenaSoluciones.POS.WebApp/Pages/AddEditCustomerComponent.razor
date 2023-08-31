@@ -1,0 +1,371 @@
+﻿@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+
+@inject SweetAlertService Swal;
+@inject IProductService productService;
+@inject ICustomerService customerService;
+
+<EditForm Model="newCustomer" OnValidSubmit="OnValidSubmit" class="row g-3">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+
+    <div class="col-md-4">
+        <label class="form-label">Nombre:</label>
+        <InputText class="form-control" @bind-Value="newCustomer.Name" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newCustomer.Name)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Apellido:</label>
+        <InputText class="form-control" @bind-Value="newCustomer.LastName" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newCustomer.LastName)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Teléfono:</label>
+        <InputMask @bind-Value="newCustomer.PhoneNumber" class="form-control" data-mask="(000) 000-0000" />
+        <ValidationMessage For="@(() => newCustomer.PhoneNumber)"></ValidationMessage>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label">Dirección:</label>
+        <InputText class="form-control" @bind-Value="newCustomer.Direction" maxlength="500"></InputText>
+        <ValidationMessage For="@(() => newCustomer.Direction)"></ValidationMessage>
+    </div>
+    <table class="table">
+        <thead>
+            <tr class="bg-dark text-white border-bottom-0 headerRow" style="text-align:center">
+                <th>Producto</th>
+                <th>Serial</th>
+                <th>Mantenimientos</th>
+                <th>&Uacute;ltimo</th>
+                <th>Próximo</th>
+                <th>Vendido por nosotros</th>
+                <th>Fecha de venta</th>
+                <th>Tiene garantía</th>
+                <th>Vencimiento garantía</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customerProduct in newCustomer.CustomerProducts)
+            {
+                <tr style="align-content:center">
+                    <td style="width:25%">
+                        <AutoComplete @bind-Value="customerProduct.ProductDescription"
+                                      TItem="ProductViewModel"
+                                      DataProvider="ProductsDataProvider"
+                                      PropertyName="Description"
+                                      Placeholder="Ingresa un producto..."
+                                      OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct))" />
+                        <InputText hidden="hidden" @bind-Value="customerProduct.ProductCode" />
+                        <ValidationMessage For="@(() => customerProduct.ProductCode)"></ValidationMessage>
+                    </td>
+                    <td style="width:15%">
+                        <InputText class="form-control" @bind-Value="customerProduct.Serial" maxlength="50"></InputText>
+                        <ValidationMessage For="@(() => customerProduct.Serial)"></ValidationMessage>
+                    </td>
+                    <td>
+                        <Switch @bind-Value="customerProduct.NeedMaintenance" />
+                        <ValidationMessage For="@(() => customerProduct.NeedMaintenance)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.LastMaintenance" Disabled="!customerProduct.NeedMaintenance" />
+                        <ValidationMessage For="@(() => customerProduct.LastMaintenance)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.NextMaintenance" Disabled="!customerProduct.NeedMaintenance" />
+                        <ValidationMessage For="@(() => customerProduct.NextMaintenance)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <Switch @bind-Value="customerProduct.SoldByUs" />
+                        <ValidationMessage For="@(() => customerProduct.SoldByUs)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.SaleDate" Disabled="!customerProduct.SoldByUs" />
+                        <ValidationMessage For="@(() => customerProduct.SaleDate)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <Switch @bind-Value="customerProduct.HasWarranty" Disabled="!customerProduct.SoldByUs" />
+                        <ValidationMessage For="@(() => customerProduct.HasWarranty)"></ValidationMessage>
+                    </td>
+                    <td style="width:5%">
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.WarrantyEndDate" Disabled="!customerProduct.HasWarranty" />
+                        <ValidationMessage For="@(() => customerProduct.WarrantyEndDate)"></ValidationMessage>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))">
+                            <Icon Name="IconName.Trash" />
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <button type="submit" Class="btn btn-primary">
+            Guardar
+        </button>
+
+        @if (CustomerId > 0)
+        {
+            <Button Color="ButtonColor.Danger" @onclick="RemoveCustomer" style="margin-right:15px">
+                Eliminar
+            </Button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int CustomerId { get; set; } = 0;
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    AddEditCustomer newCustomer = new AddEditCustomer();
+    List<ProductViewModel> assignableProducts = new List<ProductViewModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadAssignableProducts();
+        await LoadCustomer();
+        PreloadService.Hide();
+    }
+
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(assignableProducts.OrderBy(prod => prod.Description)));
+    }
+
+    private void OnChangeProduct(ProductViewModel selected, int productIndex)
+    {
+        if (selected != null)
+        {
+            if (productIndex == newCustomer.CustomerProducts!.Count - 1)
+                newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductId = selected!.Id;
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductCode = selected!.Code;
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductDescription = selected!.Description;
+            newCustomer.CustomerProducts.ElementAt(productIndex).NextMaintenance = DateTime.Now.AddMonths(selected!.MaintenancePeriods ?? 6);
+            newCustomer.CustomerProducts.ElementAt(productIndex).WarrantyEndDate = DateTime.Now.AddMonths(selected!.WarrantyTime ?? 12);
+            return;
+        }
+    }
+
+    private void removeProduct(int productIndex)
+    {
+        if (productIndex == newCustomer.CustomerProducts!.Count - 1)
+            return;
+
+        newCustomer.CustomerProducts.Remove(newCustomer.CustomerProducts!.ToList().ElementAt(productIndex));
+    }
+
+    private async Task LoadCustomer()
+    {
+        try
+        {
+            if (CustomerId > 0)
+            {
+                var response = await customerService.GetCustomerById(CustomerId);
+                if (response.Success)
+                {
+                    var customerResult = response.Result ?? new AddEditCustomer();
+                    foreach(var custProduct in customerResult.CustomerProducts)
+                    {
+                        var product = assignableProducts.FirstOrDefault(p => p.Id == custProduct.ProductId);
+                        if(product != null){
+                            custProduct.ProductCode = product.Code;
+                            custProduct.ProductDescription = product.Description;
+                        }
+                    }
+                    customerResult.CustomerProducts = customerResult.CustomerProducts
+                        .Where(p => !string.IsNullOrEmpty(p.ProductCode))
+                        .OrderBy(p => p.NextMaintenance)
+                        .ToList();
+                    newCustomer = customerResult;
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al obtener los datos del cliente: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los datos del cliente: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+
+    private async Task LoadAssignableProducts()
+    {
+        try
+        {
+            var response = await productService.GetAssinablesProducts();
+            if (response.Success)
+            {
+                assignableProducts = response.Result ?? new List<ProductViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los productos: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los productos: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        PreloadService!.Show();
+        try
+        {
+            newCustomer.CustomerProducts = newCustomer.CustomerProducts.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+            if (CustomerId == 0)
+            {
+                var response = await customerService.AddNewCustomer(newCustomer);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Cliente agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newCustomer = new AddEditCustomer();
+                    newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al agrager el cliente: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await customerService.UpdateCustomer(CustomerId, newCustomer);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Cliente modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al modificar el cliente: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+
+    }
+    
+    private async Task RemoveCustomer()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar cliente",
+                    Text = "¿Esta seguro de eliminar el cliente?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await customerService.RemoveCustomer(CustomerId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Cliente eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al eliminar el cliente: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+    }
+}

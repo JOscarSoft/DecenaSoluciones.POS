@@ -11,7 +11,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
     {
         public int Id { get; set; }
         public required string Name { get; set; }
-        public long? PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         public string? Direction { get; set; }
         public string? Product { get; set; }
         public DateOnly? NextMaintenance { get; set; }

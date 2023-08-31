@@ -50,6 +50,12 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<List<ProductViewModel>>(product);
         }
 
+        public async Task<List<ProductViewModel>> GetAssignables()
+        {
+            var product = await _dbContext.Products.Where(p => p.Assignable).ToListAsync();
+            return _mapper.Map<List<ProductViewModel>>(product);
+        }
+
         public async Task<int> RemoveProduct(int id)
         {
             var existCustomer = await _dbContext.CustomerProducts.AnyAsync(p => p.ProductId == id);

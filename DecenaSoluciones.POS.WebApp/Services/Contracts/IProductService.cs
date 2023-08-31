@@ -5,6 +5,7 @@ namespace DecenaSoluciones.POS.WebApp.Services
     public interface IProductService
     {
         Task<ApiResponse<List<ProductViewModel>>> GetProducts();
+        Task<ApiResponse<List<ProductViewModel>>> GetAssinablesProducts();
         Task<ApiResponse<ProductViewModel>> GetProductByCode(string code);
         Task<ApiResponse<ProductViewModel>> GetProductById(int id);
         Task<ApiResponse<ProductViewModel>> AddNewProduct(AddEditProduct product);

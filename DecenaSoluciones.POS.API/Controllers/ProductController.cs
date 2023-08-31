@@ -83,6 +83,25 @@ namespace DecenaSoluciones.POS.API.Controllers
             return Ok(apiResponse);
         }
 
+        [HttpGet]
+        [Route("GetAssignables")]
+        public async Task<IActionResult> GetAssignables()
+        {
+            var apiResponse = new ApiResponse<List<ProductViewModel>>();
+            try
+            {
+                apiResponse.Result = await _productService.GetAssignables();
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateNewProduct(AddEditProduct product)
         {

@@ -14,11 +14,11 @@
 </style>
 <h3>Clientes</h3>
 
-<Modal @ref="addEditCustomerModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
+<Modal @ref="addEditCustomerModal" UseStaticBackdrop="true" Fullscreen="ModalFullscreen.Always" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar clientes</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditCostumerModal(null)">Agregar clientes</Button>
     </div>
 </div>
 
@@ -39,7 +39,8 @@
           PaginationItemsTextFormat="{0} - {1} de {2} productos"
           EmptyText="No se encontraron registros para mostrar"
           AllowRowClick="true"
-          OnRowClick="OnRowClick">
+          OnRowClick="OnRowClick"
+          RowClass="GetRowClass">
 
         <GridColumn TItem="CustomerViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
             @context.Name
@@ -53,7 +54,7 @@
         <GridColumn TItem="CustomerViewModel" HeaderText="Producto" PropertyName="Product" SortKeySelector="item => item.Product" HeaderTextAlignment="Alignment.Center">
             @context.Product
         </GridColumn>
-        <GridColumn TItem="CustomerViewModel" HeaderText="Próximo mantenimiento" PropertyName="NextMaintenance" SortKeySelector="item => item.NextMaintenance" IsDefaultSortColumn="true" SortDirection="SortDirection.Descending" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="CustomerViewModel" HeaderText="Próximo mantenimiento" PropertyName="NextMaintenance" SortKeySelector="item => item.NextMaintenance" HeaderTextAlignment="Alignment.Center">
             @(context.NextMaintenance.HasValue ? context.NextMaintenance.Value.ToString("dd/MM/yyyy") : string.Empty)
         </GridColumn>
     </Grid>
@@ -79,7 +80,7 @@
             PreloadService.Hide();
             if (response.Success)
             {
-                customerList = response.Result ?? new List<CustomerViewModel>();
+                customerList = response.Result!.OrderBy(p=> p.NextMaintenance ?? DateOnly.MaxValue).ToList() ?? new List<CustomerViewModel>();
                 await customersGrid.RefreshDataAsync();
             }
             else
@@ -103,12 +104,27 @@
         }
     }
 
-    private async Task ShowAddEditProductModal(CustomerViewModel? customer)
+    private string GetRowClass(CustomerViewModel cust)
+    {
+        if (cust.NextMaintenance != null)
+        {
+            var DaysToMaintenance = (cust.NextMaintenance.Value.ToDateTime(TimeOnly.MinValue) - DateTime.Now).TotalDays;
+
+            if (DaysToMaintenance < 15)
+                return "table-danger";
+            else if (DaysToMaintenance < 30)
+                return "table-warning";
+        }
+
+        return string.Empty;
+    }
+
+    private async Task ShowAddEditCostumerModal(CustomerViewModel? customer)
     {
         var parameters = new Dictionary<string, object>();
         parameters.Add("CustomerId", customer != null ? customer.Id : 0);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
-        await addEditCustomerModal.ShowAsync<AddEditProductComponent>(title: customer != null ? "Actualizar cliente" : "Agregar nuevo cliente", parameters: parameters);
+        await addEditCustomerModal.ShowAsync<AddEditCustomerComponent>(title: customer != null ? "Actualizar cliente" : "Agregar nuevo cliente", parameters: parameters);
     }
 
     private async Task HideAddEditProductModal(MouseEventArgs e)
@@ -117,7 +133,7 @@
     }
     private async Task OnRowClick(GridRowEventArgs<CustomerViewModel> args)
     {
-        await ShowAddEditProductModal(args.Item);
+        await ShowAddEditCostumerModal(args.Item);
     }
 
     private async Task OnModalHiding()

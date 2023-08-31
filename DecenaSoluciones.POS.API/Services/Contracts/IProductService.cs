@@ -5,6 +5,7 @@ namespace DecenaSoluciones.POS.API.Services
     public interface IProductService
     {
         Task<List<ProductViewModel>> GetProductList();
+        Task<List<ProductViewModel>> GetAssignables();
         Task<ProductViewModel> GetProductById(int id);
         Task<ProductViewModel> GetProductByCode(string code);
         Task<ProductViewModel> AddNewProduct(AddEditProduct product);
