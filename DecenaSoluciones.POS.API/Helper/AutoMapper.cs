@@ -13,7 +13,9 @@ namespace DecenaSoluciones.POS.API.Helper
             CreateMap<Product, AddEditProduct>().ReverseMap();
             CreateMap<CustomerProduct, AddEditCustomerProduct>().ReverseMap();
             CreateMap<SaleProduct, AddEditSaleProduct>().ReverseMap();
-            CreateMap<QuotationProduct, AddEditSaleProduct>().ReverseMap();
+            CreateMap<QuotationProduct, AddEditSaleProduct>()
+                .ForMember(dest => dest.SaleId, opt => opt.MapFrom(source => source.QuotationId))
+                .ReverseMap();
             CreateMap<Customer, AddEditCustomer>()
                 .ForMember(dest => dest.CustomerProducts, opt => opt.MapFrom(source => source.CustomerProducts != null ? source.CustomerProducts : new List<CustomerProduct>()))
                 .ReverseMap();
@@ -25,12 +27,43 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => false))
                 .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.SaleProducts != null ? source.SaleProducts : new List<SaleProduct>()))
                 .ReverseMap();
-            CreateMap<Quotation, AddEditSale>()
-                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
-                .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.QuotationProducts != null ? source.QuotationProducts : new List<QuotationProduct>()))
-                .ReverseMap();
+             CreateMap<Quotation, AddEditSale>()
+                  .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
+                  .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.QuotationProducts != null ? source.QuotationProducts : new List<QuotationProduct>()));
+            CreateMap<AddEditSale, Quotation>()
+                .ForMember(dest => dest.QuotationProducts, opt => opt.MapFrom(source => source.SaleProducts != null ? source.SaleProducts : new List<AddEditSaleProduct>()));
+            CreateMap<Sale, SalesViewModel>()
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
+                .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
+                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => false));
+            CreateMap<Quotation, SalesViewModel>()
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
+                .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
+                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true));
         }
+        private string GetCustomerName(Customer? customer)
+        {
+            if (customer == null)
+                return string.Empty;
 
+            return $"{customer.Name} {customer.LastName}";
+        }
+        private decimal GetTotalAmount(Sale sale)
+        {
+            decimal calc = 0.0M;
+            calc += sale.SaleProducts!.Sum(p => p.Total);
+            calc += sale.WorkForceValue ?? 0.0M;
+            calc -= sale.Discount ?? 0.0M;
+            return calc;
+        }
+        private decimal GetTotalAmount(Quotation quotation)
+        {
+            decimal calc = 0.0M;
+            calc += quotation.QuotationProducts!.Sum(p => p.Total);
+            calc += quotation.WorkForceValue ?? 0.0M;
+            calc -= quotation.Discount ?? 0.0M;
+            return calc;
+        }
         private string getMaintenanceProduct(IEnumerable<CustomerProduct>? customerProducts)
         {
             if (customerProducts != null && customerProducts.Count() > 0)

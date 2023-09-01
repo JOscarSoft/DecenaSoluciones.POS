@@ -16,7 +16,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string? DepositReference { get; set; }
         [MaxLength(50)]
         public string? TCReference { get; set; }
-        public DateTime CreationDate { get; set; }
+        public DateTime CreationDate { get; set; } = DateTime.Now;
         public bool IsAQuotation { get; set; } = false;
         public AddEditCustomer? Customer { get; set; } = new AddEditCustomer();
         public ICollection<AddEditSaleProduct>? SaleProducts { get; set; } = new List<AddEditSaleProduct>();

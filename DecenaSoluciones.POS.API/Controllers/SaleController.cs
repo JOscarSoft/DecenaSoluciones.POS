@@ -27,7 +27,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllSales()
         {
-            var apiResponse = new ApiResponse<List<AddEditSale>>();
+            var apiResponse = new ApiResponse<List<SalesViewModel>>();
             try
             {
                 apiResponse.Result = await _saleService.GetSalesList();
@@ -46,7 +46,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         [Route("quotation")]
         public async Task<IActionResult> GetAllQuotations()
         {
-            var apiResponse = new ApiResponse<List<AddEditSale>>();
+            var apiResponse = new ApiResponse<List<SalesViewModel>>();
             try
             {
                 apiResponse.Result = await _quotationService.GetQuotationsList();
@@ -163,7 +163,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var apiResponse = new ApiResponse<AddEditSale>();
             try
             {
-                sale.CustomerId = sale.Customer.Id;
+                sale.CustomerId = sale.Customer!.Id;
 
                 if (sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
                 {
@@ -198,9 +198,10 @@ namespace DecenaSoluciones.POS.API.Controllers
             var apiResponse = new ApiResponse<AddEditSale>();
             try
             {
-                sale.CustomerId = sale.Customer.Id;
 
-                if (sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
+                sale.CustomerId = sale.Customer?.Id;
+
+                if (sale.Customer != null && sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
                 {
                     var newCustomer = await _customerService.AddNewCustomer(sale.Customer);
                     sale.Customer.Id = newCustomer.Id;

@@ -8,9 +8,9 @@ namespace DecenaSoluciones.POS.WebApp.Services
     public class CustomerService : ICustomerService
     {
         private readonly HttpClient _httpClient;
-        public CustomerService(HttpClient httpClient)
+        public CustomerService(IHttpClientFactory clientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = clientFactory.CreateClient("WebApi");
         }
 
         public async Task<ApiResponse<List<CustomerViewModel>>> GetCustomerList()

@@ -19,7 +19,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<List<CustomerViewModel>> GetCustomerList()
         {
             var customers = await _dbContext.Customers
-                .Include(p => p.CustomerProducts)
+                .Include(p => p.CustomerProducts)!
                 .ThenInclude(p => p.Product)
                 .ToListAsync();
             return _mapper.Map<List<CustomerViewModel>>(customers);
@@ -36,7 +36,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<AddEditCustomer> AddNewCustomer(AddEditCustomer customer)
         {
             var newCustomer = _mapper.Map<Customer>(customer);
-            foreach (var product in newCustomer.CustomerProducts)
+            foreach (var product in newCustomer.CustomerProducts!)
                 product.Product = null;
 
             _dbContext.Customers.Add(newCustomer);
@@ -53,7 +53,7 @@ namespace DecenaSoluciones.POS.API.Services
                 .FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el cliente a editar.");
 
             var newCustomer = _mapper.Map<Customer>(customer);
-            foreach(var product in newCustomer.CustomerProducts)
+            foreach(var product in newCustomer.CustomerProducts!)
                 product.Product = null;
 
             _dbContext.Customers.Update(newCustomer);
@@ -66,7 +66,7 @@ namespace DecenaSoluciones.POS.API.Services
 
             foreach(var custProdId in Ids)
             {
-                _dbContext.CustomerProducts.Remove(oldCustomer.CustomerProducts.FirstOrDefault(p=>p.Id == custProdId));
+                _dbContext.CustomerProducts.Remove(oldCustomer.CustomerProducts!.FirstOrDefault(p=>p.Id == custProdId)!);
             }
             await _dbContext.SaveChangesAsync();
 

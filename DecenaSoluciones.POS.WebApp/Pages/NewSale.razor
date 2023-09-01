@@ -1,5 +1,5 @@
 ﻿@page "/newsale"
-@page "/newsale/{ModelId:int}"
+@page "/newsale/{ModelId:int}/{inQuotation:int?}"
 
 @using BlazorInputMask
 @using DecenaSoluciones.POS.Shared.Dtos;
@@ -10,6 +10,7 @@
 @inject IProductService productService;
 @inject ICustomerService customerService;
 @inject ISaleService saleService;
+@inject IJSRuntime JSRuntime
 
 
 <h3>@title</h3>
@@ -34,7 +35,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var productSale in model.SaleProducts)
+                @foreach (var productSale in model.SaleProducts!)
                 {
                     <tr>
                         <td style="width:45%">
@@ -135,7 +136,7 @@
                     {
                         <div class="col-md-12">
                             <label class="form-label">Nombre:</label>
-                            <AutoComplete @bind-Value="model.Customer.Name"
+                            <AutoComplete @bind-Value="model.Customer!.Name"
                                           TItem="CustomerViewModel"
                                           DataProvider="CustomersDataProvider"
                                           PropertyName="Name"
@@ -149,7 +150,7 @@
                     {
                         <div class="col-md-12">
                             <label class="form-label">Nombre:</label>
-                            <InputText class="form-control" @bind-Value="model.Customer.Name" maxlength="50"></InputText>
+                            <InputText class="form-control" @bind-Value="model.Customer!.Name" maxlength="50"></InputText>
                             <ValidationMessage For="@(() => model.Customer.Name)"></ValidationMessage>
                         </div>
                         <div class="col-md-12">
@@ -172,8 +173,11 @@
             </CardBody>
         </Card>
     </div>
-    <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
-    <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
+    @if (model.Id <= 0 || !model.IsAQuotation)
+    {
+        <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
+        <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
+    }
     @if (TCPayment || DepositPayment)
     {
         <div class="col-lg-4">   
@@ -221,7 +225,7 @@
             <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnValidSubmit(false)">Procesar venta</Button>
         }
 
-        @if (model.Id <= 0 || !model.IsAQuotation)
+        @if (model.Id <= 0 || model.IsAQuotation)
         {
             <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => OnValidSubmit(true)">Generar cotización</Button>
         }
@@ -230,7 +234,8 @@
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
-    [Parameter] public int ModelId { get; set; } = 0;
+    [Parameter] public int ModelId { get; set; } = 0; 
+    [Parameter] public int? inQuotation { get; set; }
 
     List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
     List<CustomerViewModel> CustomerList { get; set; } = new List<CustomerViewModel>();
@@ -310,6 +315,8 @@
     protected override async Task OnInitializedAsync()
     {
         PreloadService!.Show();
+        await Task.WhenAll(LoadProducts(), LoadCustomers());
+        await LoadSale();
         if (ModelId > 0)
         {
             title = "Detalles de la venta";
@@ -318,9 +325,73 @@
 
             title = $"{title} - {model.Code}";
         }
-        model.SaleProducts!.Add(new AddEditSaleProduct());
-        await Task.WhenAll(LoadProducts(), LoadCustomers());
+
         PreloadService.Hide();
+    }
+
+    private async Task LoadSale()
+    {
+        try
+        {
+            if (ModelId > 0)
+            {
+                ApiResponse<AddEditSale> response = new ApiResponse<AddEditSale>();
+
+                if (inQuotation != null && inQuotation > 0)
+                    response = await saleService.GetQuotationById(ModelId);
+                else
+                    response = await saleService.GetSaleById(ModelId);
+
+                if (response.Success)
+                {
+                    var saleResult = response.Result ?? new AddEditSale();
+                    foreach (var salProduct in saleResult.SaleProducts!)
+                    {
+                        var product = ProductList.FirstOrDefault(p => p.Id == salProduct.ProductId);
+                        if (product != null)
+                        {
+                            salProduct.ProductCode = product.Code;
+                            salProduct.ProductDescription = product.Description;
+                        }
+                    }
+                    if (saleResult.CustomerId != null && saleResult.CustomerId > 0)
+                    {
+
+                        var cust = CustomerList.FirstOrDefault(p => p.Id == saleResult.CustomerId);
+                        saleResult.Customer!.Name = cust!.Name;
+                        saleResult.Customer.Id = cust.Id;
+                    }
+                    else
+                    {
+                        saleResult.Customer = new AddEditCustomer();
+                    }
+
+                    TCPayment = saleResult.TCAmount != null && saleResult.TCAmount > 0;
+                    DepositPayment = saleResult.DepositsAmount != null && saleResult.DepositsAmount > 0;
+
+                    model = saleResult;
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al obtener los datos: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            model.SaleProducts!.Add(new AddEditSaleProduct());
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los datos: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
     }
 
     private async Task LoadProducts()
@@ -385,14 +456,14 @@
 
     private string validateSale()
     {
-        var products = model.SaleProducts.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+        var products = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode));
         if (!products.Any())
             return "Favor de ingresar al menos un producto.";
 
         if (products.Any(p => p.Total <= 0))
             return "Uno de los productos ingresados no tiene datos. Favor de validar.";
 
-        var total = model.TCAmount ?? 0.00M + model.CashAmount ?? 0.00M + model.DepositsAmount ?? 0.00M;
+        var total = (model.TCAmount ?? 0.00M) + (model.CashAmount ?? 0.00M) + (model.DepositsAmount ?? 0.00M);
         if (!model.IsAQuotation && (TCPayment || DepositPayment) && total != GetTotalAmount())
             return $"Los montos ingresados no cuadran con el total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
 
@@ -412,19 +483,34 @@
                 model.SaleProducts = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
                 if (ModelId == 0)
                 {
-                    var response = await saleService.AddNewSale(model);
+                    (var receipt, var response) = await saleService.AddNewSale(model);
                     PreloadService.Hide();
                     if (response.Success)
                     {
+                        model = new AddEditSale();
+                        model.SaleProducts!.Add(new AddEditSaleProduct());
+
+                        if (string.IsNullOrEmpty(receipt))
+                        {
+                            await Swal.FireAsync(new SweetAlertOptions
+                                {
+                                    Title = "Error",
+                                    Text = "Se produjo un error generando el recibo.",
+                                    Icon = SweetAlertIcon.Success
+                                });
+
+                            return;
+                        }
+                        
+                        await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
+
                         await Swal.FireAsync(new SweetAlertOptions
                             {
                                 Title = "Exito",
-                                Text = isQuotation ? $"Cotización {response.Result.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                                Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta procesada exitosamente.",
                                 Icon = SweetAlertIcon.Success
                             });
 
-                        model = new AddEditSale();
-                        model.SaleProducts.Add(new AddEditSaleProduct());
                     }
                     else
                     {
@@ -438,16 +524,30 @@
                 }
                 else
                 {
-                    var response = await saleService.UpdateSale(ModelId, model);
+                    (var receipt, var response) = await saleService.UpdateSale(ModelId, model);
                     PreloadService.Hide();
                     if (response.Success)
                     {
+                        if (string.IsNullOrEmpty(receipt))
+                        {
+                            await Swal.FireAsync(new SweetAlertOptions
+                                {
+                                    Title = "Error",
+                                    Text = "Se produjo un error generando el recibo.",
+                                    Icon = SweetAlertIcon.Success
+                                });
+
+                            return;
+                        }
+
+                        await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
                         await Swal.FireAsync(new SweetAlertOptions
                             {
                                 Title = "Exito",
-                                Text = isQuotation ? $"Cotización {response.Result.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                                Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta procesada exitosamente.",
                                 Icon = SweetAlertIcon.Success
                             });
+
                     }
                     else
                     {
@@ -515,7 +615,7 @@
         if (element != null && !string.IsNullOrEmpty(element.ProductCode))
         {
             var product = ProductList.FirstOrDefault(p => p.Code == element.ProductCode);
-            model.SaleProducts!.ElementAt(productIndex).ITBIS = product.ITBIS > 0 ? element.Quantity * element.UnitPrice * (product!.ITBIS / 100) : 0M;
+            model.SaleProducts!.ElementAt(productIndex).ITBIS = product!.ITBIS > 0 ? element.Quantity * element.UnitPrice * (product!.ITBIS / 100) : 0M;
         }
     }
 

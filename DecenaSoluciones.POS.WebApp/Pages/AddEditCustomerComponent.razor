@@ -46,7 +46,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var customerProduct in newCustomer.CustomerProducts)
+            @foreach (var customerProduct in newCustomer.CustomerProducts!)
             {
                 <tr style="align-content:center">
                     <td style="width:25%">
@@ -170,7 +170,7 @@
                 if (response.Success)
                 {
                     var customerResult = response.Result ?? new AddEditCustomer();
-                    foreach(var custProduct in customerResult.CustomerProducts)
+                    foreach(var custProduct in customerResult.CustomerProducts!)
                     {
                         var product = assignableProducts.FirstOrDefault(p => p.Id == custProduct.ProductId);
                         if(product != null){
@@ -194,7 +194,7 @@
                         });
                 }
             }
-            newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+            newCustomer.CustomerProducts!.Add(new AddEditCustomerProduct());
         }
         catch (Exception ex)
         {
@@ -258,7 +258,7 @@
         PreloadService!.Show();
         try
         {
-            newCustomer.CustomerProducts = newCustomer.CustomerProducts.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+            newCustomer.CustomerProducts = newCustomer.CustomerProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
             if (CustomerId == 0)
             {
                 var response = await customerService.AddNewCustomer(newCustomer);
@@ -273,7 +273,7 @@
                         });
 
                     newCustomer = new AddEditCustomer();
-                    newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+                    newCustomer.CustomerProducts!.Add(new AddEditCustomerProduct());
                 }
                 else
                 {

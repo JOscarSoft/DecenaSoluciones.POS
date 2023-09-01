@@ -23,7 +23,7 @@
             --bb-sidebar-nav-item-text-hover-color: #fff;
             --bb-sidebar-nav-item-text-active-color: #fff;
             --bb-sidebar-nav-item-background-hover-color: #000080;
-            --bb-sidebar-nav-item-group-background-color: #000080;
+            --bb-sidebar-nav-item-group-background-color: rgba(0,0,0,0.08);
         }
     </style>
     <Sidebar @ref="sidebar"
@@ -63,7 +63,10 @@
             new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Inicio", Match = NavLinkMatch.All},
             new NavItem { Id = "2", Href = "/products", IconName = IconName.BoxSeamFill, Text = "Productos"},
             new NavItem { Id = "3", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
-            new NavItem { Id = "4", Href = "/newsale", IconName = IconName.CartCheckFill, Text = "Ventas"},
+            new NavItem { Id = "4", IconName = IconName.CartCheckFill, Text = "Ventas"},
+            new NavItem { Id = "5", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="4"},
+            new NavItem { Id = "6", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="4"},
+            new NavItem { Id = "7", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
         };
 
         return navItems;

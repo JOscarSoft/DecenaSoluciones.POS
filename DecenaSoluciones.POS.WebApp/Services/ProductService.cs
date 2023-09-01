@@ -8,9 +8,9 @@ namespace DecenaSoluciones.POS.WebApp.Services
     public class ProductService : IProductService
     {
         private readonly HttpClient _httpClient;
-        public ProductService(HttpClient httpClient)
+        public ProductService(IHttpClientFactory clientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = clientFactory.CreateClient("WebApi");
         }
 
         public async Task<ApiResponse<ProductViewModel>> AddNewProduct(AddEditProduct product)

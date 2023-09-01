@@ -5,7 +5,7 @@ namespace DecenaSoluciones.POS.API.Services
 {
     public interface ISaleService
     {
-        Task<List<AddEditSale>> GetSalesList();
+        Task<List<SalesViewModel>> GetSalesList();
         Task<AddEditSale> GetSaleById(int id);
         Task<AddEditSale> GetSaleByCode(string code);
         Task<AddEditSale> AddNewSale(Sale sale);

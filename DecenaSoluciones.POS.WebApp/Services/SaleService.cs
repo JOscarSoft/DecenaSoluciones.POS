@@ -1,38 +1,25 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
 using Newtonsoft.Json;
+using System;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using static System.Net.WebRequestMethods;
 
 namespace DecenaSoluciones.POS.WebApp.Services
 {
     public class SaleService : ISaleService
     {
         private readonly HttpClient _httpClient;
-        public SaleService(HttpClient httpClient)
+        private readonly HttpClient _httpClientLocal;
+        public SaleService(IHttpClientFactory clientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = clientFactory.CreateClient("WebApi");
+            _httpClientLocal = clientFactory.CreateClient("Local");
         }
 
-        public async Task<ApiResponse<AddEditCustomer>> UpdateCustomer(int id, AddEditCustomer customer)
+        public async Task<ApiResponse<List<SalesViewModel>>> GetSalesList()
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/Customer/{id}", customer);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
-
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
-
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
-        }
-
-        public async Task<ApiResponse<List<AddEditSale>>> GetSalesList()
-        {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<AddEditSale>>>("api/Sale");
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<SalesViewModel>>>("api/Sale");
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -60,9 +47,9 @@ namespace DecenaSoluciones.POS.WebApp.Services
             return result;
         }
 
-        public async Task<ApiResponse<List<AddEditSale>>> GetQuotationsList()
+        public async Task<ApiResponse<List<SalesViewModel>>> GetQuotationsList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<AddEditSale>>>("api/Sale/quotation");
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<SalesViewModel>>>("api/Sale/quotation");
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -90,7 +77,7 @@ namespace DecenaSoluciones.POS.WebApp.Services
             return result;
         }
 
-        public async Task<ApiResponse<AddEditSale>> AddNewSale(AddEditSale sale)
+        public async Task<(string, ApiResponse<AddEditSale>)> AddNewSale(AddEditSale sale)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Sale", sale);
 
@@ -101,13 +88,15 @@ namespace DecenaSoluciones.POS.WebApp.Services
                 if (result == null)
                     throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
 
-                return result;
+                sale.Code = result.Result!.Code;
+                var receipt = await GenerateReceipt(sale);
+                return (receipt, result);
             }
             else
                 throw new Exception("Se produjo un error al procesar la petición.");
         }
 
-        public async Task<ApiResponse<AddEditSale>> UpdateSale(int id, AddEditSale sale)
+        public async Task<(string, ApiResponse<AddEditSale>)> UpdateSale(int id, AddEditSale sale)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Sale/{id}", sale);
 
@@ -118,10 +107,63 @@ namespace DecenaSoluciones.POS.WebApp.Services
                 if (result == null)
                     throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
 
-                return result;
+                var receipt = await GenerateReceipt(sale);
+                return (receipt, result);
             }
             else
                 throw new Exception("Se produjo un error al procesar la petición.");
         }
+
+        private async Task<string> GenerateReceipt(AddEditSale sale)
+        {
+            try
+            {
+                string htmlTemplate = await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
+                string productsHTML = string.Empty;
+                string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
+                string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
+
+                foreach (var product in sale.SaleProducts!)
+                {
+                    productsHTML += $"<tr><td>{product.Quantity}</td>" +
+                                    $"<td>{product.ProductDescription}</td>" +
+                                    $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
+                                    $"<td>{ToMoneyString(product.ITBIS)}</td>" +
+                                    $"<td>{ToMoneyString(product.Total)}</td></tr>";
+                }
+
+                if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
+                {
+                    productsHTML += $"<tr><td>000</td><td>Mano de Obra</td>" +
+                                    $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
+                }
+
+                htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "RECIBO");
+                htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
+                htmlTemplate = htmlTemplate.Replace("{{ClientName}}", sale.Customer!.Name);
+                htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
+                htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
+                htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
+                htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
+                htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
+                htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
+
+                return htmlTemplate;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+        private string GetTotalAmount(AddEditSale sale)
+        {
+            decimal calc = 0.0M;
+            calc += sale.SaleProducts!.Sum(p => p.Total);
+            calc += sale.WorkForceValue ?? 0.0M;
+            calc -= sale.Discount ?? 0.0M;
+            return ToMoneyString(calc);
+        }
+
+        private string ToMoneyString(decimal? value) => value.HasValue ? $"${value.Value.ToString("N2")}" : "0.00";
     }
 }

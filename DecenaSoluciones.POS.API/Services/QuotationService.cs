@@ -16,21 +16,21 @@ namespace DecenaSoluciones.POS.API.Services
             _mapper = mapper;
         }
 
-        public async Task<List<AddEditSale>> GetQuotationsList()
+        public async Task<List<SalesViewModel>> GetQuotationsList()
         {
             var Quotations = await _dbContext.Quotation
                 .Include(p => p.Customer)
-                .Include(p => p.QuotationProducts)
+                .Include(p => p.QuotationProducts)!
                 .ThenInclude(p => p.Product)
                 .ToListAsync();
-            return _mapper.Map<List<AddEditSale>>(Quotations);
+            return _mapper.Map<List<SalesViewModel>>(Quotations);
         }
 
         public async Task<AddEditSale> GetQuotationById(int id)
         {
             var Quotation = await _dbContext.Quotation
                 .Include(p => p.Customer)
-                .Include(p => p.QuotationProducts)
+                .Include(p => p.QuotationProducts)!
                 .ThenInclude(p => p.Product)
                 .FirstOrDefaultAsync(p => p.Id == id);
             return _mapper.Map<AddEditSale>(Quotation);
@@ -40,7 +40,7 @@ namespace DecenaSoluciones.POS.API.Services
         {
             var Quotation = await _dbContext.Quotation
                 .Include(p => p.Customer)
-                .Include(p => p.QuotationProducts)
+                .Include(p => p.QuotationProducts)!
                 .ThenInclude(p => p.Product)
                 .FirstOrDefaultAsync(p => p.Code == code);
             return _mapper.Map<AddEditSale>(Quotation);
@@ -48,7 +48,7 @@ namespace DecenaSoluciones.POS.API.Services
         
         public async Task<AddEditSale> AddNewQuotation(Quotation newQuotation)
         {
-            foreach (var product in newQuotation.QuotationProducts)
+            foreach (var product in newQuotation.QuotationProducts!)
                 product.Product = null;
 
             newQuotation.Customer = null;
@@ -65,9 +65,9 @@ namespace DecenaSoluciones.POS.API.Services
                 .Include(p => p.QuotationProducts)
                 .Include(p => p.Customer)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el cliente a editar.");
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró la cotización a editar.");
 
-            foreach(var product in Quotation.QuotationProducts)
+            foreach(var product in Quotation.QuotationProducts!)
                 product.Product = null;
 
             Quotation.Customer = null;
@@ -82,7 +82,7 @@ namespace DecenaSoluciones.POS.API.Services
 
             foreach(var QuotationProdId in Ids)
             {
-                _dbContext.QuotationProducts.Remove(oldQuotation.QuotationProducts.FirstOrDefault(p=>p.Id == QuotationProdId));
+                _dbContext.QuotationProducts.Remove(oldQuotation.QuotationProducts!.FirstOrDefault(p=>p.Id == QuotationProdId)!);
             }
             await _dbContext.SaveChangesAsync();
 
@@ -96,14 +96,20 @@ namespace DecenaSoluciones.POS.API.Services
             var lastSequence = await _dbContext.QuotationSequence.FirstOrDefaultAsync(p => p.Code == sequenceCode);
 
             if (lastSequence != null)
-                newSequence = lastSequence.Sequence++;
-
-
-            _dbContext.QuotationSequence.Add(new QuotationSequence
             {
-                Code = DateTime.Now.ToString("yyyyMM"),
-                Sequence = newSequence
-            });
+                newSequence = lastSequence.Sequence + 1;
+                lastSequence.Sequence = newSequence;
+                _dbContext.QuotationSequence.Update(lastSequence);
+            }
+            else
+            {
+                _dbContext.QuotationSequence.Add(new QuotationSequence
+                {
+                    Code = sequenceCode,
+                    Sequence = newSequence
+                });
+            }
+            await _dbContext.SaveChangesAsync();
 
             return $"{DateTime.Now:yyyyMM}{newSequence.ToString().PadLeft(6, '0')}";
         }
