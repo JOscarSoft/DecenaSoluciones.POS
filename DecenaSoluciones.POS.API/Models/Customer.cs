@@ -20,7 +20,7 @@ namespace DecenaSoluciones.POS.API.Models
         [MaxLength(500)]
         public string? Direction { get; set; }
 
-        public DateTime CreationDate { get; set; }
+        public DateTime CreationDate { get; set; } = DateTime.Now;
 
         public virtual ICollection<CustomerProduct>? CustomerProducts { get; set; }
 

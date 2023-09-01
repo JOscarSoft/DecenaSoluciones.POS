@@ -3,6 +3,7 @@
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using CurrieTechnologies.Razor.SweetAlert2;
 @using DecenaSoluciones.POS.WebApp.Services;
+@using System.Text.RegularExpressions;
 
 @inject SweetAlertService Swal;
 @inject ICustomerService customerService;
@@ -41,7 +42,7 @@
             @context.Name
         </GridColumn>
         <GridColumn TItem="CustomerViewModel" HeaderText="Teléfono" PropertyName="PhoneNumber" Sortable="false" HeaderTextAlignment="Alignment.Center">
-            @(context.PhoneNumber == null ? string.Empty : String.Format("{0:(###) ###-####}", context.PhoneNumber))
+            @(context.PhoneNumber == null ? string.Empty : Regex.Replace(context.PhoneNumber, @"(\d{3})(\d{3})(\d{4})", "($1) $2-$3"))
         </GridColumn>
         <GridColumn TItem="CustomerViewModel" HeaderText="Dirección" PropertyName="Direction" SortKeySelector="item => item.Direction" HeaderTextAlignment="Alignment.Center">
             @context.Direction

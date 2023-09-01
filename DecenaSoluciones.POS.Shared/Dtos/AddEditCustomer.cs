@@ -7,7 +7,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public int Id { get; set; }
         public string? Name { get; set; }
         public string? LastName { get; set; }
-        [RegularExpression(@"^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$", ErrorMessage = "Teléfono Incorrecto.")]
+        [RegularExpression(@"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$", ErrorMessage = "Teléfono Incorrecto.")]
         public string? PhoneNumber { get; set; }
         public string? Direction { get; set; }
         public ICollection<AddEditCustomerProduct>? CustomerProducts { get; set; } = new List<AddEditCustomerProduct>();
