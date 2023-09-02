@@ -91,6 +91,17 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<ProductViewModel>(newProduct);
         }
 
+        public async Task<ProductViewModel> UpdateProductStock(int id, int quantity)
+        {
+            var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
+
+            product.stock += quantity;
+            _dbContext.Products.Update(product);
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<ProductViewModel>(product);
+        }
+
         public async Task<bool> UpdateInventary(List<UpdateInventory> inventoryItems)
         {
             foreach(var inventoryItem in inventoryItems) 
