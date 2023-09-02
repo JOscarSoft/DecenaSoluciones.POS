@@ -1,5 +1,9 @@
 ﻿@using BlazorBootstrap
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using Microsoft.AspNetCore.Components.Authorization;
 @inherits LayoutComponentBase
+
+@inject AuthenticationStateProvider autenticacionProvider
 
 <div class="bb-page">
     <style>
@@ -51,12 +55,12 @@
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
         if (navItems is null)
-            navItems = GetNavItems();
+            navItems = await GetNavItems();
 
         return await Task.FromResult(request.ApplyTo(navItems));
     }
 
-    private IEnumerable<NavItem> GetNavItems()
+    private async Task<IEnumerable<NavItem>> GetNavItems()
     {
         navItems = new List<NavItem>
         {
@@ -69,6 +73,14 @@
             new NavItem { Id = "7", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
         };
 
+
+        var sessionState = await ((AuthExtension)autenticacionProvider).GetAuthenticationStateAsync();
+        if (sessionState != null && sessionState.User != null)
+        {
+            var role = sessionState.User.Claims?.FirstOrDefault(c => c.Type == "role")?.Value;
+            if (role == "admin")
+                navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
+        }
         return navItems;
     }
 }

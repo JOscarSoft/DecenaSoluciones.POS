@@ -3,7 +3,10 @@
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using CurrieTechnologies.Razor.SweetAlert2;
 @using DecenaSoluciones.POS.WebApp.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
 
+@attribute [Authorize]
 @inject SweetAlertService Swal;
 @inject ISaleService saleService;
 @inject NavigationManager navegation;
@@ -57,10 +60,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PreloadService!.Show();
         try
         {
             var response = await saleService.GetSalesList();
 
+            PreloadService!.Hide();
             if (response.Success)
             {
                 salesList = response.Result ?? new List<SalesViewModel>();
@@ -77,6 +82,7 @@
         }
         catch (Exception ex)
         {
+            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

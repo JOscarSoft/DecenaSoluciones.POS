@@ -2,6 +2,7 @@
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -10,6 +11,7 @@ namespace DecenaSoluciones.POS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class SaleController : ControllerBase
     {
         private readonly IQuotationService _quotationService;

@@ -5,7 +5,10 @@
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Services;
 @using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
 
+@attribute [Authorize]
 @inject SweetAlertService Swal;
 @inject IProductService productService;
 @inject ICustomerService customerService;
@@ -373,6 +376,7 @@
                 }
                 else
                 {
+                    PreloadService!.Hide();
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
@@ -385,6 +389,7 @@
         }
         catch (Exception ex)
         {
+            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
@@ -405,6 +410,7 @@
             }
             else
             {
+                PreloadService!.Hide();
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
@@ -415,6 +421,7 @@
         }
         catch (Exception ex)
         {
+            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
@@ -435,6 +442,7 @@
             }
             else
             {
+                PreloadService!.Hide();
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
@@ -445,6 +453,7 @@
         }
         catch (Exception ex)
         {
+            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

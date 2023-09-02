@@ -2,8 +2,12 @@
 
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Extensions;
 @using DecenaSoluciones.POS.WebApp.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
 
+@attribute [Authorize]
 @inject SweetAlertService Swal;
 @inject IProductService productService;
 
@@ -12,9 +16,11 @@
 <Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowStockUpdateModal()">Actualizar stock</Button>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">     
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
+            <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowStockUpdateModal()">Actualizar stock</Button>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -90,6 +96,7 @@
         }
         catch (Exception ex)
         {
+            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

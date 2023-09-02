@@ -1,0 +1,84 @@
+﻿@page "/Login"
+@layout LoginLayout
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using Microsoft.AspNetCore.Components.Authorization
+@using DecenaSoluciones.POS.WebApp.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager navManager
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+
+<div class="row mt-5">
+
+    <div class="col-lg-4 offset-lg-4 border">
+
+        <div class="mb-3 text-center">
+            <h3>Acceder</h3>
+        </div>
+
+        <div class="mb-3">
+            <label>Usuario</label>
+            <input @bind="model.Username" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Contraseña:</label>
+            <input @bind="model.Password" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <button @onclick="SubmitLogin" class="btn btn-primary">Login</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    private LoginViewModel model = new LoginViewModel();
+
+    private async Task SubmitLogin()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await authService.Login(model);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                var authExt = (AuthExtension)autenticacionProvider;
+                await authExt.UpdateSessionState(response.Result!);
+
+                navManager.NavigateTo("/Index");
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+}

@@ -1,55 +1,35 @@
-﻿using DecenaSoluciones.POS.API.Models;
-using DecenaSoluciones.POS.API.Services;
+﻿using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace DecenaSoluciones.POS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class CustomerController : ControllerBase
+    public class AuthenticationController : ControllerBase
     {
-        private readonly ICustomerService _customerService;
-        public CustomerController(ICustomerService customerService)
+        private readonly IAuthService _authService;
+
+        public AuthenticationController(IAuthService authService)
         {
-            _customerService = customerService;
+            _authService = authService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [Route("users")]
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> GetUsersList()
         {
-            var apiResponse = new ApiResponse<List<CustomerViewModel>>();
+            var apiResponse = new ApiResponse<List<RegistrationViewModel>>();
             try
             {
-                apiResponse.Result = await _customerService.GetCustomerList();
-                apiResponse.Success = true;
-            }
-            catch (Exception ex)
-            {
-                apiResponse.Success = false;
-                apiResponse.Message = ex.Message;
-            }
+                var result = await _authService.GetUsersList();
 
-            return Ok(apiResponse);
-        }
+                if (result == null)
+                    throw new Exception("Error obteniendo lista de usuarios.");
 
-        [HttpGet]
-        [Route("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
-            try
-            {
-                var product = await _customerService.GetCustomerById(id);
-
-                if (product == null)
-                    throw new Exception("Cliente no encontrado");
-
-                apiResponse.Result = product;
+                apiResponse.Result = result;
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -62,13 +42,38 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
-        public async Task<IActionResult> CreateNewCustomer(AddEditCustomer customer)
+        [Route("login")]
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
+            var apiResponse = new ApiResponse<string>();
             try
             {
-                apiResponse.Result = await _customerService.AddNewCustomer(customer);
+                var login = await _authService.Login(model);
+
+                if (login == null)
+                    throw new Exception("Error autenticando al usuario.");
+
+                apiResponse.Result = login;
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
+        [HttpPost]
+        [Route("newuser")]
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> Register(RegistrationViewModel model)
+        {
+            var apiResponse = new ApiResponse<bool>();
+            try
+            {
+                apiResponse.Result = await _authService.Registration(model);
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -81,14 +86,14 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpPut]
-        [Route("{id}")]
-        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
-        public async Task<IActionResult> UpdateCustomer(int id, AddEditCustomer customer)
+        [Route("setpassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
+            var apiResponse = new ApiResponse<bool>();
             try
             {
-                apiResponse.Result = await _customerService.UpdateCustomer(id, customer);
+                apiResponse.Result = await _authService.ChangePassword(model);
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -101,14 +106,14 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpDelete]
-        [Route("{id}")]
+        [Route("removeuser/{userName}")]
         [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> DeleteCustomer(int id)
+        public async Task<IActionResult> RemoveUser(string userName)
         {
             var apiResponse = new ApiResponse<bool>();
             try
             {
-                apiResponse.Result = await _customerService.RemoveCustomer(id);
+                apiResponse.Result = await _authService.RemoveUser(userName);
                 apiResponse.Success = true;
             }
             catch (Exception ex)

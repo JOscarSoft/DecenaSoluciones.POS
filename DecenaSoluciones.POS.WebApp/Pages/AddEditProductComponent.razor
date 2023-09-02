@@ -1,9 +1,13 @@
 ﻿@using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Services;
+@using DecenaSoluciones.POS.WebApp.Extensions;
 @using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject SweetAlertService Swal;
 @inject IProductService productService;
+@inject AuthenticationStateProvider autenticacionProvider
+
 
 <EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" class="row g-3">
     <DataAnnotationsValidator></DataAnnotationsValidator>
@@ -53,16 +57,19 @@
     </div>
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <button type="submit" Class="btn btn-primary">
-            Guardar
-        </button>
+        @if (HasRole("admin") || HasRole("manager"))
+        {
+            <button type="submit" Class="btn btn-primary">
+                Guardar
+            </button>
+        }
 
-        @*@if (Product.Id > 0)
+        @if (HasRole("admin") && Product.Id > 0)
         {
             <Button Color="ButtonColor.Danger" @onclick="RemoveProduct" style="margin-right:15px">
                 Eliminar
             </Button>
-        }*@
+        }
     </div>
 </EditForm>
 
@@ -143,7 +150,7 @@
             }
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -157,6 +164,14 @@
 
     }
 
+    private bool HasRole(string roleName)
+    {
+        var sessionState = ((AuthExtension)autenticacionProvider).GetAuthenticationStateAsync().Result;
+        if (sessionState != null && sessionState.User != null)
+            return (sessionState.User.Claims.FirstOrDefault(c => c.Type == "role")!.Value == roleName);
+
+        return false;
+    }
 
     private async Task RemoveProduct()
     {
@@ -197,7 +212,7 @@
                 }
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -206,7 +221,7 @@
                     Text = "Se produjo un error al procesar la petición: " + ex.Message,
                     Icon = SweetAlertIcon.Error
                 });
-            
+
         }
     }
 }

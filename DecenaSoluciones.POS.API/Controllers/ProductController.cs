@@ -1,6 +1,7 @@
 ﻿using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -9,6 +10,7 @@ namespace DecenaSoluciones.POS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -103,6 +105,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
         public async Task<IActionResult> CreateNewProduct(AddEditProduct product)
         {
             var apiResponse = new ApiResponse<ProductViewModel>();
@@ -122,6 +125,7 @@ namespace DecenaSoluciones.POS.API.Controllers
 
         [HttpPut]
         [Route("{id}")]
+        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
         public async Task<IActionResult> UpdateProduct(int id, AddEditProduct product)
         {
             var apiResponse = new ApiResponse<ProductViewModel>();
@@ -141,6 +145,7 @@ namespace DecenaSoluciones.POS.API.Controllers
 
         [HttpDelete]
         [Route("{id}")]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var apiResponse = new ApiResponse<int>();
@@ -161,6 +166,7 @@ namespace DecenaSoluciones.POS.API.Controllers
 
         [HttpPost]
         [Route("UpdateInventary")]
+        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
         public async Task<IActionResult> UpdateInventary(List<UpdateInventory> inventoryItems)
         {
             var apiResponse = new ApiResponse<bool>();

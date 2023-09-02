@@ -14,6 +14,7 @@ namespace DecenaSoluciones.POS.API.Models
         public int? CustomerId { get; set; }
         public decimal? WorkForceValue { get; set; }
         public decimal? Discount { get; set; }
+        public string? UserName { get; set; }
         public DateTime CreationDate { get; set; }
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<QuotationProduct>? QuotationProducts { get; set; }

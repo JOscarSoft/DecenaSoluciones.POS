@@ -84,10 +84,13 @@ namespace DecenaSoluciones.POS.API.Services
 
             var newProducts = sale.SaleProducts!.Where(p => !oldSale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
             var existingProducts = sale.SaleProducts!.Where(p => oldSale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
+            var removedProducts = oldSale.SaleProducts!.Where(p => !sale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
 
             foreach (var item in newProducts)
                 await _productService.UpdateProductStock(item.ProductId, item.Quantity * -1);
 
+            foreach (var item in removedProducts)
+                await _productService.UpdateProductStock(item.ProductId, item.Quantity);
 
             foreach (var item in existingProducts)
             {

@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace DecenaSoluciones.POS.API.Models
 {
-    public class DecenaSolucionesDBContext : DbContext
+    public class DecenaSolucionesDBContext : IdentityDbContext<AppUser>
     {
         public DecenaSolucionesDBContext(DbContextOptions<DecenaSolucionesDBContext> options):base(options) { }
 
