@@ -22,7 +22,7 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
             if (!string.IsNullOrEmpty(token))
             {
                 claimsPrincipal = CreateClaimsPrincipalFromToken(token);
-                await _localStorage.SaveStorage("userSession", UserInfoExtension.FromClaimsPrincipal(claimsPrincipal));
+                await _localStorage.SaveStorage("userSession", UserInfoExtension.FromClaimsPrincipal(claimsPrincipal, token));
             }
             else
             {

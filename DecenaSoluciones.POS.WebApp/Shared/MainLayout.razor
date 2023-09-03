@@ -4,6 +4,7 @@
 @inherits LayoutComponentBase
 
 @inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager navManager
 
 <div class="bb-page">
     <style>
@@ -37,6 +38,7 @@
 
     <main>
         <div class="bb-top-row px-4 d-flex justify-content-end">
+            <a @onclick="CerrarSesion" href="javascript:void(0)">Cerrar Sesión</a>
         </div>
 
         <article class="content px-4">
@@ -82,6 +84,13 @@
                 navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
         }
         return navItems;
+    }
+
+    private async Task CerrarSesion()
+    {
+        var autenticacionExt = (AuthExtension)autenticacionProvider;
+        await autenticacionExt.UpdateSessionState(string.Empty);
+        navManager.NavigateTo("/Login", true);
     }
 }
 
