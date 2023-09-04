@@ -1,0 +1,50 @@
+﻿@using DecenaSoluciones.POS.Shared.Dtos;
+
+@inject NavigationManager navegation;
+
+<div style="margin-top:25px">
+    <Grid @ref="salesGrid" TItem="SalesViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="salesList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Registros por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} registros"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
+        <GridColumn TItem="SalesViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
+            @context.Code
+        </GridColumn>
+        <GridColumn TItem="SalesViewModel" HeaderText="Cliente" PropertyName="CustomerName" SortKeySelector="item => item.CustomerName" HeaderTextAlignment="Alignment.Center">
+            @context.CustomerName
+        </GridColumn>
+        <GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" SortKeySelector="item => item.Total" HeaderTextAlignment="Alignment.Center">
+            @(context.Total != null ? context.Total?.ToString("N2") : "0.00")
+        </GridColumn>
+        <GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true" SortKeySelector="item => item.CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
+            @context.CreationDate.ToString("dd/MM/yyyy")
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+
+    [Parameter] public List<SalesViewModel> salesList { get; set; } = default!;
+    [Parameter] public int quotations { get; set; } = 0;
+    Grid<SalesViewModel> salesGrid = default!;
+    string salesUrl = "/newsale";
+
+    private void OnRowClick(GridRowEventArgs<SalesViewModel> args)
+    {
+        navegation.NavigateTo($"{salesUrl}/{args.Item.Id}/{quotations}");
+    }
+
+}

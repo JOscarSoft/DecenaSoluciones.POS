@@ -1,0 +1,4 @@
+"ApiUrl": "https://webapi.decenasoluciones.com/"
+
+
+"DefaultConnection": "workstation id=DecenaSolucionesDB.mssql.somee.com;packet size=4096;user id=joscarsoft_SQLLogin_1;pwd=WinterIsComing1;data source=DecenaSolucionesDB.mssql.somee.com;persist security info=False;initial catalog=DecenaSolucionesDB;MultipleActiveResultSets=true;TrustServerCertificate=True;"

@@ -12,6 +12,8 @@
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
 
+<Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+
 <div class="row mt-5 text-center">
 
     <div class="col-lg-4 offset-lg-4 border" style="width:28%">
@@ -19,11 +21,11 @@
         <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%;margin-bottom:50px">
 
         <div class="mb-3">
-            <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" />
+            <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
         </div>
 
         <div class="mb-3">
-            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" />
+            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
         </div>
 
         <div class="mb-3" style="margin-top:50px">
@@ -39,9 +41,41 @@
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
     private LoginViewModel model = new LoginViewModel();
+    List<ToastMessage> messages = new List<ToastMessage>();
+    private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Danger, message));
+
+    private ToastMessage CreateToastMessage(ToastType toastType, string message)
+    => new ToastMessage
+        {
+            Type = toastType,
+            Title = "¡Atención!",
+            Message = message,
+        };
+
+    private string validateLogin()
+    {
+        if (string.IsNullOrEmpty(model.Username))
+            return "Favor ingresar el usuario.";
+        if (string.IsNullOrEmpty(model.Password))
+            return "Favor ingresar el contraseña.";
+
+        return string.Empty;
+    }
+
+    public async Task EnterLogin(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+            await SubmitLogin();
+    }
 
     private async Task SubmitLogin()
     {
+        string validations = validateLogin();
+        if (!string.IsNullOrEmpty(validations))
+        {
+            ShowMessage(validations);
+            return;
+        }
         PreloadService!.Show();
         try
         {

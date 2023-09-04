@@ -1,0 +1,63 @@
+﻿@page "/quotations"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Pages.Components
+@using DecenaSoluciones.POS.WebApp.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject ISaleService saleService;
+@inject NavigationManager navegation;
+
+<h3>Historico de cotizaciones</h3>
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(quotationsUrl)">Nueva cotización</Button>
+    </div>
+</div>
+
+<SaleListComponent salesList="salesList" quotations="1"></SaleListComponent>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<SalesViewModel> salesList = new List<SalesViewModel>();
+    string quotationsUrl = "/newsale";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await saleService.GetQuotationsList();
+
+            PreloadService!.Hide();
+            if (response.Success)
+            {
+                salesList = response.Result ?? new List<SalesViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener las cotizaciones: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener las cotizaciones: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+}
