@@ -11,18 +11,17 @@
                             navManager.NavigateTo("/Login");
                         else
                         {
-                            <p class="alert alert-danger">No esta autorizado para ver esta página</p>
+                            <h3 role="alert">Lo sentimos, no está autorizado a acceder a esta página.</h3>
                         }
                     }
 
                 </NotAuthorized>
             </AuthorizeRouteView>
-
         </Found>
         <NotFound>
-            <PageTitle>Not found</PageTitle>
+            <PageTitle>Error</PageTitle>
             <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
+                <h3 role="alert">Lo sentimos, la página solicitada no fue encontrada.</h3>
             </LayoutView>
         </NotFound>
     </Router>

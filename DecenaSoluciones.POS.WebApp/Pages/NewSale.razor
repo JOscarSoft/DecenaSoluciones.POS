@@ -2,7 +2,9 @@
 @page "/newsale/{ModelId:int}/{inQuotation:int?}"
 
 @using BlazorInputMask
+@using Blazored.LocalStorage;
 @using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
 @using DecenaSoluciones.POS.WebApp.Services;
 @using CurrieTechnologies.Razor.SweetAlert2;
 @using Microsoft.AspNetCore.Authorization;
@@ -14,6 +16,7 @@
 @inject ICustomerService customerService;
 @inject ISaleService saleService;
 @inject IJSRuntime JSRuntime
+@inject ILocalStorageService _localStorage
 
 
 <h3>@title</h3>
@@ -175,6 +178,12 @@
                 </div>
             </CardBody>
         </Card>
+        @if(model.Id > 0 && !string.IsNullOrEmpty(model.UserName))
+        {
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+                <label>Gestionado por <strong>@model.UserName</strong></label>
+            </div>
+        }
     </div>
     @if (model.Id <= 0 || !model.IsAQuotation)
     {
@@ -489,6 +498,11 @@
             PreloadService!.Show();
             try
             {
+
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
+                    model.UserName = userSession.Username;
+
                 model.SaleProducts = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
                 if (ModelId == 0)
                 {

@@ -50,6 +50,9 @@ namespace DecenaSoluciones.POS.API.Services
 
         public async Task<bool> ChangePassword(ChangePasswordViewModel model)
         {
+            if (model.Username.ToUpper().Equals("SUPERADMIN"))
+                throw new Exception("Por motivos de seguridad este usuario no puede ser modificado.");
+
             var userExists = await userManager.FindByNameAsync(model.Username);
             if (userExists == null)
                 throw new Exception("No se encontró el usuario especificado.");
@@ -65,6 +68,9 @@ namespace DecenaSoluciones.POS.API.Services
 
         public async Task<bool> RemoveUser(string userName)
         {
+            if(userName.ToUpper().Equals("SUPERADMIN"))
+                throw new Exception("Por motivos de seguridad este usuario no puede ser eliminado.");
+
             var userExists = await userManager.FindByNameAsync(userName);
             if (userExists == null)
                 throw new Exception("No se encontró el usuario especificado.");

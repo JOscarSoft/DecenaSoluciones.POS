@@ -1,0 +1,147 @@
+﻿@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Services;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+
+
+<EditForm Model="newUser" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+
+    <div class="col-md-4">
+        <label class="form-label">Usuario:</label>
+        <InputText class="form-control" @bind-Value="newUser.Username" maxlength="15"></InputText>
+        <ValidationMessage For="@(() => newUser.Username)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Nombre:</label>
+        <InputText class="form-control" @bind-Value="newUser.FirstName" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newUser.FirstName)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Apellido:</label>
+        <InputText class="form-control" @bind-Value="newUser.LastName" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newUser.LastName)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Contraseña:</label>
+        <input class="form-control" @bind="newUser.Password" maxlength="15" type="password"></input>
+        <ValidationMessage For="@(() => newUser.Password)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Confirmar contraseña:</label>
+        <input class="form-control" @bind="passwordConfirm" maxlength="15" type="password"></input>
+        <ValidationMessage For="@(() => newUser.Password)"></ValidationMessage>
+    </div>
+    <div class="form-group col-md-4">
+        <label>Rol</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" @onchange="@(() => {newUser.Role = UserRoles.Admin;})">
+                <label class="form-check-label" for="inlineRadio1">Administrador</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" @onchange="@(() => {newUser.Role = UserRoles.Manager;})">
+                <label class="form-check-label" for="inlineRadio2">Gerente</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" @onchange="@(() => {newUser.Role = UserRoles.Seller;})">
+                <label class="form-check-label" for="inlineRadio3">Vendedor</label>
+            </div>
+        </div>
+        <ValidationMessage For="@(() => newUser.Role)"></ValidationMessage>
+    </div>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <button type="submit" Class="btn btn-primary">
+            Guardar
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    RegistrationViewModel newUser = new RegistrationViewModel();
+    string passwordConfirm = string.Empty;
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private string validateUser()
+    {
+        if (string.IsNullOrEmpty(newUser.Username))
+            return "El usuario es requerido";
+        if (string.IsNullOrEmpty(newUser.FirstName))
+            return "El nombre del usuario es requerido";
+        if (string.IsNullOrEmpty(newUser.Password))
+            return "Favor de ingresar una contraseña válida";
+        if (newUser.Password != passwordConfirm)
+            return "Las contraseñas no coinciden";
+        if (string.IsNullOrEmpty(newUser.Role))
+            return "Favor de especificar un rol.";
+
+        return string.Empty;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        var validations = validateUser();
+        if (string.IsNullOrEmpty(validations))
+        {
+
+            PreloadService!.Show();
+            try
+            {
+                passwordConfirm = string.Empty;
+                var response = await authService.Registration(newUser);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Usuario agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newUser = new RegistrationViewModel();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al agrager el usuario: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                PreloadService.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+}

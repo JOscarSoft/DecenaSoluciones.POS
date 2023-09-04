@@ -1,0 +1,192 @@
+﻿@page "/users"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.WebApp.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+
+@attribute [Authorize(Roles = "admin")]
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+
+<style>
+    .tdActions {
+        width: 10%;
+    }
+</style>
+<h3>Usuario</h3>
+
+<Modal @ref="addEditUserModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
+<Modal @ref="changePasswordModal" UseStaticBackdrop="true" Size="ModalSize.Regular" />
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddUserModal(null)">Agregar usuarios</Button>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="usersGrid" TItem="RegistrationViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="usersList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Usuarios por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} productos"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true">
+
+        <GridColumn TItem="RegistrationViewModel" HeaderText="Usuario" PropertyName="Username" SortKeySelector="item => item.Username" HeaderTextAlignment="Alignment.Center">
+            @context.Username
+        </GridColumn>
+        <GridColumn TItem="RegistrationViewModel" HeaderText="Nombre" PropertyName="FirstName" SortKeySelector="item => item.FirstName" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
+            @context.FirstName
+        </GridColumn>
+        <GridColumn TItem="RegistrationViewModel" HeaderText="Apellido" PropertyName="LastName" SortKeySelector="item => item.LastName" HeaderTextAlignment="Alignment.Center">
+            @context.LastName
+        </GridColumn>
+        <GridColumn TItem="RegistrationViewModel" HeaderText="Rol" PropertyName="Role" SortKeySelector="item => item.Role" HeaderTextAlignment="Alignment.Center">
+            @context.Role
+        </GridColumn>
+        <GridColumn TItem="RegistrationViewModel" Filterable="false" Sortable="false" ColumnClass="@(x => "tdActions")">
+            <ChildContent>
+                <Button Color="ButtonColor.Primary" @onclick="(() => ShowChangePasswordModal(context.Username))"><Icon Name="IconName.Pencil" /></Button>
+                <Button Color="ButtonColor.Danger" @onclick="(() => RemoveUser(context.Username))"><Icon Name="IconName.Trash" /></Button>
+            </ChildContent>
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<RegistrationViewModel> usersList = new List<RegistrationViewModel>();
+    Grid<RegistrationViewModel> usersGrid = default!;
+    private Modal addEditUserModal = default!;
+    private Modal changePasswordModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await authService.GetUsersList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                usersList = response.Result ?? new List<RegistrationViewModel>();
+                await usersGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los usuarios: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los usuarios: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task ShowAddUserModal(ProductViewModel? product)
+    {
+        var productParam = product ?? new ProductViewModel();
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditUSerModal));
+        await addEditUserModal.ShowAsync<AddUserComponent>(title: "Agregar nuevo usuario", parameters: parameters);
+    }
+
+    private async Task ShowChangePasswordModal(string userName)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("userName", userName);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditUSerModal));
+        await changePasswordModal.ShowAsync<ChangePasswordComponent>(title: $"Actualizar Contraseña - {userName}", parameters: parameters);
+    }
+
+    private async Task RemoveUser(string userName)
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar usuario",
+                    Text = "¿Esta seguro de eliminar el usuario?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await authService.RemoveUser(userName);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Usuario eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al eliminar el usuario: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+    private async Task HideAddEditUSerModal(MouseEventArgs e)
+    {
+        await addEditUserModal.HideAsync();
+        await changePasswordModal.HideAsync();
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+    }
+}

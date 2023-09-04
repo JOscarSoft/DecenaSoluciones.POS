@@ -2,6 +2,7 @@
 @using Blazored.LocalStorage;
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.WebApp.Pages;
 @using Microsoft.AspNetCore.Components.Authorization;
 @inherits LayoutComponentBase
 
@@ -40,9 +41,17 @@
              DataProvider="SidebarDataProvider" />
 
     <main>
-        <div class="bb-top-row px-4 d-flex justify-content-end">
-            <a @onclick="CerrarSesion" href="javascript:void(0)">Cerrar Sesión</a>
-        </div>
+        <AuthorizeView>
+            <div class="bb-top-row px-4 d-flex justify-content-end">
+                <Dropdown>
+                    <DropdownToggleButton Color="ButtonColor.Primary">@context.User.Identity!.Name</DropdownToggleButton>
+                    <DropdownMenu>
+                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" href="javascript:void(0)">Cambiar contraseña</DropdownItem>
+                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="CerrarSesion" href="javascript:void(0)">Cerrar sesión</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </div>
+        </AuthorizeView>
 
         <article class="content px-4">
             <div class="py-2">
@@ -53,9 +62,13 @@
 
 </div>
 
+
+<Modal @ref="changePasswordModal" UseStaticBackdrop="true" Size="ModalSize.Regular" />
+
 @code {
     private Sidebar sidebar = default!;
     private IEnumerable<NavItem> navItems = default!;
+    private Modal changePasswordModal = default!;
 
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
@@ -84,6 +97,19 @@
             navItems = navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
 
         return navItems;
+    }
+
+    private async Task ShowChangePasswordModal(string userName)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("userName", userName);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideChangePasswordModal));
+        await changePasswordModal.ShowAsync<ChangePasswordComponent>(title: $"Actualizar Contraseña - {userName}", parameters: parameters);
+    }
+
+    private async Task HideChangePasswordModal(MouseEventArgs e)
+    {
+        await changePasswordModal.HideAsync();
     }
 
     private async Task CerrarSesion()

@@ -14,20 +14,20 @@
 
 <div class="row mt-5 text-center">
 
-    <div class="col-lg-4 offset-lg-4 border">
+    <div class="col-lg-4 offset-lg-4 border" style="width:28%">
 
-        <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%">
+        <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%;margin-bottom:50px">
 
         <div class="mb-3">
-            <input @bind="model.Username" class="form-control" placeholder="Usuario" />
+            <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" />
         </div>
 
         <div class="mb-3">
-            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" />
+            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" />
         </div>
 
-        <div class="mb-3">
-            <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block">Login</button>
+        <div class="mb-3" style="margin-top:50px">
+            <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Login</button>
         </div>
 
     </div>
