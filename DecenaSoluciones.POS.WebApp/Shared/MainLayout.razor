@@ -1,10 +1,13 @@
 ﻿@using BlazorBootstrap
+@using Blazored.LocalStorage;
+@using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Extensions;
 @using Microsoft.AspNetCore.Components.Authorization;
 @inherits LayoutComponentBase
 
 @inject AuthenticationStateProvider autenticacionProvider
 @inject NavigationManager navManager
+@inject ILocalStorageService _localStorage
 
 <div class="bb-page">
     <style>
@@ -76,13 +79,10 @@
         };
 
 
-        var sessionState = await ((AuthExtension)autenticacionProvider).GetAuthenticationStateAsync();
-        if (sessionState != null && sessionState.User != null)
-        {
-            var role = sessionState.User.Claims?.FirstOrDefault(c => c.Type == "role")?.Value;
-            if (role == "admin")
-                navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
-        }
+        var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+        if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
+            navItems = navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
+
         return navItems;
     }
 

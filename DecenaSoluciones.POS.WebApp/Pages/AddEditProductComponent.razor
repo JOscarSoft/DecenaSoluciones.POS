@@ -6,10 +6,9 @@
 
 @inject SweetAlertService Swal;
 @inject IProductService productService;
-@inject AuthenticationStateProvider autenticacionProvider
 
 
-<EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" class="row g-3">
+<EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
     <DataAnnotationsValidator></DataAnnotationsValidator>
 
     <div class="col-md-4">
@@ -57,19 +56,16 @@
     </div>
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        @if (HasRole("admin") || HasRole("manager"))
-        {
+        <AuthorizeView Roles="admin, manager" Context="authContext">
             <button type="submit" Class="btn btn-primary">
                 Guardar
             </button>
-        }
-
-        @if (HasRole("admin") && Product.Id > 0)
-        {
+        </AuthorizeView>
+        <AuthorizeView Roles="admin" Context="authContext">
             <Button Color="ButtonColor.Danger" @onclick="RemoveProduct" style="margin-right:15px">
                 Eliminar
             </Button>
-        }
+        </AuthorizeView>
     </div>
 </EditForm>
 
@@ -161,16 +157,6 @@
                 });
 
         }
-
-    }
-
-    private bool HasRole(string roleName)
-    {
-        var sessionState = ((AuthExtension)autenticacionProvider).GetAuthenticationStateAsync().Result;
-        if (sessionState != null && sessionState.User != null)
-            return (sessionState.User.Claims.FirstOrDefault(c => c.Type == "role")!.Value == roleName);
-
-        return false;
     }
 
     private async Task RemoveProduct()

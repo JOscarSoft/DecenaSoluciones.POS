@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -22,7 +23,8 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
             if (!string.IsNullOrEmpty(token))
             {
                 claimsPrincipal = CreateClaimsPrincipalFromToken(token);
-                await _localStorage.SaveStorage("userSession", UserInfoExtension.FromClaimsPrincipal(claimsPrincipal, token));
+                var userInfo = UserInfoExtension.FromClaimsPrincipal(claimsPrincipal, token);
+                await _localStorage.SaveStorage("userSession", userInfo);
             }
             else
             {
@@ -55,7 +57,10 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
             if (tokenHandler.CanReadToken(token))
             {
                 var jwtSecurityToken = tokenHandler.ReadJwtToken(token);
-                identity = new(jwtSecurityToken.Claims, "DecenaSolucionesSession");
+                identity = new(jwtSecurityToken.Claims, "JwtIdentity");
+                identity.AddClaim(new Claim(ClaimTypes.Name, jwtSecurityToken.Claims.FirstOrDefault(p => p.Type == "unique_name")?.Value ?? ""));
+                foreach (var item in jwtSecurityToken.Claims.Where(p => p.Type == "role"))
+                    identity.AddClaim(new Claim(ClaimTypes.Role, item.Value));
             }
 
             return new(identity);
