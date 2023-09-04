@@ -1,7 +1,102 @@
 ﻿@page "/"
+@using BlazorBootstrap.Utilities;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Services;
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization
 
 @attribute [Authorize]
+@inject IReportService reportService;
+@inject SweetAlertService Swal;
 
-<h1>Bienvenido!</h1>
+<style>
+    div:has(.charDiv) {
+        margin: 0 auto;
+    }
+</style>
+
+<h1 style="margin-bottom:50px">Bienvenido!</h1>
+<div class="text-center" style="margin:auto; width:50%;">
+    <DoughnutChart @ref="doughnutChart" Width="350" Class="charDiv" />
+</div>
+<div class="row g-3" style="margin-top:35px">
+    <div class="col-md-4 text-center">
+        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.SoldProductsPerWeek</label>
+        <h3>Productos Vendidos Esta Semana</h3>
+    </div>
+    <div class="col-md-4  text-center">
+        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.ExpiredMaintenances</label>
+        <h3>Clientes Pendiente de Mantenimientos</h3>
+    </div>
+    <div class="col-md-4  text-center">
+        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.ProductsWithEmptyStock</label>
+        <h3>Productos Con Stock Insuficiente</h3>
+    </div>
+</div>
+
+@code{
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    DashboardViewModel viewModel = new DashboardViewModel();
+    private DoughnutChart doughnutChart = default!;
+    private DoughnutChartOptions doughnutChartOptions = default!;
+    private ChartData chartData = default!;
+    private string[]? backgroundColors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await reportService.GetDashboardReport();
+
+            PreloadService!.Hide();
+            if (response.Success)
+            {
+                viewModel = response.Result ?? new DashboardViewModel();
+                backgroundColors = ColorBuilder.CategoricalTwelveColors;
+                chartData = new ChartData { Labels = viewModel.SoldProducts.Select(p => p.ProductName).ToList(), Datasets = new List<IChartDataset> { GetCharDataSet(viewModel.SoldProducts) } };
+                doughnutChartOptions = new();
+                doughnutChartOptions.Responsive = true;
+                doughnutChartOptions.Plugins.Title!.Text = "Top productos vendidos";
+                doughnutChartOptions.Plugins.Title.Display = true;
+                await doughnutChart.InitializeAsync(chartData, doughnutChartOptions);
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener la información de inicio: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener la información de inicio: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private IChartDataset GetCharDataSet(List<SoldProductQuantityViewModel> products)
+    {
+        return new DoughnutChartDataset() { Label = "Ventas", Data = products.Select(p => Convert.ToDouble(p.Quantity)).ToList(), BackgroundColor = GetRandomBackgroundColors(products.Count) };
+    }
+
+    private List<string> GetRandomBackgroundColors(int productCount)
+    {
+        var colors = new List<string>();
+        for (var index = 0; index < productCount; index++)
+        {
+            colors.Add(backgroundColors![index]);
+        }
+
+        return colors;
+    }
+}

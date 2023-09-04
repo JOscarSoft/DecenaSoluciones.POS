@@ -10,13 +10,44 @@
 @attribute [Authorize]
 @inject SweetAlertService Swal;
 @inject ISaleService saleService;
+@inject IReportService reportService;
 @inject NavigationManager navegation;
+@inject IJSRuntime JS
 
 <h3>Historico de ventas</h3>
+
+<Modal @ref="reportsModal" title="Generar reporte" UseStaticBackdrop="true" Size="ModalSize.Large">
+    <BodyTemplate>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Tipo:</label>
+                <select class="form-select" @onchange="ChangeReportType">
+                    <option value="1" selected>Reporte de ventas</option>
+                    <option value="2">Productos vendidos</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Desde:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateFrom" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Hasta:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateTo" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="SubmitGenerateReport">Generar</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Cancelar</Button>
+    </FooterTemplate>
+</Modal>
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
         <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(salesUrl)">Nueva venta</Button>
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Generar reporte</Button>
+        </AuthorizeView>
     </div>
 </div>
 
@@ -25,7 +56,11 @@
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
     List<SalesViewModel> salesList = new List<SalesViewModel>();
+    private Modal reportsModal = default!;
     string salesUrl = "/newsale";
+    private EnumReportType reportType = EnumReportType.Sales;
+    private DateOnly reportDateFrom = DateOnly.FromDateTime(DateTime.Now.AddDays(-7));
+    private DateOnly reportDateTo = DateOnly.FromDateTime(DateTime.Now);
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,6 +93,62 @@
                     Text = "Se produjo un error al obtener las ventas: " + ex.Message,
                     Icon = SweetAlertIcon.Error
                 });
+        }
+    }
+
+    private void ChangeReportType(ChangeEventArgs e)
+    {
+        if (e.Value?.ToString() != null)
+        {
+            reportType = e.Value?.ToString() == "1" ? EnumReportType.Sales : EnumReportType.SoldProducts;
+            return;
+        }
+
+        reportType = EnumReportType.Sales;
+    }
+
+    private async Task OnHideModalClick(MouseEventArgs e)
+    {
+        await reportsModal.HideAsync();
+    }
+
+    private async Task ShowReportsModal()
+    {
+        reportType = EnumReportType.Sales;
+        await reportsModal.ShowAsync();
+    }
+
+    private async Task SubmitGenerateReport()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await reportService.GenerateReport(reportDateFrom, reportDateTo, reportType);
+
+            var fileName = reportType == EnumReportType.Sales ? "Reporte de ventas.xlsx" : "Ventas por productos.xlsx";
+
+            using var streamRef = new DotNetStreamReference(stream: response);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            PreloadService.Hide();
+            await reportsModal.HideAsync();
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = "Reporte generado exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
         }
     }
 }

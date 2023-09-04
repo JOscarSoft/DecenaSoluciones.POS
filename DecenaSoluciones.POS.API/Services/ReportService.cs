@@ -33,7 +33,7 @@ namespace DecenaSoluciones.POS.API.Services
             {
                 ProductName = p.Key.Description,
                 Quantity = p.Sum(p => p.Quantity)
-            }).OrderByDescending(p => p.Quantity).Take(10).ToList();
+            }).OrderByDescending(p => p.Quantity).Take(5).ToList();
 
             result.ExpiredMaintenances = (await _dbContext.CustomerProducts.Where(p => p.NextMaintenance.HasValue).ToListAsync())
                 .Where(p => (p.NextMaintenance!.Value - DateTime.Now).TotalDays < 15)
