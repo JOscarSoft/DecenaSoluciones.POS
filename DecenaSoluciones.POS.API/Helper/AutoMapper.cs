@@ -40,6 +40,10 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
                 .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
                 .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true));
+            CreateMap<Sale, SalesReportViewModel>()
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
+                .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
+                .ForMember(dest => dest.ProductsQuantity, opt => opt.MapFrom(source => source.SaleProducts!.Sum(p => p.Quantity)));
         }
         private string GetCustomerName(Customer? customer)
         {
