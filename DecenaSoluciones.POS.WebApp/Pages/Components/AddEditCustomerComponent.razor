@@ -70,7 +70,7 @@
                         <ValidationMessage For="@(() => customerProduct.NeedMaintenance)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
-                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.LastMaintenance" Disabled="!customerProduct.NeedMaintenance" />
+                        <DateInput TValue="DateTime?"Disabled="!customerProduct.NeedMaintenance" Value="customerProduct.LastMaintenance" ValueExpression="() => customerProduct.LastMaintenance" ValueChanged="(e) => {OnUpdateMaintenance(e, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct));}" />
                         <ValidationMessage For="@(() => customerProduct.LastMaintenance)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
@@ -153,6 +153,19 @@
             return;
         }
     }
+
+    private void OnUpdateMaintenance(DateTime? newDate, int productIndex)
+    {
+        Console.WriteLine("here");
+        if (newDate != null)
+        {
+            var periods = assignableProducts.FirstOrDefault(p => p.Code == newCustomer.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
+            newCustomer.CustomerProducts!.ElementAt(productIndex).LastMaintenance = newDate;
+            newCustomer.CustomerProducts!.ElementAt(productIndex).NextMaintenance = newDate.Value.AddMonths(periods);
+            return;
+        }
+    }
+
 
     private void removeProduct(int productIndex)
     {
