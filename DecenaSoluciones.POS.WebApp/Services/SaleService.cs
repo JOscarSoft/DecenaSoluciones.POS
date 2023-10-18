@@ -123,18 +123,21 @@ namespace DecenaSoluciones.POS.WebApp.Services
                 string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
                 string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
 
+                int count = 1;
                 foreach (var product in sale.SaleProducts!)
                 {
-                    productsHTML += $"<tr><td>{product.Quantity}</td>" +
-                                    $"<td>{product.ProductDescription}</td>" +
+                    productsHTML += $"<tr><td>{count}</td>" +
+                                    $"<td>{product.ProductDescription}</td>" + 
+                                    $"<td>{product.Quantity}</td>" +
                                     $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
                                     $"<td>{ToMoneyString(product.ITBIS)}</td>" +
                                     $"<td>{ToMoneyString(product.Total)}</td></tr>";
+                    count++;
                 }
 
                 if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
                 {
-                    productsHTML += $"<tr><td>000</td><td>Mano de Obra</td>" +
+                    productsHTML += $"<tr><td>000</td><td>Mano de Obra</td><td>000</td>" +
                                     $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
                 }
 
