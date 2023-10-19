@@ -19,6 +19,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public DateTime CreationDate { get; set; } = DateTime.Now;
         public bool IsAQuotation { get; set; } = false;
         public string? UserName { get; set; }
+        public bool? CreditSale { get; set; }
         public AddEditCustomer? Customer { get; set; } = new AddEditCustomer();
         public ICollection<AddEditSaleProduct>? SaleProducts { get; set; } = new List<AddEditSaleProduct>();
     }

@@ -22,6 +22,7 @@ namespace DecenaSoluciones.POS.API.Models
         [MaxLength(50)]
         public string? TCReference { get; set; }
         public string? UserName { get; set; }
+        public bool? CreditSale { get; set; }
         public DateTime CreationDate { get; set; }
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<SaleProduct>? SaleProducts { get; set; }

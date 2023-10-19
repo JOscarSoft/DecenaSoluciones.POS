@@ -189,6 +189,7 @@
     {
         <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
         <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
+        <Switch @bind-Value="isCashSale" Label="Venta al contado" @onchange="(() => {model.CreditSale = !isCashSale;})" />
     }
     @if (TCPayment || DepositPayment)
     {
@@ -261,6 +262,7 @@
     bool disabledClientFields = true;
     bool TCPayment = false;
     bool DepositPayment = false;
+    bool isCashSale = true;
 
     string totalAmount => ToMoneyString(GetTotalAmount());
     string totalTaxes => ToMoneyString(model.SaleProducts!.Sum(p => p.ITBIS));
@@ -336,6 +338,7 @@
                 title = "Detalles de la cotización";
 
             title = $"{title} - {model.Code}";
+            isCashSale = model.CreditSale == false;
         }
 
         PreloadService.Hide();
@@ -503,6 +506,7 @@
                 if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
                     model.UserName = userSession.Username;
 
+                model.CreditSale = !isCashSale;
                 model.SaleProducts = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
                 if (ModelId == 0)
                 {

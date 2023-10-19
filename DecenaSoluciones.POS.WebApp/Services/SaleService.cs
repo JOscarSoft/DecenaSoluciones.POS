@@ -124,6 +124,7 @@ namespace DecenaSoluciones.POS.WebApp.Services
                 string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
 
                 int count = 1;
+                int page = 1;
                 foreach (var product in sale.SaleProducts!)
                 {
                     productsHTML += $"<tr><td>{count}</td>" +
@@ -133,6 +134,12 @@ namespace DecenaSoluciones.POS.WebApp.Services
                                     $"<td>{ToMoneyString(product.ITBIS)}</td>" +
                                     $"<td>{ToMoneyString(product.Total)}</td></tr>";
                     count++;
+
+                    if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
+                    {
+                        page ++;
+                        productsHTML += GetPageBreak();
+                    }
                 }
 
                 if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
@@ -141,15 +148,25 @@ namespace DecenaSoluciones.POS.WebApp.Services
                                     $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
                 }
 
-                htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "RECIBO");
+                var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
+                if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
+                {
+                    productsHTML += GetPageBreak();
+                }
+
+                htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
                 htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-                htmlTemplate = htmlTemplate.Replace("{{ClientName}}", sale.Customer!.Name);
+                htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
                 htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
                 htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
                 htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
                 htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
                 htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
                 htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
+
+                string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
+                htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :
+                    $"<p class=\"ClientP\"><span style=\"font-weight: bold; font-size: 18px\">Condiciones de pago: </span>{payCondition}</p>");
 
                 return htmlTemplate;
             }
@@ -158,6 +175,15 @@ namespace DecenaSoluciones.POS.WebApp.Services
                 return string.Empty;
             }
         }
+        private string GetPageBreak() => "</table><p style=\"page-break-before: always\">" +
+                            "<table class=\"tblProducts\">" +
+                            "<tr><th>ITEMS</th>" +
+                            "<th>PRODUCTO</th>" +
+                            "<th>CANT.</th>" +
+                            "<th>PRECIO</th>" +
+                            "<th>ITBIS</th>" +
+                            "<th>TOTAL</th></tr>";
+
         private string GetTotalAmount(AddEditSale sale)
         {
             decimal calc = 0.0M;
