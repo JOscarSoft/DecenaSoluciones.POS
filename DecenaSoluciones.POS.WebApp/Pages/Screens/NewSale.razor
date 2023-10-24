@@ -503,7 +503,7 @@
             {
 
                 var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
-                if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
+                if (userSession != null)
                     model.UserName = userSession.Username;
 
                 model.CreditSale = !isCashSale;
