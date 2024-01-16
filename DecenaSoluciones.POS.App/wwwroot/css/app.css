@@ -1,0 +1,33 @@
+﻿h3 {
+    color: #000080
+}
+
+.validation-message {
+    color: #dc3545 !important;
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+}
+
+.loadingDiv {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+}
+
+    .loadingDiv .logo {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+    }
+
+    .loadingDiv .loading {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 15%;
+    }
+
+.headerRow {
+    background-color: #000080 !important;
+}

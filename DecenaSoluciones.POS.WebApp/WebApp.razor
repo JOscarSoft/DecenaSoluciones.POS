@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager navManager
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(WebApp).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @{
+                        if (context.User.Identity?.IsAuthenticated != true)
+                            navManager.NavigateTo("/Login");
+                        else
+                        {
+                            <h3 role="alert">Lo sentimos, no está autorizado a acceder a esta página.</h3>
+                        }
+                    }
+
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <PageTitle>Error</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <h3 role="alert">Lo sentimos, la página solicitada no fue encontrada.</h3>
+            </LayoutView>
+        </NotFound>
+    </Router>
+
+</CascadingAuthenticationState>

@@ -5,10 +5,11 @@
 @using Blazored.LocalStorage;
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Extensions;
-@using DecenaSoluciones.POS.WebApp.Services;
+@using DecenaSoluciones.POS.Shared.Services;
 @using CurrieTechnologies.Razor.SweetAlert2;
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization
+@using DecenaSoluciones.POS.Shared.Extensions
 
 @attribute [Authorize]
 @inject SweetAlertService Swal;
@@ -16,7 +17,7 @@
 @inject ICustomerService customerService;
 @inject ISaleService saleService;
 @inject IJSRuntime JSRuntime
-@inject ILocalStorageService _localStorage
+@inject ILocalStorage _localStorage
 
 
 <h3>@title</h3>

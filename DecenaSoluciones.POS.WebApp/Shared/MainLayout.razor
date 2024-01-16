@@ -1,15 +1,15 @@
 ﻿@using BlazorBootstrap
-@using Blazored.LocalStorage;
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.WebApp.Extensions;
 @using DecenaSoluciones.POS.WebApp.Pages;
 @using DecenaSoluciones.POS.WebApp.Pages.Components;
 @using Microsoft.AspNetCore.Components.Authorization;
+@using DecenaSoluciones.POS.Shared.Extensions;
 @inherits LayoutComponentBase
 
 @inject AuthenticationStateProvider autenticacionProvider
 @inject NavigationManager navManager
-@inject ILocalStorageService _localStorage
+@inject ILocalStorage _localStorage
 
 <div class="bb-page">
     <style>

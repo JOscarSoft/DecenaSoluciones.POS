@@ -1,12 +1,18 @@
 ﻿using Blazored.LocalStorage;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Text.Json;
 
 namespace DecenaSoluciones.POS.WebApp.Extensions
 {
-    public static class LocalStorageExtension
+    public class LocalStorageExtension : ILocalStorage
     {
-        public static async Task SaveStorage<T>(
-            this ILocalStorageService sessionStorageService,
+        private readonly ILocalStorageService sessionStorageService;
+        public LocalStorageExtension(ILocalStorageService sessionStorageService)
+        {
+            this.sessionStorageService = sessionStorageService;
+        }
+
+        public async Task SaveStorage<T>(
             string key, T item
             ) where T : class
         {
@@ -16,8 +22,7 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
 
         }
 
-        public static async Task<T?> GetStorage<T>(
-        this ILocalStorageService sessionStorageService,
+        public async Task<T?> GetStorage<T>(
         string key
         ) where T : class
         {
@@ -32,6 +37,9 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
                 return null;
         }
 
-
+        public void RemoveFromStorage(string key)
+        {
+            sessionStorageService.RemoveItemAsync(key);
+        }
     }
 }
