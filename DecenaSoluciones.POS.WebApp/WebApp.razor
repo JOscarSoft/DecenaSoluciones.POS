@@ -4,7 +4,7 @@
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(WebApp).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">j
                 <NotAuthorized>
                     @{
                         if (context.User.Identity?.IsAuthenticated != true)
@@ -14,7 +14,7 @@
                             <h3 role="alert">Lo sentimos, no está autorizado a acceder a esta página.</h3>
                         }
                     }
-
+                    
                 </NotAuthorized>
             </AuthorizeRouteView>
         </Found>

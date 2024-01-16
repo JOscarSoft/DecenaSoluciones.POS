@@ -87,15 +87,9 @@
             new NavItem { Id = "2", Href = "/products", IconName = IconName.BoxSeamFill, Text = "Productos"},
             new NavItem { Id = "3", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
             new NavItem { Id = "4", IconName = IconName.CartCheckFill, Text = "Ventas"},
-            new NavItem { Id = "5", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="4"},
-            new NavItem { Id = "6", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="4"},
-            new NavItem { Id = "7", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
+            new NavItem { Id = "5", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="4"},
+            new NavItem { Id = "6", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
         };
-
-
-        var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
-        if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
-            navItems = navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
 
         return navItems;
     }
