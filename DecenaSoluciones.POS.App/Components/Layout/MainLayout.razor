@@ -9,7 +9,6 @@
 
 @inject AuthenticationStateProvider autenticacionProvider
 @inject NavigationManager navManager
-@inject ILocalStorage _localStorage
 
 <div class="bb-page">
     <style>
@@ -36,21 +35,10 @@
             --bb-sidebar-nav-item-group-background-color: rgba(0,0,0,0.08);
         }
     </style>
-    <Sidebar @ref="sidebar"
-             ImageSrc="/images/logo/Logo-Simple.png"
-             Title="Decena Soluciones Técnicas"
-             DataProvider="SidebarDataProvider" />
-
     <main>
         <AuthorizeView>
-            <div class="bb-top-row px-4 d-flex justify-content-end">
-                <Dropdown>
-                    <DropdownToggleButton Color="ButtonColor.Primary">@context.User.Identity!.Name</DropdownToggleButton>
-                    <DropdownMenu>
-                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" href="javascript:void(0)">Cambiar contraseña</DropdownItem>
-                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="CerrarSesion" href="javascript:void(0)">Cerrar sesión</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
+            <div class="sidebar">
+                <NavMenu UserName="@context.User.Identity!.Name" OnLogout="CerrarSesion" OnChangePassword="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" />
             </div>
         </AuthorizeView>
 
@@ -67,32 +55,7 @@
 <Modal @ref="changePasswordModal" UseStaticBackdrop="true" Size="ModalSize.Regular" />
 
 @code {
-    private Sidebar sidebar = default!;
-    private IEnumerable<NavItem> navItems = default!;
     private Modal changePasswordModal = default!;
-
-    private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
-    {
-        if (navItems is null)
-            navItems = await GetNavItems();
-
-        return await Task.FromResult(request.ApplyTo(navItems));
-    }
-
-    private async Task<IEnumerable<NavItem>> GetNavItems()
-    {
-        navItems = new List<NavItem>
-        {
-            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Inicio", Match = NavLinkMatch.All},
-            new NavItem { Id = "2", Href = "/products", IconName = IconName.BoxSeamFill, Text = "Productos"},
-            new NavItem { Id = "3", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
-            new NavItem { Id = "4", IconName = IconName.CartCheckFill, Text = "Ventas"},
-            new NavItem { Id = "5", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="4"},
-            new NavItem { Id = "6", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
-        };
-
-        return navItems;
-    }
 
     private async Task ShowChangePasswordModal(string userName)
     {

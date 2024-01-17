@@ -1,0 +1,187 @@
+﻿<style>
+    .navbar-toggler {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .top-row {
+        height: 3.5rem;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .bottom-row {
+        position: absolute;
+        bottom: 0;
+        padding-bottom: 10px;
+        text-align: right;
+        width: 100%;
+        padding-right: 28px;
+    }
+
+    .icon-menu-arrow {
+        text-align: right;
+    }
+
+    .oi {
+        width: 2rem;
+        vertical-align: text-top;
+        top: -2px;
+    }
+
+    .nav-item {
+        padding-bottom: 1.5rem;
+        font-size:larger;
+        color: var(--bb-sidebar-nav-item-text-color);
+    }
+        .nav-item.separator {
+            border-bottom: 1px solid var(--bb-sidebar-top-row-border-color);
+        }
+
+        .nav-item:first-of-type {
+            padding-top: 1rem;
+        }
+
+        .nav-item:last-of-type {
+            padding-bottom: 1rem;
+        }
+
+        .nav-item ::deep a {
+            border-radius: 4px;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            line-height: 3rem;
+        }
+
+    .dropdown-menu-start[data-bs-popper] {
+        inset: 38px -11px auto auto;
+    }
+
+    .offcanvas {
+        width: 65% !important;
+    }
+
+    .navbar-header {
+        height: 3.5rem;
+        background-color: var(--bb-sidebar-top-row-background-color);
+        border-bottom: 1px solid var(--bb-sidebar-top-row-border-color);
+        border-right: 1px solid var(--bb-sidebar-top-row-border-color);
+    }
+
+    .navbar-header-menu {
+        border-bottom: 1px solid var(--bb-sidebar-top-row-border-color);
+    }
+
+    .container-fluid {
+        justify-content: flex-start !important;
+    }
+
+    .navbar-brand {
+        margin-left: 20px;
+        font-size: large;
+    }
+
+    .me-3 {
+        margin-right: 0.5rem !important;
+    }
+</style>
+<div class="top-row ps-3 navbar navbar-header">
+    <div class="container-fluid">
+        <button title="Navigation menu" class="navbar-toggler" @onclick="(() => ToggleNavMenu(true))">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand d-flex align-items-center" href="" >
+            <span class="navbar-brand-text fw-semibold expanded-only me-2" b-h9l5f7lx3r="">Decena Soluciones Técnicas</span>
+        </a>
+    </div>
+</div>
+
+<Offcanvas @ref="offcanvas" Title="" Placement="Placement.Start" ShowCloseButton="false">
+    <HeaderTemplate>
+        <div class="navbar-header-menu text-center">
+            <div class="col-lg-4 offset-lg-4" style="width:100%;">
+                <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%;">
+            </div>
+        </div>
+    </HeaderTemplate>
+    <BodyTemplate>
+        <div @onclick="(() => ToggleNavMenu(false))">
+            <nav class="flex-column">
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-house-door-fill" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Inicio</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/products">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Productos</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/customers">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-people-fill" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Clientes</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/sales">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-cart-check-fill" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Ventas</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item separator">
+                    <NavLink class="nav-link" href="/quotations">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-receipt" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Cotizaciones</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item" style="margin-top:35px">
+                    <NavLink class="nav-link" href="javascript:void(0)" @onclick="OnChangePassword">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-person-fill-gear" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Cambiar contraseña</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="javascript:void(0)" @onclick="OnLogout">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-door-open-fill" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Cerrar sesión</span>
+                    </NavLink>
+                </div>
+            </nav>
+        </div>
+    </BodyTemplate>
+</Offcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback OnLogout { get; set; }
+    [Parameter]
+    public EventCallback OnChangePassword { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+    private Offcanvas offcanvas;
+
+    private async Task ToggleNavMenu(bool setOpen)
+    {
+        if (setOpen)
+            await offcanvas!.ShowAsync();
+        else
+            await offcanvas!.HideAsync();
+
+    }
+}
