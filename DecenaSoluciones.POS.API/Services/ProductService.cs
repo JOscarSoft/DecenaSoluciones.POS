@@ -2,6 +2,7 @@
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace DecenaSoluciones.POS.API.Services
 {
@@ -123,7 +124,8 @@ namespace DecenaSoluciones.POS.API.Services
 
         private async Task<string> GenerateCodeFromDescription(string description)
         {
-            string init = description.Length > 3 ? description.Substring(0, 3) : description;
+            string plainText = Regex.Replace(description, "[^a-zA-Z]+", "", RegexOptions.Compiled);
+            string init = plainText.Length > 3 ? plainText.Substring(0, 3) : plainText;
             var existingCodes = await _dbContext.Products.Where(p => p.Code.Contains(init)).ToListAsync();
             var codeDigits = existingCodes.Select(p => new string(p.Code.Where(Char.IsDigit).ToArray()))
                                           .Where(p => !string.IsNullOrEmpty(p))

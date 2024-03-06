@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using System.Globalization;
 using System.Net.Http.Json;
 using static System.Net.WebRequestMethods;
 
@@ -190,6 +191,6 @@ namespace DecenaSoluciones.POS.Shared.Services
             return ToMoneyString(calc);
         }
 
-        private string ToMoneyString(decimal? value) => value.HasValue ? $"${value.Value.ToString("N2")}" : "0.00";
+        private string ToMoneyString(decimal? value) => value.HasValue ? $"{value.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}" : "0.00";
     }
 }

@@ -1,4 +1,5 @@
 ﻿@using DecenaSoluciones.POS.Shared.Dtos;
+@using System.Globalization;
 
 @inject NavigationManager navegation;
 
@@ -27,7 +28,7 @@
             @context.CustomerName
         </GridColumn>
         <GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" SortKeySelector="item => item.Total" HeaderTextAlignment="Alignment.Center">
-            @(context.Total != null ? context.Total?.ToString("N2") : "0.00")
+            @(context.Total != null ? context.Total?.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")
         </GridColumn>
         <GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true" SortKeySelector="item => item.CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
             @context.CreationDate.ToString("dd/MM/yyyy")

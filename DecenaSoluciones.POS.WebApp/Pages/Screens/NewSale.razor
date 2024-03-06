@@ -10,6 +10,7 @@
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization
 @using DecenaSoluciones.POS.Shared.Extensions
+@using System.Globalization;
 
 @attribute [Authorize]
 @inject SweetAlertService Swal;
@@ -64,10 +65,10 @@
                             <ValidationMessage For="@(() => productSale.UnitPrice)"></ValidationMessage>
                         </td>
                         <td>
-                            @productSale.ITBIS.ToString("N2")
+                            @productSale.ITBIS.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
                         </td>
                         <td>
-                            @productSale.Total.ToString("N2")
+                            @productSale.Total.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
                         </td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
@@ -269,7 +270,7 @@
     string totalTaxes => ToMoneyString(model.SaleProducts!.Sum(p => p.ITBIS));
     string subTotal => ToMoneyString(model.SaleProducts!.Sum(p => p.Total) - model.SaleProducts!.Sum(p => p.ITBIS));
 
-    private string ToMoneyString(decimal value) => $"${value.ToString("N2")}";
+    private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
 
     public void EnterCode(KeyboardEventArgs e)
     {

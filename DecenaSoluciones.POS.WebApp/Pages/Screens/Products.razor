@@ -7,6 +7,7 @@
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
 @using DecenaSoluciones.POS.WebApp.Pages.Components;
+@using System.Globalization;
 
 @attribute [Authorize]
 @inject SweetAlertService Swal;
@@ -51,10 +52,10 @@
             @context.Description
         </GridColumn>
         <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost" SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
-            @context.Cost.ToString("N2")
+            @context.Cost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
         </GridColumn>
         <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price" SortKeySelector="item => item.Price" HeaderTextAlignment="Alignment.Center">
-            @context.Price.ToString("N2")
+            @context.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
         </GridColumn>
         <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true" SortKeySelector="item => item.stock" Filterable="false" HeaderTextAlignment="Alignment.Center">
             @context.stock
