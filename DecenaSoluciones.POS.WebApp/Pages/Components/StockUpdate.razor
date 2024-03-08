@@ -1,6 +1,7 @@
 ﻿@using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.Shared.Services;
 @using CurrieTechnologies.Razor.SweetAlert2;
+@using System.Globalization;
 
 @inject SweetAlertService Swal;
 @inject IProductService productService;
@@ -41,11 +42,11 @@
                         <ValidationMessage For="@(() => productStock.Quantity)"></ValidationMessage>
                     </td>
                     <td>
-                        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="productStock.Cost"></CurrencyInput>
+                        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.Cost />
                         <ValidationMessage For="@(() => productStock.Cost)"></ValidationMessage>
                     </td>
                     <td>
-                        <CurrencyInput TValue="decimal" Locale="en-US" class="form-control" @bind-Value="productStock.Price"></CurrencyInput>
+                        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.Price />
                         <ValidationMessage For="@(() => productStock.Price)"></ValidationMessage>
                     </td>
                     <td>

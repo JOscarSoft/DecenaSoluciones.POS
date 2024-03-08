@@ -45,9 +45,9 @@
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(salesUrl)">Nueva venta</Button>
+        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(salesUrl)">Nueva venta</Button>
         <AuthorizeView Roles="admin, manager">
-            <Button Type="ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Generar reporte</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Generar reporte</Button>
         </AuthorizeView>
     </div>
 </div>

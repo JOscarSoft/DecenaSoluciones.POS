@@ -47,8 +47,8 @@
                 <Dropdown>
                     <DropdownToggleButton Color="ButtonColor.Primary">@context.User.Identity!.Name</DropdownToggleButton>
                     <DropdownMenu>
-                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" href="javascript:void(0)">Cambiar contraseña</DropdownItem>
-                        <DropdownItem To="#" Type="ButtonType.Link" @onclick="CerrarSesion" href="javascript:void(0)">Cerrar sesión</DropdownItem>
+                            <DropdownItem To="#" Type="BlazorBootstrap.ButtonType.Link" @onclick="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" href="javascript:void(0)">Cambiar contraseña</DropdownItem>
+                            <DropdownItem To="#" Type="BlazorBootstrap.ButtonType.Link" @onclick="CerrarSesion" href="javascript:void(0)">Cerrar sesión</DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
             </div>
