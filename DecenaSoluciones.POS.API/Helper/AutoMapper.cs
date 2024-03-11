@@ -11,6 +11,8 @@ namespace DecenaSoluciones.POS.API.Helper
         {
             CreateMap<Product, ProductViewModel>();
             CreateMap<Product, AddEditProduct>().ReverseMap();
+            CreateMap<Company, CompanyViewModel>();
+            CreateMap<Company, AddEditCompany>().ReverseMap();
             CreateMap<CustomerProduct, AddEditCustomerProduct>().ReverseMap();
             CreateMap<SaleProduct, AddEditSaleProduct>().ReverseMap();
             CreateMap<QuotationProduct, AddEditSaleProduct>()

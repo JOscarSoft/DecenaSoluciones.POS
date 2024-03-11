@@ -6,6 +6,7 @@ namespace DecenaSoluciones.POS.Shared.Extensions
     {
         public string Token { get; set; } = "";
         public string Username { get; set; } = "";
+        public string CompanyId { get; set; }
         public List<string> Roles { get; set; } = new();
 
         public ClaimsPrincipal ToClaimsPrincipal() => new(new ClaimsIdentity(new Claim[] {
@@ -16,7 +17,8 @@ namespace DecenaSoluciones.POS.Shared.Extensions
         {
             Username = principal.FindFirst(ClaimTypes.Name)?.Value ?? "",
             Token = token,
-            Roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList()
+            Roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList(),
+            CompanyId = principal.FindFirst("Company")?.Value ?? ""
         };
     }
 }

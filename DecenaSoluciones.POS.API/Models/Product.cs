@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DecenaSoluciones.POS.API.Models.Contracts;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DecenaSoluciones.POS.API.Models
 {
     [Table(name: "Products")]
-    public class Product : BaseEntity
+    public class Product : BaseEntity, ICompanyEntity
     {
         [MaxLength(15)]
         public required string Code { get; set; }
@@ -17,6 +18,8 @@ namespace DecenaSoluciones.POS.API.Models
         public required decimal Cost { get; set; }
         public bool Assignable { get; set; }
         public decimal ITBIS { get; set; }
+        public int CompanyId { get; set; }
+        public virtual Company Company { get; set; }
 
         public virtual ICollection<CustomerProduct>? CustomerProducts { get; set; }
     }

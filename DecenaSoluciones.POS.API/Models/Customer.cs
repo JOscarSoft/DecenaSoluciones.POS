@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DecenaSoluciones.POS.API.Models.Contracts;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DecenaSoluciones.POS.API.Models
 {
     [Table(name:"Customers")]
-    public class Customer : BaseEntity
+    public class Customer : BaseEntity, ICompanyEntity
     {
         [MaxLength(50)]
         public required string Name { get; set; }
@@ -21,11 +22,13 @@ namespace DecenaSoluciones.POS.API.Models
         public string? Direction { get; set; }
 
         public DateTime CreationDate { get; set; } = DateTime.Now;
+        public int CompanyId { get; set; }
 
         public virtual ICollection<CustomerProduct>? CustomerProducts { get; set; }
 
         public virtual ICollection<Quotation>? CustomerQuotations { get; set; }
 
         public virtual ICollection<Sale>? CustomerSales { get; set; }
+        public virtual Company Company { get; set; }
     }
 }

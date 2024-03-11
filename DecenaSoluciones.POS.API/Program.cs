@@ -1,5 +1,8 @@
+using DecenaSoluciones.POS.API.Middleware;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
+using DecenaSoluciones.POS.API.Services.Contracts;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +15,6 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddDbContext<DecenaSolucionesDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -52,6 +53,13 @@ builder.Services.AddScoped<IQuotationService, QuotationService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddSingleton<IDefaultContextFactory, DefaultContextFactory>();
+builder.Services.AddScoped(provider =>
+{
+    var factory = provider.GetRequiredService<IDefaultContextFactory>();
+    return factory.CreateContext();
+});
 
 builder.Services.AddCors(options =>
 {

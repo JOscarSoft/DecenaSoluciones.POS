@@ -11,5 +11,7 @@ namespace DecenaSoluciones.POS.API.Models
         public required string FirstName { get; set; }
         [MaxLength(50)]
         public string? LastName { get; set; }
+        public int? CompanyId { get; set; }
+        public virtual Company? Company { get; set; }
     }
 }

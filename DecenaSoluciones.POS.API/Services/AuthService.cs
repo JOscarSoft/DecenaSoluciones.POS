@@ -91,6 +91,8 @@ namespace DecenaSoluciones.POS.API.Services
                 throw new Exception("Usuario inválido");
             if (!await userManager.CheckPasswordAsync(user, model.Password))
                 throw new Exception("Contraseña inválida");
+            if(user.CompanyId != null && !user.Company!.Active)
+                throw new Exception("Su suscripción se encuentra inactiva, favor contactenos!");
 
             var userRoles = await userManager.GetRolesAsync(user);
             var authClaims = new List<Claim>
@@ -102,6 +104,7 @@ namespace DecenaSoluciones.POS.API.Services
             foreach (var userRole in userRoles)
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
 
+            authClaims.Add(new Claim("Company", user.CompanyId?.ToString() ?? model.CompanyId?.ToString() ?? ""));
             return GenerateToken(authClaims);
         }
 

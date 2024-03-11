@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Globalization;
 using System.Net.Http.Json;
 using static System.Net.WebRequestMethods;
@@ -9,10 +10,13 @@ namespace DecenaSoluciones.POS.Shared.Services
     {
         private readonly HttpClient _httpClient;
         private readonly HttpClient _httpClientLocal;
-        public SaleService(IHttpClientFactory clientFactory)
+        private readonly ILocalStorage _localStorage;
+
+        public SaleService(IHttpClientFactory clientFactory, ILocalStorage localStorage)
         {
             _httpClient = clientFactory.CreateClient("WebApi");
             _httpClientLocal = clientFactory.CreateClient("Local");
+            _localStorage = localStorage;
         }
 
         public async Task<ApiResponse<List<SalesViewModel>>> GetSalesList()
@@ -116,7 +120,12 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             try
             {
-                string htmlTemplate = await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
+                var companyId = (await _localStorage.GetStorage<UserInfoExtension>("userSession"))!.CompanyId;
+
+                string htmlTemplate = string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
+                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
+                    await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
+
                 string productsHTML = string.Empty;
                 string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
                 string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
