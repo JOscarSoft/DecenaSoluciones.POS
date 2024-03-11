@@ -1,13 +1,7 @@
-using DecenaSoluciones.POS.API.Middleware;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
-using DecenaSoluciones.POS.API.Services.Contracts;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -70,7 +64,8 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
     });
 });
-builder.Services.AddIdentity<AppUser, IdentityRole>(options => {
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 2;
     options.Password.RequireDigit = false;

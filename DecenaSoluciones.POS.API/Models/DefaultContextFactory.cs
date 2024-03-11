@@ -1,5 +1,4 @@
 ﻿using DecenaSoluciones.POS.API.Services;
-using DecenaSoluciones.POS.API.Services.Contracts;
 using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
