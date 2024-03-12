@@ -1,0 +1,358 @@
+﻿@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+@inject ICompanyService companyService;
+
+<EditForm Model="newCompany" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+
+    <div class="col-md-4">
+        <label class="form-label">Nombre:</label>
+        <InputText class="form-control" @bind-Value="newCompany.Name" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newCompany.Name)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Nombre Contacto:</label>
+        <InputText class="form-control" @bind-Value="newCompany.ContactName" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newCompany.ContactName)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Telefono Contacto:</label>
+        <InputMask @bind-Value="newCompany.ContactPhone" class="form-control" data-mask="(000) 000-0000" />
+        <ValidationMessage For="@(() => newCompany.ContactPhone)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Fin suscripción:</label>
+        <DateInput TValue="DateTime" @bind-Value="newCompany.SubscriptionExpiration" />
+        <ValidationMessage For="@(() => newCompany.SubscriptionExpiration)"></ValidationMessage>
+    </div>
+    <table class="table">
+        <thead>
+            <tr class="bg-dark text-white border-bottom-0 headerRow" style="text-align:center">
+                <th>Usuario</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Rol</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in companyUsers!)
+            {
+                <tr style="align-content:center">
+                    <td style="width:15%">
+                        @user.Username
+                    </td>
+                    <td style="width:15%">
+                        @user.FirstName
+                    </td>
+                    <td style="width:15%">
+                        @user.LastName
+                    </td>
+                    <td style="width:15%">
+                        @user.Role
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(async () => await removeUser(user))">
+                            <Icon Name="IconName.Trash" />
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <button type="submit" Class="btn btn-primary">
+                Guardar
+            </button>
+        </AuthorizeView>
+        <AuthorizeView Roles="admin" Context="authContext">
+            <Button Color="ButtonColor.Danger" @onclick="RemoveCompany" style="margin-right:15px">
+                Eliminar
+            </Button>
+        </AuthorizeView>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int CompanyId { get; set; } = 0;
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    AddEditCompany newCompany = new AddEditCompany();
+    List<RegistrationViewModel> companyUsers = new List<RegistrationViewModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadCompanyUsers();
+        await LoadCompany();
+        PreloadService.Hide();
+    }
+
+    private async Task removeUser(RegistrationViewModel user)
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar usuario",
+                    Text = "¿Esta seguro de eliminar el usuario?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await authService.RemoveUser(user.Username);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Usuario eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al eliminar el usuario: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+                await LoadCompanyUsers();
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+    private async Task LoadCompany()
+    {
+        try
+        {
+            if (CompanyId > 0)
+            {
+                var response = await companyService.GetCompany(CompanyId);
+                if (response.Success)
+                {
+                    newCompany = new AddEditCompany(response.Result);
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al obtener los datos de la compañía: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los datos de la compañía: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+
+    private async Task LoadCompanyUsers()
+    {
+        if(CompanyId > 0)
+        {           
+            try
+            {
+                var response = await authService.GetUsersList(CompanyId);
+                if (response.Success)
+                {
+                    companyUsers = response.Result ?? new List<RegistrationViewModel>();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al obtener los usuarios: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener los usuarios: " + ex.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            } 
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(string.IsNullOrEmpty(newCompany.Name))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el nombre de la compañía.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            if (CompanyId == 0)
+            {
+                var response = await companyService.AddNewCompany(newCompany);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Compañía agregada exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newCompany = new AddEditCompany();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al agrager la compañía: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await companyService.UpdateCompany(CompanyId, newCompany);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Compañía modificada exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al modificar la compañía: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+
+    }
+    
+    private async Task RemoveCompany()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar compañía",
+                    Text = "¿Esta seguro de eliminar la compañía?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await companyService.RemoveCompany(CompanyId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Compañía eliminada exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error al eliminar la compañía: " + response.Message,
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+    }
+}

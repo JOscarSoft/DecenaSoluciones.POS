@@ -36,6 +36,26 @@ namespace DecenaSoluciones.POS.API.Controllers
             return Ok(apiResponse);
         }
 
+        [HttpGet]
+        [Route("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var apiResponse = new ApiResponse<CompanyViewModel>();
+            try
+            {
+                apiResponse.Result = await _companyService.GetCompanyById(id);
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateNewCompany(AddEditCompany company)

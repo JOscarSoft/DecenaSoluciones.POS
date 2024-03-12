@@ -82,7 +82,7 @@
     private async Task<IEnumerable<NavItem>> GetNavItems()
     {
         var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
-        if (string.IsNullOrEmpty(userSession.CompanyId))
+        if (userSession!.IsCompanyCreator)
         {
             navItems = new List<NavItem>
             {

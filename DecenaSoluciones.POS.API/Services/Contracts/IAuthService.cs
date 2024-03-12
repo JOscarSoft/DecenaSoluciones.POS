@@ -9,5 +9,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<bool> ChangePassword(ChangePasswordViewModel model);
         Task<bool> RemoveUser(string userName);
         Task<List<RegistrationViewModel>> GetUsersList();
+        Task<List<RegistrationViewModel>> GetCompanyUsersList(int CompanyId);
     }
 }

@@ -11,6 +11,29 @@ namespace DecenaSoluciones.POS.Shared.Dtos
     {
         [Required(ErrorMessage = "El nombre es requerido")]
         public string Name { get; set; } = string.Empty;
-        public bool Active { get; set; } = true;
+
+        [Required(ErrorMessage = "El nombre del contacto es requerido")]
+        public string ContactName { get; set; }
+        public string? ContactEmail { get; set; }
+        [Required(ErrorMessage = "El teléfono del contacto es requerido")]
+        public string ContactPhone { get; set; }
+        public DateTime SubscriptionExpiration { get; set; } = DateTime.Now;
+
+        public AddEditCompany()
+        {
+            
+        }
+
+        public AddEditCompany(CompanyViewModel? companyViewModel)
+        {
+            if(companyViewModel == null)
+                return;
+
+            Name = companyViewModel.Name;
+            ContactName = companyViewModel.ContactName;
+            ContactEmail = companyViewModel.ContactEmail;
+            ContactPhone = companyViewModel.ContactPhone;
+            SubscriptionExpiration = companyViewModel.SubscriptionExpiration;
+        }
     }
 }

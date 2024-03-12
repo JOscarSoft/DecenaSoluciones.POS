@@ -13,6 +13,14 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 
         [Required(ErrorMessage = "El nombre es requerido")]
         public string Name { get; set; } = string.Empty;
-        public bool Active { get; set; }
+
+        [Required(ErrorMessage = "El nombre del contacto es requerido")]
+        public string ContactName { get; set; }
+        public string? ContactEmail { get; set; }
+
+        [Required(ErrorMessage = "El telefono es requerido")]
+        public string ContactPhone { get; set; }
+        public DateTime SubscriptionExpiration { get; set; }
+        public bool Active { get {  return SubscriptionExpiration > DateTime.Now; } }
     }
 }

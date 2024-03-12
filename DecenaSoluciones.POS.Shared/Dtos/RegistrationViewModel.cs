@@ -9,6 +9,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 {
     public class RegistrationViewModel
     {
+
         [Required(ErrorMessage = "El usuario es requerido")]
         public string Username { get; set; }
         [Required(ErrorMessage = "El nombre del usuario es requerido")]
@@ -20,5 +21,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 
         [Required(ErrorMessage = "El rol es requerido")]
         public string? Role { get; set; }
+        public int CompanyId { get; set; }
+        public string CompanyName { get; set; }
+        //public CompanyViewModel? Company { get; set; }
     }
 }

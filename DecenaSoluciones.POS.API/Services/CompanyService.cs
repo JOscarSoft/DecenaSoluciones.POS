@@ -84,5 +84,11 @@ namespace DecenaSoluciones.POS.API.Services
 
             return 1;
         }
+
+        public async Task<CompanyViewModel> GetCompanyById(int id)
+        {
+            var company = await _dbContext.Companies.FirstOrDefaultAsync(p => p.Id == id);
+            return _mapper.Map<CompanyViewModel>(company);
+        }
     }
 }

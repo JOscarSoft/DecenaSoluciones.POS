@@ -8,5 +8,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<CompanyViewModel> AddNewCompany(AddEditCompany company);
         Task<CompanyViewModel> UpdateCompany(int id, AddEditCompany company);
         Task<int> RemoveCompany(int id);
+        Task<CompanyViewModel> GetCompanyById(int id);
     }
 }

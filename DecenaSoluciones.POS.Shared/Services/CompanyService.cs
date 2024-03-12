@@ -55,13 +55,13 @@ namespace DecenaSoluciones.POS.Shared.Services
                 throw new Exception("Se produjo un error al procesar la petición.");
         }
 
-        public async Task<ApiResponse<bool>> RemoveCompany(int id)
+        public async Task<ApiResponse<int>> RemoveCompany(int id)
         {
             var response = await _httpClient.DeleteAsync($"api/Company/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
 
                 if (result == null)
                     throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
@@ -70,6 +70,16 @@ namespace DecenaSoluciones.POS.Shared.Services
             }
             else
                 throw new Exception("Se produjo un error al procesar la petición.");
+        }
+
+        public async Task<ApiResponse<CompanyViewModel>> GetCompany(int companyId)
+        {
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<CompanyViewModel>>($"api/Company/{companyId}");
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+
+            return result;
         }
     }
 }

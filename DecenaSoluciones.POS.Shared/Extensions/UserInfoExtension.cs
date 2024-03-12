@@ -8,6 +8,11 @@ namespace DecenaSoluciones.POS.Shared.Extensions
         public string Username { get; set; } = "";
         public string CompanyId { get; set; }
         public List<string> Roles { get; set; } = new();
+        public bool IsCompanyCreator { get
+            {
+                return string.IsNullOrWhiteSpace(CompanyId);
+            } 
+        }
 
         public ClaimsPrincipal ToClaimsPrincipal() => new(new ClaimsIdentity(new Claim[] {
             new (ClaimTypes.Name, Username)

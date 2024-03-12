@@ -38,17 +38,19 @@ namespace DecenaSoluciones.POS.API.Services
                 UserName = model.Username.ToUpper(),
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                CompanyId = model.CompanyId > 0 ? model.CompanyId : null
             };
-            var createUserResult = await userManager.CreateAsync(user, model.Password);
+
+            var createUserResult = await userManager.CreateAsync(user, model.Password!);
             if (!createUserResult.Succeeded)
                 throw new Exception(createUserResult.Errors?.FirstOrDefault()?.Description ?? "Error al crear el usuario.");
 
-            if (!await roleManager.RoleExistsAsync(model.Role))
-                await roleManager.CreateAsync(new IdentityRole(model.Role));
+            if (!await roleManager.RoleExistsAsync(model.Role!))
+                await roleManager.CreateAsync(new IdentityRole(model.Role!));
 
-            if (await roleManager.RoleExistsAsync(model.Role))
-                await userManager.AddToRoleAsync(user, model.Role);
+            if (await roleManager.RoleExistsAsync(model.Role!))
+                await userManager.AddToRoleAsync(user, model.Role!);
 
             return createUserResult.Succeeded;
         }
@@ -82,7 +84,7 @@ namespace DecenaSoluciones.POS.API.Services
 
             if (userExists.CompanyId.HasValue)
             {
-                var moreUsers = await _dbContext.Users.AnyAsync(p => p.UserName != userExists.UserName);
+                var moreUsers = await _dbContext.Users.AnyAsync(p => p.UserName != userExists.UserName && p.CompanyId == userExists.CompanyId);
 
                 if(!moreUsers)
                     throw new Exception("No se puede eliminar el unico usuario existente para esta compañía.");
@@ -102,7 +104,7 @@ namespace DecenaSoluciones.POS.API.Services
                 throw new Exception("Usuario inválido");
             if (!await userManager.CheckPasswordAsync(user, model.Password))
                 throw new Exception("Contraseña inválida");
-            if(user.CompanyId != null && !user.Company!.Active)
+            if(user.CompanyId != null && user.Company!.SubscriptionExpiration < DateTime.Now)
                 throw new Exception("Su suscripción se encuentra inactiva, favor contactenos!");
 
             var userRoles = await userManager.GetRolesAsync(user);
@@ -115,19 +117,20 @@ namespace DecenaSoluciones.POS.API.Services
             foreach (var userRole in userRoles)
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
 
-            authClaims.Add(new Claim("Company", user.CompanyId?.ToString() ?? model.CompanyId ?? ""));
-            return GenerateToken(authClaims);
+            string companyId = user.CompanyId?.ToString() ?? model.CompanyId ?? "";
+            authClaims.Add(new Claim("Company", companyId));
+            return GenerateToken(authClaims, string.IsNullOrEmpty(companyId) || int.Parse(companyId) == 1 || int.Parse(companyId) == 0);
         }
 
 
-        private string GenerateToken(IEnumerable<Claim> claims)
+        private string GenerateToken(IEnumerable<Claim> claims, bool dontExpire)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTKey:Secret"] ?? "ecawiasqrpqrgyhwnolrudpbsrwaynbqdayndnmcehjnwqyouikpodzaqxivwkconwqbhrmxfgccbxbyljguwlxhdlcvxlutbnwjlgpfhjgqbegtbxbvwnacyqnltrby"));
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Issuer = _configuration["JWTKey:ValidIssuer"],
                 Audience = _configuration["JWTKey:ValidAudience"],
-                Expires = DateTime.Now.AddYears(1),
+                Expires = dontExpire ? DateTime.Now.AddYears(1) : DateTime.Now.AddDays(1).Date,
                 SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(claims)
             };
@@ -146,10 +149,32 @@ namespace DecenaSoluciones.POS.API.Services
                 var userRoles = await userManager.GetRolesAsync(user);
                 result.Add(new RegistrationViewModel
                 {
-                    Username = user.UserName,
+                    Username = user.UserName!,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    Role = userRoles.FirstOrDefault()
+                    Role = userRoles.FirstOrDefault(),
+                    CompanyId = user.Company?.Id ?? 0,
+                    CompanyName = user.Company?.Name ?? string.Empty,
+                });
+            }
+            return result;
+        }
+
+        public async Task<List<RegistrationViewModel>> GetCompanyUsersList(int CompanyId)
+        {
+            var result = new List<RegistrationViewModel>();
+            var users = await userManager.Users.Where(p => p.CompanyId == CompanyId).ToListAsync();
+            foreach (var user in users)
+            {
+                var userRoles = await userManager.GetRolesAsync(user);
+                result.Add(new RegistrationViewModel
+                {
+                    Username = user.UserName!,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = userRoles.FirstOrDefault(),
+                    CompanyId = user.Company?.Id ?? 0,
+                    CompanyName = user.Company?.Name ?? string.Empty,
                 });
             }
             return result;

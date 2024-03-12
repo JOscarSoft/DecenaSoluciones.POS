@@ -106,7 +106,7 @@
         await SubmitLogin();
     }
 
-    private async Task SubmitAdminLogin()
+    private void SubmitAdminLogin()
     {
         navManager.NavigateTo("/");
     }
@@ -130,7 +130,7 @@
                 var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
                 PreloadService.Hide();
 
-                if (string.IsNullOrEmpty(userSession!.CompanyId))
+                if (userSession!.IsCompanyCreator)
                     OnCompanySelection = true;
                 else
                     navManager.NavigateTo("/");

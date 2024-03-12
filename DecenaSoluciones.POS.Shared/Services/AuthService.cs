@@ -38,6 +38,16 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
+        public async Task<ApiResponse<List<RegistrationViewModel>>> GetUsersList(int companyid)
+        {
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<RegistrationViewModel>>>($"api/Authentication/users/company/{companyid}");
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
+        }
+
         public async Task<ApiResponse<string>> Login(LoginViewModel model)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Authentication/login", model);

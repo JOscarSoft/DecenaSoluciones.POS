@@ -6,10 +6,17 @@ namespace DecenaSoluciones.POS.API.Models
     [Table(name: "Companies")]
     public class Company : BaseEntity
     {
-        public int Id { get; set; }
-
         [MaxLength(50)]
         public string Name { get; set; }
-        public bool Active { get; set; }
+
+        [MaxLength(50)]
+        public string? ContactName { get; set; }
+
+        [MaxLength(50)]
+        public string? ContactEmail { get; set; }
+
+        [MaxLength(25)]
+        public string? ContactPhone { get; set; }
+        public DateTime SubscriptionExpiration { get; set; }
     }
 }

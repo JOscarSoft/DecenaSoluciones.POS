@@ -2,6 +2,7 @@
 
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.Shared.Extensions
 @using DecenaSoluciones.POS.WebApp.Extensions;
 @using DecenaSoluciones.POS.WebApp.Pages.Components;
 @using DecenaSoluciones.POS.Shared.Services;
@@ -11,6 +12,7 @@
 @attribute [Authorize(Roles = "admin")]
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
+@inject ILocalStorage _localStorage;
 
 <style>
     .tdActions {
@@ -46,6 +48,12 @@
           EmptyText="No se encontraron registros para mostrar"
           AllowRowClick="true">
 
+        <GridColumn TItem="RegistrationViewModel" Filterable="false" Sortable="false" ColumnClass="@(x => "tdActions")">
+            <ChildContent>
+                <Button Color="ButtonColor.Primary" @onclick="(() => ShowChangePasswordModal(context.Username))"><Icon Name="IconName.Pencil" /></Button>
+                <Button Color="ButtonColor.Danger" @onclick="(() => RemoveUser(context.Username))"><Icon Name="IconName.Trash" /></Button>
+            </ChildContent>
+        </GridColumn>
         <GridColumn TItem="RegistrationViewModel" HeaderText="Usuario" PropertyName="Username" SortKeySelector="item => item.Username" HeaderTextAlignment="Alignment.Center">
             @context.Username
         </GridColumn>
@@ -58,12 +66,12 @@
         <GridColumn TItem="RegistrationViewModel" HeaderText="Rol" PropertyName="Role" SortKeySelector="item => item.Role" HeaderTextAlignment="Alignment.Center">
             @context.Role
         </GridColumn>
-        <GridColumn TItem="RegistrationViewModel" Filterable="false" Sortable="false" ColumnClass="@(x => "tdActions")">
-            <ChildContent>
-                <Button Color="ButtonColor.Primary" @onclick="(() => ShowChangePasswordModal(context.Username))"><Icon Name="IconName.Pencil" /></Button>
-                <Button Color="ButtonColor.Danger" @onclick="(() => RemoveUser(context.Username))"><Icon Name="IconName.Trash" /></Button>
-            </ChildContent>
-        </GridColumn>
+        @if (IsCompanyCreator)
+        {
+            <GridColumn TItem="RegistrationViewModel" HeaderText="Compañía" SortKeySelector="item => item.CompanyName" PropertyName="Name" HeaderTextAlignment="Alignment.Center">
+                @(context.CompanyName ?? string.Empty)
+            </GridColumn>            
+        }
     </Grid>
 </div>
 
@@ -73,9 +81,14 @@
     Grid<RegistrationViewModel> usersGrid = default!;
     private Modal addEditUserModal = default!;
     private Modal changePasswordModal = default!;
+    private bool IsCompanyCreator = false;
+    private UserInfoExtension? userSession;
 
     protected override async Task OnInitializedAsync()
     {
+        userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+        IsCompanyCreator = userSession!.IsCompanyCreator;
+
         await UpdateData();
     }
 
@@ -84,7 +97,7 @@
         try
         {
             PreloadService!.Show();
-            var response = await authService.GetUsersList();
+            var response = IsCompanyCreator ? await authService.GetUsersList() : await authService.GetUsersList(int.Parse(userSession!.CompanyId));
             PreloadService.Hide();
             if (response.Success)
             {

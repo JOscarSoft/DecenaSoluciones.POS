@@ -41,6 +41,31 @@ namespace DecenaSoluciones.POS.API.Controllers
             return Ok(apiResponse);
         }
 
+        [HttpGet]
+        [Route("users/company/{companyid}")]
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> GetCompanyUsersList(int companyid)
+        {
+            var apiResponse = new ApiResponse<List<RegistrationViewModel>>();
+            try
+            {
+                var result = await _authService.GetCompanyUsersList(companyid);
+
+                if (result == null)
+                    throw new Exception("Error obteniendo lista de usuarios.");
+
+                apiResponse.Result = result;
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login(LoginViewModel model)

@@ -1,4 +1,5 @@
 ﻿@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Extensions
 @using DecenaSoluciones.POS.Shared.Services;
 @using DecenaSoluciones.POS.WebApp.Extensions;
 @using CurrieTechnologies.Razor.SweetAlert2;
@@ -6,6 +7,8 @@
 
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
+@inject ICompanyService companyService;
+@inject ILocalStorage _localStorage;
 
 
 <EditForm Model="newUser" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
@@ -36,6 +39,16 @@
         <input class="form-control" @bind="passwordConfirm" maxlength="15" type="password"></input>
         <ValidationMessage For="@(() => newUser.Password)"></ValidationMessage>
     </div>
+    <div class="col-md-4">
+        <label class="form-label">Compañía:</label>
+        <AutoComplete @bind-Value="newUser.CompanyName"
+            TItem="CompanyViewModel"
+            DataProvider="CompaniesDataProvider"
+            PropertyName="Name"
+            Placeholder="Seleccione una compañía..."
+            OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
+        <InputText hidden="hidden" @bind-Value="companyId" />
+    </div>
     <div class="form-group col-md-4">
         <label>Rol</label>
         <div>
@@ -64,9 +77,20 @@
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+    private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
 
     RegistrationViewModel newUser = new RegistrationViewModel();
     string passwordConfirm = string.Empty;
+    string companyId {
+        get
+        {
+            return newUser.CompanyId.ToString();
+        }
+        set
+        {
+            newUser.CompanyId = string.IsNullOrEmpty(value) ? 0 : int.Parse(value);
+        }
+    }
 
     private async Task CloseModal()
     {
@@ -99,6 +123,10 @@
             try
             {
                 passwordConfirm = string.Empty;
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                if (!userSession!.IsCompanyCreator)
+                    newUser.CompanyId = int.Parse(userSession.CompanyId);
+
                 var response = await authService.Registration(newUser);
                 PreloadService.Hide();
                 if (response.Success)
@@ -140,6 +168,61 @@
                 {
                     Title = "Error",
                     Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void OnChangeCompany(CompanyViewModel? selected)
+    {
+        if (selected != null)
+        {
+            newUser.CompanyName = selected.Name;
+            newUser.CompanyId = selected.Id;
+            return;
+        }
+        newUser.CompanyName = string.Empty;
+        newUser.CompanyId = 0;
+    }
+
+    private async Task<AutoCompleteDataProviderResult<CompanyViewModel>> CompaniesDataProvider(AutoCompleteDataProviderRequest<CompanyViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(companies.OrderBy(prod => prod.Name)));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateCompanyList();
+    }
+
+    private async Task UpdateCompanyList()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await companyService.GetCompanyList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                companies = response.Result ?? new List<CompanyViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener las compañías: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener las compañías: " + ex.Message,
                     Icon = SweetAlertIcon.Error
                 });
         }

@@ -14,7 +14,7 @@
 
 <h3>Clientes</h3>
 
-<Modal @ref="addEditCompanyModal" UseStaticBackdrop="true" Fullscreen="ModalFullscreen.Always" OnHidden="OnModalHiding" />
+<Modal @ref="addEditCompanyModal" UseStaticBackdrop="true" Size="ModalSize.Large" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">        
@@ -46,8 +46,17 @@
         <GridColumn TItem="CompanyViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
             @context.Name
         </GridColumn>
+        <GridColumn TItem="CompanyViewModel" HeaderText="Contacto" PropertyName="ContactName" SortKeySelector="item => item.ContactName" HeaderTextAlignment="Alignment.Center">
+            @(context.ContactName)
+        </GridColumn>
+        <GridColumn TItem="CompanyViewModel" HeaderText="Teléfono" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" HeaderTextAlignment="Alignment.Center">
+            @(context.ContactPhone)
+        </GridColumn>
         <GridColumn TItem="CompanyViewModel" HeaderText="Activa" PropertyName="Active" SortKeySelector="item => item.Active" HeaderTextAlignment="Alignment.Center">
-            @(context.Active ? "Si" : "No")
+            @(context.Active ? "Yes" : "No")
+        </GridColumn>
+        <GridColumn TItem="CompanyViewModel" HeaderText="Fin suscripción" PropertyName="SubscriptionExpiration" SortKeySelector="item => item.SubscriptionExpiration" HeaderTextAlignment="Alignment.Center">
+            @(context.SubscriptionExpiration.ToString("dd/MM/yyyy"))
         </GridColumn>
     </Grid>
 </div>
@@ -102,7 +111,7 @@
         var parameters = new Dictionary<string, object>();
         parameters.Add("CompanyId", company != null ? company.Id : 0);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditCompanyModal));
-        await addEditCompanyModal.ShowAsync<AddEditCustomerComponent>(title: company != null ? "Actualizar compañía" : "Agregar nueva compañía", parameters: parameters);
+        await addEditCompanyModal.ShowAsync<AddEditCompanyComponent>(title: company != null ? "Actualizar compañía" : "Agregar nueva compañía", parameters: parameters);
     }
 
     private async Task HideAddEditCompanyModal(MouseEventArgs e)

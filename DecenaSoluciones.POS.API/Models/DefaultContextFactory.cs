@@ -10,6 +10,11 @@ namespace DecenaSoluciones.POS.API.Models
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
 
+        public DefaultContextFactory()
+        {
+                
+        }
+
         public DefaultContextFactory(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
