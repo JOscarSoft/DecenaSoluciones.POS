@@ -14,12 +14,17 @@ namespace DecenaSoluciones.POS.API.Services
         private readonly UserManager<AppUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly IConfiguration _configuration;
-        public AuthService(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        private readonly DecenaSolucionesDBContext _dbContext;
+
+        public AuthService(UserManager<AppUser> userManager, 
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration configuration,
+            DecenaSolucionesDBContext dbContext)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
             _configuration = configuration;
-
+            _dbContext = dbContext;
         }
         public async Task<bool> Registration(RegistrationViewModel model)
         {
@@ -75,13 +80,19 @@ namespace DecenaSoluciones.POS.API.Services
             if (userExists == null)
                 throw new Exception("No se encontró el usuario especificado.");
 
-           
+            if (userExists.CompanyId.HasValue)
+            {
+                var moreUsers = await _dbContext.Users.AnyAsync(p => p.UserName != userExists.UserName);
 
-            var changePasswordResult = await userManager.DeleteAsync(userExists);
-            if (!changePasswordResult.Succeeded)
-                throw new Exception(changePasswordResult.Errors?.FirstOrDefault()?.Description ?? "Error al eliminar el usuario.");
+                if(!moreUsers)
+                    throw new Exception("No se puede eliminar el unico usuario existente para esta compañía.");
+            }
 
-            return changePasswordResult.Succeeded;
+            var deleteUserResult = await userManager.DeleteAsync(userExists);
+            if (!deleteUserResult.Succeeded)
+                throw new Exception(deleteUserResult.Errors?.FirstOrDefault()?.Description ?? "Error al eliminar el usuario.");
+
+            return deleteUserResult.Succeeded;
         }
 
         public async Task<string> Login(LoginViewModel model)
@@ -104,7 +115,7 @@ namespace DecenaSoluciones.POS.API.Services
             foreach (var userRole in userRoles)
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
 
-            authClaims.Add(new Claim("Company", user.CompanyId?.ToString() ?? model.CompanyId?.ToString() ?? ""));
+            authClaims.Add(new Claim("Company", user.CompanyId?.ToString() ?? model.CompanyId ?? ""));
             return GenerateToken(authClaims);
         }
 

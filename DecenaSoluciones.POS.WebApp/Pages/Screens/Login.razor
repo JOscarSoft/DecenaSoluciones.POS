@@ -12,6 +12,8 @@
 @inject NavigationManager navManager
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
+@inject ICompanyService companyService;
+@inject ILocalStorage _localStorage;
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
 
@@ -21,17 +23,38 @@
 
         <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%;margin-bottom:50px">
 
-        <div class="mb-3">
-            <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
-        </div>
+        @if (OnCompanySelection)
+        {
+            <div class="mb-3">
+                <AutoComplete @bind-Value="model.CompanyName"
+                              TItem="CompanyViewModel"
+                              DataProvider="CompaniesDataProvider"
+                              PropertyName="Name"
+                              Placeholder="Seleccione una compañía..."
+                              OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
+                <InputText hidden="hidden" @bind-Value="model.CompanyId" />
+            </div>
+            <div class="mb-3" style="margin-top:50px">
+                <button @onclick="SubmitCompanyLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Acceder a Compañía</button>
+            </div>
+            <div class="mb-3" style="margin-top:50px">
+                <button @onclick="SubmitAdminLogin" class="btn btn-lg btn-dark btn-block" style="width:75%">Modulo Administrativo</button>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
+            </div>
 
-        <div class="mb-3">
-            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
-        </div>
+            <div class="mb-3">
+                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
+            </div>
 
-        <div class="mb-3" style="margin-top:50px">
-            <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Login</button>
-        </div>
+            <div class="mb-3" style="margin-top:50px">
+                <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Login</button>
+            </div>
+        }
 
     </div>
 
@@ -43,7 +66,10 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     private LoginViewModel model = new LoginViewModel();
     List<ToastMessage> messages = new List<ToastMessage>();
+    private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
     private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Danger, message));
+
+    private bool OnCompanySelection = false;
 
     private ToastMessage CreateToastMessage(ToastType toastType, string message)
     => new ToastMessage
@@ -69,6 +95,22 @@
             await SubmitLogin();
     }
 
+    private async Task SubmitCompanyLogin()
+    {
+        if (string.IsNullOrEmpty(model.CompanyId))
+        {
+            ShowMessage("Favor seleccionar la compañía.");
+            return;
+        }
+
+        await SubmitLogin();
+    }
+
+    private async Task SubmitAdminLogin()
+    {
+        navManager.NavigateTo("/");
+    }
+
     private async Task SubmitLogin()
     {
         string validations = validateLogin();
@@ -81,16 +123,21 @@
         try
         {
             var response = await authService.Login(model);
-            PreloadService.Hide();
             if (response.Success)
             {
                 var authExt = (AuthExtension)autenticacionProvider;
                 await authExt.UpdateSessionState(response.Result!);
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                PreloadService.Hide();
 
-                navManager.NavigateTo("/");
+                if (string.IsNullOrEmpty(userSession!.CompanyId))
+                    OnCompanySelection = true;
+                else
+                    navManager.NavigateTo("/");
             }
             else
             {
+                PreloadService.Hide();
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
@@ -110,6 +157,60 @@
                     Icon = SweetAlertIcon.Error
                 });
 
+        }
+    }
+
+    private void OnChangeCompany(CompanyViewModel? selected)
+    {
+        if (selected != null)
+        {
+            model.CompanyName = selected.Name;
+            model.CompanyId = selected.Id.ToString();
+            return;
+        }
+        model.CompanyId = string.Empty;
+    }
+
+    private async Task<AutoCompleteDataProviderResult<CompanyViewModel>> CompaniesDataProvider(AutoCompleteDataProviderRequest<CompanyViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(companies.OrderBy(prod => prod.Name)));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateCompanyList();
+    }
+
+    private async Task UpdateCompanyList()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await companyService.GetCompanyList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                companies = response.Result ?? new List<CompanyViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener las compañías: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener las compañías: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
         }
     }
 

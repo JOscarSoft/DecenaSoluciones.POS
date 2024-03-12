@@ -1,0 +1,121 @@
+﻿@page "/companies"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Pages.Components;
+@using DecenaSoluciones.POS.Shared.Services;
+@using System.Text.RegularExpressions;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject ICompanyService companyService;
+
+<h3>Clientes</h3>
+
+<Modal @ref="addEditCompanyModal" UseStaticBackdrop="true" Fullscreen="ModalFullscreen.Always" OnHidden="OnModalHiding" />
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">        
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditCompanyModal(null)">Agregar compañía</Button>
+        </AuthorizeView>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="companiesGrid" TItem="CompanyViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="companyList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Clientes por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} productos"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
+
+        <GridColumn TItem="CompanyViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="CompanyViewModel" HeaderText="Activa" PropertyName="Active" SortKeySelector="item => item.Active" HeaderTextAlignment="Alignment.Center">
+            @(context.Active ? "Si" : "No")
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<CompanyViewModel> companyList = new List<CompanyViewModel>();
+    Grid<CompanyViewModel> companiesGrid = default!;
+    private Modal addEditCompanyModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await companyService.GetCompanyList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                companyList = response.Result!.OrderBy(p=> p.Active).OrderBy(p => p.Name).ToList() ?? new List<CompanyViewModel>();
+                await companiesGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error al obtener las compañías: " + response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al obtener los compañías: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task ShowAddEditCompanyModal(CompanyViewModel? company)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("CompanyId", company != null ? company.Id : 0);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditCompanyModal));
+        await addEditCompanyModal.ShowAsync<AddEditCustomerComponent>(title: company != null ? "Actualizar compañía" : "Agregar nueva compañía", parameters: parameters);
+    }
+
+    private async Task HideAddEditCompanyModal(MouseEventArgs e)
+    {
+        await addEditCompanyModal.HideAsync();
+    }
+    private async Task OnRowClick(GridRowEventArgs<CompanyViewModel> args)
+    {
+        await ShowAddEditCompanyModal(args.Item);
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+    }
+}

@@ -24,6 +24,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddSweetAlert2();
