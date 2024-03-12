@@ -45,6 +45,12 @@ namespace DecenaSoluciones.POS.API.Services
             return result;
         }
 
+        public async Task<List<InventoryReportViewModel>> GetInventoryReport()
+        {
+            var products = await _dbContext.Products.ToListAsync();
+            return _mapper.Map<List<InventoryReportViewModel>>(products);
+        }
+
         public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly fromDate, DateOnly toDate)
         {
             var sales = await _dbContext.Sale

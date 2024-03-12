@@ -30,6 +30,23 @@ namespace DecenaSoluciones.POS.Shared.Services
                 throw new Exception("Se produjo un error al procesar la petición.");
         }
 
+        public async Task<Stream> GenerateInventoryReport()
+        {
+            var response = await _httpClient.GetAsync("api/Report/GetInventoryReport");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStreamAsync();
+
+                if (result == null)
+                    throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+
+                return result;
+            }
+            else
+                throw new Exception("Se produjo un error al procesar la petición.");
+        }
+
         public async Task<ApiResponse<DashboardViewModel>> GetDashboardReport()
         {
             var result = await _httpClient.GetFromJsonAsync<ApiResponse<DashboardViewModel>>("api/Report/Dashboard");

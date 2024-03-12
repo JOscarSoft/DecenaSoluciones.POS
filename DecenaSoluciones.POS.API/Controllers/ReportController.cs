@@ -67,5 +67,19 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Ventas por productos.xlsx");
         }
+
+        [HttpGet]
+        [Route("GetInventoryReport")]
+        public async Task<IActionResult> GetInventoryReport()
+        {
+            var result = await _reportService.GetInventoryReport();
+
+            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
+
+            using var ms = new MemoryStream();
+            excelReport.SaveAs(ms);
+
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de inventario.xlsx");
+        }
     }
 }

@@ -12,6 +12,8 @@
 @attribute [Authorize]
 @inject SweetAlertService Swal;
 @inject IProductService productService;
+@inject IReportService reportService;
+@inject IJSRuntime JS;
 
 <h3>Productos</h3>
 
@@ -22,6 +24,7 @@
         <AuthorizeView Roles="admin, manager">
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowStockUpdateModal()">Actualizar stock</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateInventoryReport">Reporte de inventario</Button>
         </AuthorizeView>
     </div>
 </div>
@@ -123,6 +126,39 @@
         parameters.Add("ProductList", productList);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
         await addEditProductModal.ShowAsync<StockUpdate>(title: "Actualizar Stock", parameters: parameters);
+    }
+
+    private async Task GenerateInventoryReport()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await reportService.GenerateInventoryReport();
+
+            var fileName = "Reporte de inventario.xlsx";
+
+            using var streamRef = new DotNetStreamReference(stream: response);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            PreloadService.Hide();
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = "Reporte generado exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
     }
 
     private async Task HideAddEditProductModal(MouseEventArgs e)
