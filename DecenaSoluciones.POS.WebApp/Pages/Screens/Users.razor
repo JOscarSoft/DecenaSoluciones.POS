@@ -162,6 +162,7 @@
                 PreloadService.Hide();
                 if (response.Success)
                 {
+                    await UpdateData();
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Eliminado",
@@ -171,6 +172,7 @@
                 }
                 else
                 {
+                    await UpdateData();
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",

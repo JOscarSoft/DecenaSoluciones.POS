@@ -39,16 +39,19 @@
         <input class="form-control" @bind="passwordConfirm" maxlength="15" type="password"></input>
         <ValidationMessage For="@(() => newUser.Password)"></ValidationMessage>
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Compañía:</label>
-        <AutoComplete @bind-Value="newUser.CompanyName"
-            TItem="CompanyViewModel"
-            DataProvider="CompaniesDataProvider"
-            PropertyName="Name"
-            Placeholder="Seleccione una compañía..."
-            OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
-        <InputText hidden="hidden" @bind-Value="companyId" />
-    </div>
+    @if (userSession!.IsCompanyCreator)
+    {
+        <div class="col-md-4">
+            <label class="form-label">Compañía:</label>
+            <AutoComplete @bind-Value="newUser.CompanyName"
+                          TItem="CompanyViewModel"
+                          DataProvider="CompaniesDataProvider"
+                          PropertyName="Name"
+                          Placeholder="Seleccione una compañía..."
+                          OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
+            <InputText hidden="hidden" @bind-Value="companyId" />
+        </div>
+    }
     <div class="form-group col-md-4">
         <label>Rol</label>
         <div>
@@ -78,6 +81,7 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
     private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
+    UserInfoExtension? userSession;
 
     RegistrationViewModel newUser = new RegistrationViewModel();
     string passwordConfirm = string.Empty;
@@ -123,9 +127,11 @@
             try
             {
                 passwordConfirm = string.Empty;
-                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
                 if (!userSession!.IsCompanyCreator)
+                {
                     newUser.CompanyId = int.Parse(userSession.CompanyId);
+                    newUser.CompanyName = userSession.CompanyId;
+                }
 
                 var response = await authService.Registration(newUser);
                 PreloadService.Hide();
@@ -192,6 +198,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+
+        userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
         await UpdateCompanyList();
     }
 
