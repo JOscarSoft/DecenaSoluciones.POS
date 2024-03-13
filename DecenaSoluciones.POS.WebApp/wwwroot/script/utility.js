@@ -6,7 +6,7 @@
         printWindow.document.close();
         delay(500).then(() => {
             printWindow.print();
-            printWindow.close();
+            printWindow.onafterprint = window.close;   
         });
     }
 }

@@ -1,6 +1,4 @@
-﻿using DecenaSoluciones.POS.API.Services;
-using DocumentFormat.OpenXml.InkML;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace DecenaSoluciones.POS.API.Models
@@ -12,7 +10,7 @@ namespace DecenaSoluciones.POS.API.Models
 
         public DefaultContextFactory()
         {
-                
+
         }
 
         public DefaultContextFactory(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
@@ -24,8 +22,8 @@ namespace DecenaSoluciones.POS.API.Models
         public DecenaSolucionesDBContext CreateContext()
         {
             string company = string.Empty;
-            
-            if(_httpContextAccessor.HttpContext?.User != null)
+
+            if (_httpContextAccessor.HttpContext?.User != null)
                 company = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(p => p.Type == "Company")?.Value;
 
             var options = new DbContextOptionsBuilder<DecenaSolucionesDBContext>()
@@ -38,8 +36,13 @@ namespace DecenaSoluciones.POS.API.Models
         // add this code for the IDesignTimeDbContextFactory implementation
         public DecenaSolucionesDBContext CreateDbContext(string[] args)
         {
+            var cfgBuilder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
+            var _config = cfgBuilder.Build();
+
             var options = new DbContextOptionsBuilder<DecenaSolucionesDBContext>()
-                .UseSqlServer(_configuration.GetConnectionString("DefaultConnection"))
+                .UseSqlServer(_config.GetConnectionString("DefaultConnection"))
                 .Options;
 
             return new DecenaSolucionesDBContext(options);
