@@ -130,7 +130,7 @@ namespace DecenaSoluciones.POS.API.Services
             {
                 Issuer = _configuration["JWTKey:ValidIssuer"],
                 Audience = _configuration["JWTKey:ValidAudience"],
-                Expires = dontExpire ? DateTime.Now.AddYears(1) : DateTime.Now.AddDays(1).Date,
+                Expires = dontExpire ? DateTime.Now.AddYears(1) : DateTime.Now.AddHours(6),
                 SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(claims)
             };
