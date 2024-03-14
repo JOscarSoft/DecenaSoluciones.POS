@@ -1,6 +1,7 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
-using System.Net.Http.Json;
 using DecenaSoluciones.POS.Shared.Enums;
+using DecenaSoluciones.POS.Shared.Extensions;
+using System.Net.Http.Json;
 
 namespace DecenaSoluciones.POS.Shared.Services
 {
@@ -17,42 +18,40 @@ namespace DecenaSoluciones.POS.Shared.Services
             var reportUrl = reportType == EnumReportType.SoldProducts ? "api/Report/GetSoldProductsReport" : "api/Report/GetSalesReport";
             var response = await _httpClient.GetAsync($"{reportUrl}/{fromDate:dd-MM-yyyy}/{toDate:dd-MM-yyyy}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadAsStreamAsync();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+            var result = await response.Content.ReadAsStreamAsync();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+
+            return result;
         }
 
         public async Task<Stream> GenerateInventoryReport()
         {
             var response = await _httpClient.GetAsync("api/Report/GetInventoryReport");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadAsStreamAsync();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+            var result = await response.Content.ReadAsStreamAsync();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+
+            return result;
         }
 
         public async Task<ApiResponse<DashboardViewModel>> GetDashboardReport()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<DashboardViewModel>>("api/Report/Dashboard");
+            var response = await _httpClient.GetAsync("api/Report/Dashboard");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<DashboardViewModel>>();
 
             if (result == null)
-                throw new Exception("No se obtuvo respuesta del servicio de Reportes.");
+                throw new Exception("No se obtuvo respuesta del servicio de reportes.");
 
             return result;
         }

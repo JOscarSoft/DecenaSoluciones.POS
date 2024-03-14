@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Net.Http.Json;
 
 namespace DecenaSoluciones.POS.Shared.Services
@@ -15,55 +16,68 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Product", product);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de productos.");
-
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
-        }
-        
-        public async Task<ApiResponse<ProductViewModel>> GetProductByCode(string code)
-        {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<ProductViewModel>>($"api/Product/GetByCode/{code}");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+            return result;
+        }
+
+        public async Task<ApiResponse<ProductViewModel>> GetProductByCode(string code)
+        {
+            var response = await _httpClient.GetAsync($"api/Product/GetByCode/{code}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Productos.");
 
             return result;
         }
 
         public async Task<ApiResponse<ProductViewModel>> GetProductById(int id)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<ProductViewModel>>($"api/Product/{id}");
+            var response = await _httpClient.GetAsync($"api/Product/{id}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
 
             if (result == null)
-                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+                throw new Exception("No se obtuvo respuesta del servicio de Productos.");
 
             return result;
         }
 
         public async Task<ApiResponse<List<ProductViewModel>>> GetProducts()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<ProductViewModel>>>("api/Product");
+            var response = await _httpClient.GetAsync("api/Product");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ProductViewModel>>>();
 
             if (result == null)
-                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+                throw new Exception("No se obtuvo respuesta del servicio de Productos.");
 
             return result;
         }
 
         public async Task<ApiResponse<List<ProductViewModel>>> GetAssinablesProducts()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<ProductViewModel>>>("api/Product/GetAssignables");
+            var response = await _httpClient.GetAsync("api/Product/GetAssignables");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ProductViewModel>>>();
 
             if (result == null)
-                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+                throw new Exception("No se obtuvo respuesta del servicio de Productos.");
 
             return result;
         }
@@ -72,51 +86,42 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.DeleteAsync($"api/Product/{id}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de productos.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+            return result;
         }
 
         public async Task<ApiResponse<ProductViewModel>> UpdateProduct(int id, AddEditProduct product)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Product/{id}", product);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de productos.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductViewModel>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+            return result;
         }
 
         public async Task<ApiResponse<bool>> UpdateInventary(List<UpdateInventory> inventoryItems)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Product/UpdateInventary", inventoryItems);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de productos.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de productos.");
+
+            return result;
         }
     }
 }

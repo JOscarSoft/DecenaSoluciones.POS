@@ -94,7 +94,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener los productos: " + response.Message,
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -105,7 +105,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener los productos: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
                     Icon = SweetAlertIcon.Error
                 });
         }
@@ -154,7 +154,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
 

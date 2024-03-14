@@ -204,7 +204,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al obtener los datos del cliente: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -216,7 +216,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener los datos del cliente: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
                     Icon = SweetAlertIcon.Error
                 });
         }
@@ -237,7 +237,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener los productos: " + response.Message,
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -247,7 +247,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener los productos: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
                     Icon = SweetAlertIcon.Error
                 });
         }
@@ -295,7 +295,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al agrager el cliente: " + response.Message,
+                            Text = response.Message.HandleErrorMessage(),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -320,7 +320,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al modificar el cliente: " + response.Message,
+                            Text = response.Message.HandleErrorMessage(),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -334,7 +334,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
 
@@ -375,7 +375,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al eliminar el cliente: " + response.Message,
+                            Text = response.Message.HandleErrorMessage(),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -387,7 +387,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
             

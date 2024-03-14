@@ -151,7 +151,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al agrager el usuario: " + response.Message,
+                            Text = response.Message.HandleErrorMessage(),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -162,7 +162,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                        Text = ex.Message.HandleErrorMessage(),
                         Icon = SweetAlertIcon.Error
                     });
 
@@ -219,7 +219,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener las compañías: " + response.Message,
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las compañías."),
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -230,7 +230,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener las compañías: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las compañías."),
                     Icon = SweetAlertIcon.Error
                 });
         }

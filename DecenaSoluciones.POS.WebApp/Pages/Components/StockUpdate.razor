@@ -153,7 +153,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al actualizar el stock. " + response.Message,
+                            Text = response.Message.HandleErrorMessage(),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -164,7 +164,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                        Text = ex.Message.HandleErrorMessage(),
                         Icon = SweetAlertIcon.Error
                     });
 

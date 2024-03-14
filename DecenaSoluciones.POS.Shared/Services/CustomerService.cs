@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Net.Http.Json;
 
 namespace DecenaSoluciones.POS.Shared.Services
@@ -13,7 +14,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<List<CustomerViewModel>>> GetCustomerList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<CustomerViewModel>>>("api/Customer");
+            var response = await _httpClient.GetAsync("api/Customer");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<CustomerViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
@@ -23,7 +28,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<AddEditCustomer>> GetCustomerById(int id)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<AddEditCustomer>>($"api/Customer/{id}");
+            var response = await _httpClient.GetAsync($"api/Customer/{id}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
@@ -35,51 +44,42 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Customer", customer);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
+
+            return result;
         }
 
         public async Task<ApiResponse<AddEditCustomer>> UpdateCustomer(int id, AddEditCustomer customer)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Customer/{id}", customer);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditCustomer>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Clientes.");
+
+            return result;
         }
 
         public async Task<ApiResponse<bool>> RemoveCustomer(int id)
         {
             var response = await _httpClient.DeleteAsync($"api/Customer/{id}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de clientes.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de clientes.");
+
+            return result;
         }
     }
 }

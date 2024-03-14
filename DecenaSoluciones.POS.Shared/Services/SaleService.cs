@@ -2,7 +2,6 @@
 using DecenaSoluciones.POS.Shared.Extensions;
 using System.Globalization;
 using System.Net.Http.Json;
-using static System.Net.WebRequestMethods;
 
 namespace DecenaSoluciones.POS.Shared.Services
 {
@@ -21,7 +20,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<List<SalesViewModel>>> GetSalesList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<SalesViewModel>>>("api/Sale");
+            var response = await _httpClient.GetAsync("api/Sale");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<SalesViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -31,7 +34,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<AddEditSale>> GetSaleById(int id)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<AddEditSale>>($"api/Sale/{id}");
+            var response = await _httpClient.GetAsync($"api/Sale/{id}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -41,7 +48,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<AddEditSale>> GetSaleByCode(string code)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<AddEditSale>>($"api/Sale/GetByCode/{code}");
+            var response = await _httpClient.GetAsync($"api/Sale/GetByCode/{code}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -51,7 +62,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<List<SalesViewModel>>> GetQuotationsList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<SalesViewModel>>>("api/Sale/quotation");
+            var response = await _httpClient.GetAsync("api/Sale/quotation");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<SalesViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -61,7 +76,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<AddEditSale>> GetQuotationById(int id)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<AddEditSale>>($"api/Sale/quotation/{id}");
+            var response = await _httpClient.GetAsync($"api/Sale/quotation/{id}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -71,7 +90,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<AddEditSale>> GetQuotationByCode(string code)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<AddEditSale>>($"api/Sale/quotation/GetByCode/{code}");
+            var response = await _httpClient.GetAsync($"api/Sale/quotation/GetByCode/{code}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -83,37 +106,31 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Sale", sale);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
-                sale.Code = result.Result!.Code;
-                var receipt = await GenerateReceipt(sale);
-                return (receipt, result);
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            sale.Code = result.Result!.Code;
+            var receipt = await GenerateReceipt(sale);
+            return (receipt, result);
         }
 
         public async Task<(string, ApiResponse<AddEditSale>)> UpdateSale(int id, AddEditSale sale)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Sale/{id}", sale);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
 
-                var receipt = await GenerateReceipt(sale);
-                return (receipt, result);
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            var receipt = await GenerateReceipt(sale);
+            return (receipt, result);
         }
 
         private async Task<string> GenerateReceipt(AddEditSale sale)
@@ -135,7 +152,7 @@ namespace DecenaSoluciones.POS.Shared.Services
                 foreach (var product in sale.SaleProducts!)
                 {
                     productsHTML += $"<tr><td>{count}</td>" +
-                                    $"<td>{product.ProductDescription}</td>" + 
+                                    $"<td>{product.ProductDescription}</td>" +
                                     $"<td>{product.Quantity}</td>" +
                                     $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
                                     $"<td>{ToMoneyString(product.ITBIS)}</td>" +
@@ -144,7 +161,7 @@ namespace DecenaSoluciones.POS.Shared.Services
 
                     if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
                     {
-                        page ++;
+                        page++;
                         productsHTML += GetPageBreak();
                     }
                 }

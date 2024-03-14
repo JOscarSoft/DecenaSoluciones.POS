@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Net.Http.Json;
 
 namespace DecenaSoluciones.POS.Shared.Services
@@ -13,7 +14,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<List<CompanyViewModel>>> GetCompanyList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<CompanyViewModel>>>("api/Company");
+            var response = await _httpClient.GetAsync("api/Company");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<CompanyViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
@@ -25,56 +30,51 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Company", company);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<CompanyViewModel>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<CompanyViewModel>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+
+            return result;
         }
 
         public async Task<ApiResponse<CompanyViewModel>> UpdateCompany(int id, AddEditCompany company)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Company/{id}", company);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<CompanyViewModel>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<CompanyViewModel>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+
+            return result;
         }
 
         public async Task<ApiResponse<int>> RemoveCompany(int id)
         {
             var response = await _httpClient.DeleteAsync($"api/Company/{id}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<int>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Compañías.");
+
+            return result;
         }
 
         public async Task<ApiResponse<CompanyViewModel>> GetCompany(int companyId)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<CompanyViewModel>>($"api/Company/{companyId}");
+            var response = await _httpClient.GetAsync($"api/Company/{companyId}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<CompanyViewModel>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Compañías.");

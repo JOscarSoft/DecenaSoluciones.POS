@@ -1,4 +1,5 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Extensions;
 using System.Net.Http.Json;
 
 namespace DecenaSoluciones.POS.Shared.Services
@@ -15,22 +16,23 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Authentication/setpassword", model);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
         }
 
         public async Task<ApiResponse<List<RegistrationViewModel>>> GetUsersList()
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<RegistrationViewModel>>>("api/Authentication/users");
+            var response = await _httpClient.GetAsync("api/Authentication/users");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<RegistrationViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
@@ -40,7 +42,11 @@ namespace DecenaSoluciones.POS.Shared.Services
 
         public async Task<ApiResponse<List<RegistrationViewModel>>> GetUsersList(int companyid)
         {
-            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<RegistrationViewModel>>>($"api/Authentication/users/company/{companyid}");
+            var response = await _httpClient.GetAsync($"api/Authentication/users/company/{companyid}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<RegistrationViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
@@ -52,51 +58,42 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Authentication/login", model);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
         }
 
         public async Task<ApiResponse<bool>> Registration(RegistrationViewModel model)
-        {            
+        {
             var response = await _httpClient.PostAsJsonAsync($"api/Authentication/newuser", model);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
         }
 
         public async Task<ApiResponse<bool>> RemoveUser(string userName)
         {
             var response = await _httpClient.DeleteAsync($"api/Authentication/removeuser/{userName}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+            response.EnsureResponseStatus();
 
-                if (result == null)
-                    throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-                return result;
-            }
-            else
-                throw new Exception("Se produjo un error al procesar la petición.");
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
         }
     }
 }

@@ -67,7 +67,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener la información de inicio: " + response.Message,
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener la información de inicio."),
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -78,7 +78,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener la información de inicio: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener la información de inicio."),
                     Icon = SweetAlertIcon.Error
                 });
         }

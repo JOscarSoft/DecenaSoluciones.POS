@@ -44,7 +44,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener las cotizaciones: " + response.Message,
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
                         Icon = SweetAlertIcon.Error
                     });
             }
@@ -55,7 +55,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener las cotizaciones: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
                     Icon = SweetAlertIcon.Error
                 });
         }

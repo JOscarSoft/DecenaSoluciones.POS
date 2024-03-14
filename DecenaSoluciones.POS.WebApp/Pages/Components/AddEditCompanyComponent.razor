@@ -130,7 +130,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al eliminar el usuario: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al eliminar el usuario"),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -143,7 +143,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
 
@@ -166,7 +166,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al obtener los datos de la compañía: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos de la compañía."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -177,7 +177,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al obtener los datos de la compañía: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos de la compañía."),
                     Icon = SweetAlertIcon.Error
                 });
         }
@@ -200,7 +200,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al obtener los usuarios: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los usuarios."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -210,7 +210,7 @@
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = "Se produjo un error al obtener los usuarios: " + ex.Message,
+                        Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los usuarios."),
                         Icon = SweetAlertIcon.Error
                     });
             } 
@@ -257,7 +257,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al agrager la compañía: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al agregar la compañía."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -282,7 +282,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al modificar la compañía: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al modificar la compañía."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -296,7 +296,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
 
@@ -337,7 +337,7 @@
                     await Swal.FireAsync(new SweetAlertOptions
                         {
                             Title = "Error",
-                            Text = "Se produjo un error al eliminar la compañía: " + response.Message,
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al eliminar la compañía."),
                             Icon = SweetAlertIcon.Error
                         });
                 }
@@ -349,7 +349,7 @@
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
-                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
             
