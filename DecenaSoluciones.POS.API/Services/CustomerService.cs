@@ -79,7 +79,7 @@ namespace DecenaSoluciones.POS.API.Services
             var existQuotation = await _dbContext.Quotation.AnyAsync(p => p.CustomerId == id);
             var existSales = await _dbContext.Sale.AnyAsync(p => p.CustomerId == id);
             if (existProducts || existQuotation || existSales)
-                throw new Exception("El producto no puede ser eliminado porque existen registros asociados a el.");
+                throw new Exception("El cliente no puede ser eliminado porque existen registros asociados a el.");
 
             var customer = await _dbContext.Customers.FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el cliente a eliminar.");
 

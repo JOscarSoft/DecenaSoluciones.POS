@@ -43,13 +43,9 @@
     {
         <div class="col-md-4">
             <label class="form-label">Compañía:</label>
-            <AutoComplete @bind-Value="newUser.CompanyName"
-                          TItem="CompanyViewModel"
-                          DataProvider="CompaniesDataProvider"
-                          PropertyName="Name"
-                          Placeholder="Seleccione una compañía..."
-                          OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
-            <InputText hidden="hidden" @bind-Value="companyId" />
+            <RadzenDropDown Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies"
+                            AllowFiltering="true" @bind-Value=newUser.CompanyId Data=@filteredCompanies TextProperty="Name"
+                            ValueProperty="Id" Name="DropDownCompanies" class="form-control" Style="height:37.6px"/>
         </div>
     }
     <div class="form-group col-md-4">
@@ -81,20 +77,11 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
     private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
+    private List<CompanyViewModel> filteredCompanies { get; set; } = new List<CompanyViewModel>();
     UserInfoExtension? userSession;
 
     RegistrationViewModel newUser = new RegistrationViewModel();
     string passwordConfirm = string.Empty;
-    string companyId {
-        get
-        {
-            return newUser.CompanyId.ToString();
-        }
-        set
-        {
-            newUser.CompanyId = string.IsNullOrEmpty(value) ? 0 : int.Parse(value);
-        }
-    }
 
     private async Task CloseModal()
     {
@@ -117,6 +104,16 @@
         return string.Empty;
     }
 
+    void FilterCompanies(LoadDataArgs args)
+    {
+        filteredCompanies = companies;
+
+        if (!string.IsNullOrEmpty(args.Filter))
+            filteredCompanies = companies.Where(c => c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
     private async Task OnValidSubmit()
     {
         var validations = validateUser();
@@ -128,10 +125,9 @@
             {
                 passwordConfirm = string.Empty;
                 if (!userSession!.IsCompanyCreator)
-                {
                     newUser.CompanyId = int.Parse(userSession.CompanyId);
-                    newUser.CompanyName = userSession.CompanyId;
-                }
+
+                newUser.CompanyName = newUser.CompanyId.ToString();
 
                 var response = await authService.Registration(newUser);
                 PreloadService.Hide();
@@ -179,23 +175,6 @@
         }
     }
 
-    private void OnChangeCompany(CompanyViewModel? selected)
-    {
-        if (selected != null)
-        {
-            newUser.CompanyName = selected.Name;
-            newUser.CompanyId = selected.Id;
-            return;
-        }
-        newUser.CompanyName = string.Empty;
-        newUser.CompanyId = 0;
-    }
-
-    private async Task<AutoCompleteDataProviderResult<CompanyViewModel>> CompaniesDataProvider(AutoCompleteDataProviderRequest<CompanyViewModel> request)
-    {
-        return await Task.FromResult(request.ApplyTo(companies.OrderBy(prod => prod.Name)));
-    }
-
     protected override async Task OnInitializedAsync()
     {
 
@@ -213,6 +192,7 @@
             if (response.Success)
             {
                 companies = response.Result ?? new List<CompanyViewModel>();
+                filteredCompanies = companies;
             }
             else
             {

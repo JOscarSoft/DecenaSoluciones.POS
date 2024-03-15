@@ -23,6 +23,5 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string? Role { get; set; }
         public int CompanyId { get; set; }
         public string CompanyName { get; set; }
-        //public CompanyViewModel? Company { get; set; }
     }
 }

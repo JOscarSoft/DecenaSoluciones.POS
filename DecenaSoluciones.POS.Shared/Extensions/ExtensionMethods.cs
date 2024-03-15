@@ -30,5 +30,18 @@ namespace DecenaSoluciones.POS.Shared.Extensions
         { 
             return string.IsNullOrWhiteSpace(message) ? defaultMessage ?? "Se produjo un error al procesar la petición." : message; 
         }
+
+        public static string RemovePhoneNumberSpecialCharacters(this string str)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in str)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
     }
 }

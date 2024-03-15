@@ -12,6 +12,8 @@
 @inject NavigationManager navManager
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
+@inject ILocalStorage _localStorage;
+@inject ICompanyService companyService;
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
 
@@ -21,17 +23,33 @@
 
         <img src="/images/logo/Logo-Full.png" alt="logo" style="width:50%;margin-bottom:50px">
 
-        <div class="mb-3">
-            <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
-        </div>
+        @if (OnCompanySelection)
+        {
+            <div class="mb-3">
+                <RadzenDropDown Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies"
+                                AllowFiltering="true" @bind-Value=selectedCompany Data=@filteredCompanies TextProperty="Name"
+                                ValueProperty="Id" Style="width: 75%;" Name="DropDownCompanies" />
+            </div>
+            <div class="mb-3" style="margin-top:50px">
+                <RadzenButton Click="SubmitCompanyLogin" Variant="Variant.Flat" Shade="Shade.Darker"
+                              ButtonStyle="ButtonStyle.Primary" Text="Acceder a Compañía" Style="width: 75%" />
+            </div>
+        }
+        else
+        {
 
-        <div class="mb-3">
-            <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
-        </div>
+            <div class="mb-3">
+                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+            </div>
 
-        <div class="mb-3" style="margin-top:50px">
-            <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Login</button>
-        </div>
+            <div class="mb-3">
+                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+            </div>
+
+            <div class="mb-3" style="margin-top:50px">
+                <RadzenButton Click="SubmitLogin" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Login" Style="width: 75%" />
+            </div>
+        }
 
     </div>
 
@@ -43,7 +61,22 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     private LoginViewModel model = new LoginViewModel();
     List<ToastMessage> messages = new List<ToastMessage>();
+    private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
+    private List<CompanyViewModel> filteredCompanies { get; set; } = new List<CompanyViewModel>();
+    private bool OnCompanySelection = false;
     private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Danger, message));
+
+    private int selectedCompany
+    {
+        get
+        {
+            return string.IsNullOrEmpty(model.CompanyId) ? 0 : int.Parse(model.CompanyId);
+        }
+        set
+        {
+            model.CompanyId = value.ToString();
+        }
+    }
 
     private ToastMessage CreateToastMessage(ToastType toastType, string message)
     => new ToastMessage
@@ -53,6 +86,17 @@
             Message = message,
         };
 
+
+    void FilterCompanies(LoadDataArgs args)
+    {
+        filteredCompanies = companies;
+
+        if (!string.IsNullOrEmpty(args.Filter))
+            filteredCompanies = companies.Where(c => c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
     private string validateLogin()
     {
         if (string.IsNullOrEmpty(model.Username))
@@ -61,6 +105,17 @@
             return "Favor ingresar el contraseña.";
 
         return string.Empty;
+    }
+
+    private async Task SubmitCompanyLogin()
+    {
+        if (string.IsNullOrEmpty(model.CompanyId))
+        {
+            ShowMessage("Favor seleccionar la compañía.");
+            return;
+        }
+
+        await SubmitLogin();
     }
 
     public async Task EnterLogin(KeyboardEventArgs e)
@@ -86,8 +141,13 @@
             {
                 var authExt = (AuthExtension)autenticacionProvider;
                 await authExt.UpdateSessionState(response.Result!);
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                PreloadService.Hide();
 
-                navManager.NavigateTo("/");
+                if (userSession!.IsCompanyCreator)
+                    OnCompanySelection = true;
+                else
+                    navManager.NavigateTo("/");
             }
             else
             {
@@ -110,6 +170,45 @@
                     Icon = SweetAlertIcon.Error
                 });
 
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateCompanyList();
+    }
+
+    private async Task UpdateCompanyList()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await companyService.GetCompanyList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                companies = response.Result ?? new List<CompanyViewModel>();
+                filteredCompanies = companies;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las compañías."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las compañías."),
+                    Icon = SweetAlertIcon.Error
+                });
         }
     }
 

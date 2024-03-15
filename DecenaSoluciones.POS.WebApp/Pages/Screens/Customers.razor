@@ -126,11 +126,11 @@
     {
         var parameters = new Dictionary<string, object>();
         parameters.Add("CustomerId", customer != null ? customer.Id : 0);
-        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditCustomerModal));
         await addEditCustomerModal.ShowAsync<AddEditCustomerComponent>(title: customer != null ? "Actualizar cliente" : "Agregar nuevo cliente", parameters: parameters);
     }
 
-    private async Task HideAddEditProductModal(MouseEventArgs e)
+    private async Task HideAddEditCustomerModal(MouseEventArgs e)
     {
         await addEditCustomerModal.HideAsync();
     }

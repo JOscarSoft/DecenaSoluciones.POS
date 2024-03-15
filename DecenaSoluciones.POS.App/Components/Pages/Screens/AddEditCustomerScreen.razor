@@ -1,0 +1,436 @@
+﻿@page "/newcustomer"
+@page "/newcustomer/{CustomerId:int}"
+
+@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+@inject IProductService productService;
+@inject ICustomerService customerService;
+
+<EditForm Model="newCustomer" OnValidSubmit="OnValidSubmit" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Nombre" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox @bind-Value=@newCustomer.Name Style="width: 50%"/>
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newCustomer.Name)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Apellido" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox @bind-Value=@newCustomer.LastName />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newCustomer.LastName)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" >
+            <RadzenFormField Text="Teléfono" Variant="@variant" Style="width:100%">
+                    <ChildContent>
+                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newCustomer.PhoneNumber />
+                    </ChildContent>
+                    <Helper>
+                        <ValidationMessage For="@(() => newCustomer.Name)"></ValidationMessage>
+                    </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Dirección" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox @bind-Value=@newCustomer.Direction />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newCustomer.Direction)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+    <div class="rz-p-sm-12">
+        <RadzenAccordion Style="margin: 50px 0">
+            <Items>
+                <RadzenAccordionItem Text="Productos" Icon="account_balance_wallet"
+                                     ExpandTitle="Ver productos"
+                                     ExpandAriaLabel="Ver productos">
+                    @foreach (var customerProduct in newCustomer.CustomerProducts!)
+                    {
+                        <RadzenFieldset AllowCollapse="true" Style="width: 100%" ExpandTitle="Mas detalles"
+                                        CollapseTitle="Menos detalles" ExpandAriaLabel="Ver detalles" CollapseAriaLabel="Menos detalles">
+                            <HeaderTemplate>
+                                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">@customerProduct.ProductDescription</RadzenText>
+                                </HeaderTemplate>
+                                <ChildContent>
+                                <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                            <RadzenFormField Text="Producto" Variant="@variant" Style="width:100%">
+                                            <ChildContent>
+                                                <RadzenDropDown 
+                                                    TValue="string"
+                                                    Value=@customerProduct.ProductCode 
+                                                    Data=@assignableProducts 
+                                                    TextProperty="Description" 
+                                                    ValueProperty="Code"
+                                                    Change="((productCode) => OnChangeProduct(productCode as string, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))" />
+                                            </ChildContent>
+                                            <Helper>
+                                                <ValidationMessage For="@(() => customerProduct.ProductCode)"></ValidationMessage>
+                                            </Helper>
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                                            <RadzenSwitch @bind-Value="customerProduct.SoldByUs" />
+                                        <RadzenLabel Text="Vendido por nosotros" />
+                                    </RadzenStack>
+                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                                            <RadzenSwitch @bind-Value="customerProduct.NeedMaintenance" />
+                                        <RadzenLabel Text="Necesita mantenimientos" />
+                                    </RadzenStack>
+                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                                            <RadzenSwitch @bind-Value="customerProduct.HasWarranty" />
+                                        <RadzenLabel Text="Tiene garantía" />
+                                    </RadzenStack>
+                                    @if (customerProduct.NeedMaintenance)
+                                    {
+
+                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                            <RadzenFormField Text="Último mantenimiento" Variant="@variant">
+                                                <ChildContent>
+                                                    <RadzenDatePicker @bind-Value=@(customerProduct.LastMaintenance) DateFormat="dd/MM/yyyy" ShowCalendarWeek Change="(e) => {OnUpdateMaintenance(e, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct));}"/>
+                                                 </ChildContent>
+                                                 <Helper>
+                                                     <ValidationMessage For="@(() => customerProduct.LastMaintenance)"></ValidationMessage>
+                                                 </Helper>
+                                             </RadzenFormField>
+                                         </RadzenColumn>
+                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                            <RadzenFormField Text="Próximo mantenimiento" Variant="@variant">
+                                                <ChildContent>
+                                                    <RadzenDatePicker @bind-Value=@(customerProduct.NextMaintenance) DateFormat="dd/MM/yyyy" ShowCalendarWeek />
+                                                 </ChildContent>
+                                                 <Helper>
+                                                     <ValidationMessage For="@(() => customerProduct.NextMaintenance)"></ValidationMessage>
+                                                 </Helper>
+                                             </RadzenFormField>
+                                         </RadzenColumn>
+                                    }
+                                     <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                        <RadzenFormField Text="Serial" Variant="@variant" Style="width:100%">
+                                             <ChildContent>
+                                                 <RadzenTextBox @bind-Value=@customerProduct.Serial />
+                                             </ChildContent>
+                                             <Helper>
+                                                 <ValidationMessage For="@(() => customerProduct.Serial)"></ValidationMessage>
+                                             </Helper>
+                                         </RadzenFormField>
+                                     </RadzenColumn>
+
+                                    @if (customerProduct.HasWarranty)
+                                    {
+                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                            <RadzenFormField Text="Vencimiento garantía" Variant="@variant">
+                                                <ChildContent>
+                                                    <RadzenDatePicker @bind-Value=@(customerProduct.WarrantyEndDate) DateFormat="dd/MM/yyyy" ShowCalendarWeek />
+                                                 </ChildContent>
+                                                 <Helper>
+                                                     <ValidationMessage For="@(() => customerProduct.WarrantyEndDate)"></ValidationMessage>
+                                                 </Helper>
+                                             </RadzenFormField>
+                                         </RadzenColumn>
+                                    }
+                                    <RadzenButton Click="(() => removeProduct(newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar" Style="width: 100%" />
+                                </RadzenRow>
+                             </ChildContent>
+                         </RadzenFieldset>
+                    }
+                </RadzenAccordionItem>
+            </Items>
+        </RadzenAccordion>
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Guardar" Style="width: 100%" />
+        </AuthorizeView>
+        <RadzenButton Click="@(() => navManager.NavigateTo("/customers"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de clientes" Style="width: 100%" />
+        <AuthorizeView Roles="admin" Context="authContext">
+            <RadzenButton Click="RemoveCustomer" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar Cliente" Style="width: 100%" />
+        </AuthorizeView>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int CustomerId { get; set; } = 0;
+
+    AddEditCustomer newCustomer = new AddEditCustomer();
+    List<ProductViewModel> assignableProducts = new List<ProductViewModel>();
+    Variant variant = Variant.Outlined;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadAssignableProducts();
+        await LoadCustomer();
+        PreloadService.Hide();
+    }
+
+    private void OnChangeProduct(string? selectedCode, int productIndex)
+    {
+        if (!string.IsNullOrEmpty(selectedCode))
+        {
+            if (productIndex == newCustomer.CustomerProducts!.Count - 1)
+                newCustomer.CustomerProducts.Add(new AddEditCustomerProduct());
+
+            var selected = assignableProducts.FirstOrDefault(p => p.Code == selectedCode);
+
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductId = selected!.Id;
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductCode = selected!.Code;
+            newCustomer.CustomerProducts.ElementAt(productIndex).ProductDescription = selected!.Description;
+            newCustomer.CustomerProducts.ElementAt(productIndex).NextMaintenance = DateTime.Now.AddMonths(selected!.MaintenancePeriods ?? 6);
+            newCustomer.CustomerProducts.ElementAt(productIndex).WarrantyEndDate = DateTime.Now.AddMonths(selected!.WarrantyTime ?? 12);
+            return;
+        }
+    }
+
+    private void OnUpdateMaintenance(DateTime? newDate, int productIndex)
+    {
+        if (newDate != null)
+        {
+            var periods = assignableProducts.FirstOrDefault(p => p.Code == newCustomer.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
+            newCustomer.CustomerProducts!.ElementAt(productIndex).LastMaintenance = newDate;
+            newCustomer.CustomerProducts!.ElementAt(productIndex).NextMaintenance = newDate.Value.AddMonths(periods);
+            return;
+        }
+    }
+
+
+    private void removeProduct(int productIndex)
+    {
+        if (productIndex == newCustomer.CustomerProducts!.Count - 1)
+            return;
+
+        newCustomer.CustomerProducts.Remove(newCustomer.CustomerProducts!.ToList().ElementAt(productIndex));
+    }
+
+    private async Task LoadCustomer()
+    {
+        try
+        {
+            if (CustomerId > 0)
+            {
+                var response = await customerService.GetCustomerById(CustomerId);
+                if (response.Success)
+                {
+                    var customerResult = response.Result ?? new AddEditCustomer();
+                    foreach(var custProduct in customerResult.CustomerProducts!)
+                    {
+                        var product = assignableProducts.FirstOrDefault(p => p.Id == custProduct.ProductId);
+                        if(product != null){
+                            custProduct.ProductCode = product.Code;
+                            custProduct.ProductDescription = product.Description;
+                        }
+                    }
+                    customerResult.CustomerProducts = customerResult.CustomerProducts
+                        .Where(p => !string.IsNullOrEmpty(p.ProductCode))
+                        .OrderBy(p => p.NextMaintenance)
+                        .ToList();
+                    newCustomer = customerResult;
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            newCustomer.CustomerProducts!.Add(new AddEditCustomerProduct());
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadAssignableProducts()
+    {
+        try
+        {
+            var response = await productService.GetAssinablesProducts();
+            if (response.Success)
+            {
+                assignableProducts = response.Result ?? new List<ProductViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(string.IsNullOrEmpty(newCustomer.Name))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el nombre del cliente.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            newCustomer.CustomerProducts = newCustomer.CustomerProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+            if (CustomerId == 0)
+            {
+                var response = await customerService.AddNewCustomer(newCustomer);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Cliente agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newCustomer = new AddEditCustomer();
+                    newCustomer.CustomerProducts!.Add(new AddEditCustomerProduct());
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await customerService.UpdateCustomer(CustomerId, newCustomer);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Cliente modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+
+    }
+    
+    private async Task RemoveCustomer()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar cliente",
+                    Text = "¿Esta seguro de eliminar el cliente?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await customerService.RemoveCustomer(CustomerId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Cliente eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    navManager.NavigateTo("/customers");
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+    }
+}

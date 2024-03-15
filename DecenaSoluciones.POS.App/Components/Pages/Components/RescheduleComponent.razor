@@ -1,0 +1,189 @@
+﻿@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject ICustomerService customerService;
+@inject IProductService productService;
+
+
+<EditForm Model="customerModel" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    @foreach (var product in customerModel.CustomerProducts!)
+    {
+        <RadzenFieldset 
+            AllowCollapse="true" Style="width: 100%" ExpandTitle="Mas detalles" 
+            CollapseTitle="Menos detalles" ExpandAriaLabel="Ver detalles" CollapseAriaLabel="Menos detalles">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">@product.ProductDescription</RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <div class="col-md-6">
+                    <label class="form-label">Último:</label>
+                        <RadzenDatePicker @bind-Value=@(product.LastMaintenance) DateFormat="dd/MM/yyyy" Name="RadzenDatePickerBindValue" ShowCalendarWeek />
+                    <ValidationMessage For="@(() => product.LastMaintenance)"></ValidationMessage>
+                </div>
+                <div class="col-md-6" style="margin-top:5px">
+                    <label class="form-label">Próximo:</label>
+                     <RadzenDatePicker @bind-Value=@(product.NextMaintenance) DateFormat="dd/MM/yyyy" Name="RadzenDatePickerBindValue" ShowCalendarWeek />
+                    <ValidationMessage For="@(() => product.NextMaintenance)"></ValidationMessage>
+                </div>
+            </ChildContent>
+         </RadzenFieldset>
+    }
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Guardar" Style="width: 100%" />
+        </AuthorizeView>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int CustomerId { get; set; } = 0;
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    AddEditCustomer customerModel = new AddEditCustomer();
+    List<ProductViewModel> assignableProducts = new List<ProductViewModel>();
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadAssignableProducts();
+        await LoadCustomer();
+        PreloadService.Hide();
+    }
+
+    private void OnUpdateMaintenance(DateTime? newDate, int productIndex)
+    {
+        if (newDate != null)
+        {
+            var periods = assignableProducts.FirstOrDefault(p => p.Code == customerModel.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
+            customerModel.CustomerProducts!.ElementAt(productIndex).LastMaintenance = newDate;
+            customerModel.CustomerProducts!.ElementAt(productIndex).NextMaintenance = newDate.Value.AddMonths(periods);
+            return;
+        }
+    }
+    private async Task LoadCustomer()
+    {
+        try
+        {
+            var response = await customerService.GetCustomerById(CustomerId);
+            if (response.Success)
+            {
+                var customerResult = response.Result ?? new AddEditCustomer();
+                foreach (var custProduct in customerResult.CustomerProducts!)
+                {
+                    var product = assignableProducts.FirstOrDefault(p => p.Id == custProduct.ProductId);
+                    if (product != null)
+                    {
+                        custProduct.ProductCode = product.Code;
+                        custProduct.ProductDescription = product.Description;
+                    }
+                }
+                customerResult.CustomerProducts = customerResult.CustomerProducts
+                    .Where(p => !string.IsNullOrEmpty(p.ProductCode))
+                    .OrderBy(p => p.NextMaintenance)
+                    .ToList();
+                customerModel = customerResult;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos del cliente."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadAssignableProducts()
+    {
+        try
+        {
+            var response = await productService.GetAssinablesProducts();
+            if (response.Success)
+            {
+                assignableProducts = response.Result ?? new List<ProductViewModel>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await customerService.UpdateCustomer(CustomerId, customerModel);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Exito",
+                        Text = "Productos reprogramados exitosamente.",
+                        Icon = SweetAlertIcon.Success
+                    });
+
+                await OnClose.InvokeAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage(),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+}

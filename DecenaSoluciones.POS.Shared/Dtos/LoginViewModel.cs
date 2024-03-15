@@ -15,6 +15,6 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         [Required(ErrorMessage = "La contraseña es requerida")]
         public string Password { get; set; } = string.Empty;
         public string CompanyId { get; set; } = string.Empty;
-        public string? CompanyName { get; set; } = string.Empty;
+        //public string? CompanyName { get; set; } = string.Empty;
     }
 }

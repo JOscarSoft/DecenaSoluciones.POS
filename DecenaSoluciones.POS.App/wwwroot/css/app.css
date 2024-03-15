@@ -31,3 +31,22 @@
 .headerRow {
     background-color: #000080 !important;
 }
+
+.rz-text-h1,
+.rz-text-h2,
+.rz-text-h3,
+.rz-text-h4,
+.rz-text-h5,
+.rz-text-h6 {
+    color: #000080 !important;
+    font-weight: bold !important;
+}
+
+
+.floatButtom {
+    position: fixed !important;
+    bottom: 40px !important;
+    right: 40px !important;
+    min-height: 4rem !important;
+    min-width: 4rem !important;
+}

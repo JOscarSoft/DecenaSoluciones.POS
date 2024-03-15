@@ -26,29 +26,32 @@
         @if (OnCompanySelection)
         {
             <div class="mb-3">
-                <AutoComplete @bind-Value="model.CompanyName"
-                              TItem="CompanyViewModel"
-                              DataProvider="CompaniesDataProvider"
-                              PropertyName="Name"
-                              Placeholder="Seleccione una compañía..."
-                              OnChanged="(CompanyViewModel selected) => OnChangeCompany(selected)" />
-                <InputText hidden="hidden" @bind-Value="model.CompanyId" />
+                <RadzenDropDown 
+                    Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies" 
+                    AllowFiltering="true" @bind-Value=selectedCompany Data=@filteredCompanies TextProperty="Name" 
+                    ValueProperty="Id" Style="width: 75%;" Name="DropDownCompanies" />
             </div>
             <div class="mb-3" style="margin-top:50px">
                 <button @onclick="SubmitCompanyLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Acceder a Compañía</button>
             </div>
-            <div class="mb-3" style="margin-top:50px">
+            <div class="divider"></div>
+            <div class="row" >
+                <div class="col"><hr></div>
+                <div class="col-auto">O</div>
+                <div class="col"><hr></div>
+            </div>
+            <div class="mb-3" style="margin-top:10px">
                 <button @onclick="SubmitAdminLogin" class="btn btn-lg btn-dark btn-block" style="width:75%">Modulo Administrativo</button>
             </div>
         }
         else
         {
             <div class="mb-3">
-                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
+                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
             </div>
 
             <div class="mb-3">
-                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeydown="@EnterLogin" />
+                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
             </div>
 
             <div class="mb-3" style="margin-top:50px">
@@ -63,10 +66,22 @@
 
 
 @code {
+    private int selectedCompany
+    {
+        get
+        {
+            return string.IsNullOrEmpty(model.CompanyId) ? 0 : int.Parse(model.CompanyId);
+        }
+        set
+        {
+            model.CompanyId = value.ToString();
+        }
+    }
     [Inject] protected PreloadService? PreloadService { get; set; }
     private LoginViewModel model = new LoginViewModel();
     List<ToastMessage> messages = new List<ToastMessage>();
     private List<CompanyViewModel> companies { get; set; } = new List<CompanyViewModel>();
+    private List<CompanyViewModel> filteredCompanies { get; set; } = new List<CompanyViewModel>();
     private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Danger, message));
 
     private bool OnCompanySelection = false;
@@ -104,6 +119,16 @@
         }
 
         await SubmitLogin();
+    }
+
+    void FilterCompanies(LoadDataArgs args)
+    {
+        filteredCompanies = companies;
+
+        if (!string.IsNullOrEmpty(args.Filter))
+            filteredCompanies = companies.Where(c => c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+
+        InvokeAsync(StateHasChanged);
     }
 
     private void SubmitAdminLogin()
@@ -160,22 +185,6 @@
         }
     }
 
-    private void OnChangeCompany(CompanyViewModel? selected)
-    {
-        if (selected != null)
-        {
-            model.CompanyName = selected.Name;
-            model.CompanyId = selected.Id.ToString();
-            return;
-        }
-        model.CompanyId = string.Empty;
-    }
-
-    private async Task<AutoCompleteDataProviderResult<CompanyViewModel>> CompaniesDataProvider(AutoCompleteDataProviderRequest<CompanyViewModel> request)
-    {
-        return await Task.FromResult(request.ApplyTo(companies.OrderBy(prod => prod.Name)));
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await UpdateCompanyList();
@@ -191,6 +200,7 @@
             if (response.Success)
             {
                 companies = response.Result ?? new List<CompanyViewModel>();
+                filteredCompanies = companies;
             }
             else
             {

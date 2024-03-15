@@ -1,0 +1,236 @@
+﻿@page "/customers"
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.App.Components.Pages.Components
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize]
+@inject ICustomerService customerService;
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+
+<style>
+    .danger-customer {
+        min-height: 72px;
+        background-color: var(--rz-secondary-lighter);
+    }
+
+    .warning-customer {
+        min-height: 72px;
+        background-color: var(--rz-warning-lighter);
+    }
+
+    .safe-customer {
+        min-height: 72px;
+        background-color: var(--rz-success-lighter);
+    }
+</style>
+
+
+<Modal @ref="RescheduleModal" UseStaticBackdrop="true" Size="ModalSize.Large" OnHidden="OnModalHiding" />
+
+<div class="text-center">
+    <RadzenStack Gap="0.3rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Style="margin-bottom:15px">
+        <RadzenFormField Text="Nombre del cliente..." Variant="Variant.Text" Style="margin-right:20px">
+            <RadzenTextBox @bind-Value=@searchText />
+        </RadzenFormField>
+        <RadzenButton Click=@(FilterCustomers) Icon="search" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" />
+        <RadzenButton Click=@(() => {
+            searchText = string.Empty;
+            FilterCustomers();
+                      }) Icon="cancel" ButtonStyle="ButtonStyle.Secondary" Disabled=@(!filtered) Size="ButtonSize.Large" />
+    </RadzenStack>
+    @if (filteredCustomerList != null && filteredCustomerList.Count() > 0)
+    {
+        <RadzenDataList AllowVirtualization=false
+                        WrapItems=true
+                        AllowPaging=true
+                        Data="@filteredCustomerList"
+                        TItem="CustomerViewModel"
+                        PageSize="10"
+                        PagerHorizontalAlign="HorizontalAlign.Left"
+                        ShowPagingSummary="true">
+            <Template Context="customer">
+                <RadzenCard Style="width: 100%; padding: 0;">
+                    <RadzenRow Gap="0">
+                        <RadzenColumn Size="12" SizeLG="3" Class=@(GetCustomerClass(customer)) @onclick="() => GoToCustomer(customer)">
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H5">@(customer.Name)</RadzenText>
+                            <RadzenBadge BadgeStyle=@(GetMaintenanceBadge(customer)) IsPill="@true" class="rz-ml-2" Text=@(customer.NextMaintenance.HasValue ? customer.NextMaintenance.Value.ToString("dd/MM/yyyy") : string.Empty) />
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeLG="7" Class="rz-p-4">
+                            <RadzenRow Gap="0">
+                                <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
+                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Producto</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@(customer.Product)</RadzenText>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
+                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Dirección</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@(customer.Direction)</RadzenText>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeLG="2" Class="rz-p-4">
+                            <RadzenRow Gap="0">
+                                <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
+                                    <RadzenImage Path="images/WhatsApp_icon.png" Style="width: 50px" onclick="@(() => CallWhastapp(customer))" />
+                                    <RadzenImage Path="images/Phone_icon.png" Style="width: 40px" onclick="@(() => MakeDirectCall(customer))" />
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
+                                    <RadzenButton Click="(() => ShowRescheduleModal(customer))" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Reprogramar Mantenimiento" Style="width: 100%" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-mx-auto rz-my-12">
+            <RadzenImage Path="images/NoResults.png" Style="width: 15rem;" AlternateText="community" />
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H5" Class="rz-mb-0">No se encontraron clientes para mostrar</RadzenText>
+        </RadzenStack>
+    }
+    <AuthorizeView Roles="admin, manager" Context="authContext">
+        <RadzenButton Click="@(() => navManager.NavigateTo("/newcustomer"))" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Shade="Shade.Darker" class="rz-border-radius-10 rz-shadow-10 floatButtom" />
+    </AuthorizeView>
+
+</div>
+
+@code{
+    string searchText = "";
+    bool filtered = false;
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    IQueryable<CustomerViewModel> customerList;
+    IQueryable<CustomerViewModel> filteredCustomerList;
+    private Modal RescheduleModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await customerService.GetCustomerList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                customerList = (response.Result!.OrderBy(p => p.NextMaintenance ?? DateOnly.MaxValue).ToList() ?? new List<CustomerViewModel>()).AsQueryable();
+                filteredCustomerList = customerList;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los clientes."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los clientes."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void GoToCustomer(CustomerViewModel customer)
+    {
+        navManager.NavigateTo($"/newcustomer/{customer.Id}");
+    }
+
+    private void FilterCustomers()
+    {
+        PreloadService!.Show();
+        filtered = false;
+        if(string.IsNullOrEmpty(searchText))
+            filteredCustomerList = customerList;
+        else
+        {
+            filtered = true;
+            filteredCustomerList = customerList.Where(p => p.Name.ToLower().Contains(searchText.Trim().ToLower()));
+        }
+
+
+        PreloadService.Hide();
+    }
+
+    private string GetCustomerClass(CustomerViewModel cust)
+    {
+        if (cust.NextMaintenance != null)
+        {
+            var DaysToMaintenance = (cust.NextMaintenance.Value.ToDateTime(TimeOnly.MinValue) - DateTime.Now).TotalDays;
+
+            if (DaysToMaintenance < 15)
+                return "rz-p-4 danger-customer";
+            else if (DaysToMaintenance < 30)
+                return "rz-p-4 warning-customer";
+        }
+
+        return "rz-p-4 safe-customer";
+    }
+
+    private BadgeStyle GetMaintenanceBadge(CustomerViewModel cust)
+    {
+        if (cust.NextMaintenance != null)
+        {
+            var DaysToMaintenance = (cust.NextMaintenance.Value.ToDateTime(TimeOnly.MinValue) - DateTime.Now).TotalDays;
+
+            if (DaysToMaintenance < 15)
+                return BadgeStyle.Secondary;
+            else if (DaysToMaintenance < 30)
+                return BadgeStyle.Warning;
+        }
+
+        return BadgeStyle.Success;
+    }
+
+    private async Task CallWhastapp(CustomerViewModel customer)
+    {
+        if (string.IsNullOrEmpty(customer.PhoneNumber))
+            return;
+
+        Uri uri = new Uri($"https://api.whatsapp.com/send?phone=1{customer.PhoneNumber.RemovePhoneNumberSpecialCharacters()}");
+        await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+    }
+
+    private async Task MakeDirectCall(CustomerViewModel customer)
+    {
+        if (string.IsNullOrEmpty(customer.PhoneNumber))
+            return;
+
+        Uri uri = new Uri($"tel:{customer.PhoneNumber.RemovePhoneNumberSpecialCharacters()}");
+        await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+    }
+
+    private async Task ShowRescheduleModal(CustomerViewModel customer)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("CustomerId", customer.Id);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditCustomerModal));
+        await RescheduleModal.ShowAsync<RescheduleComponent>(title: "Reprogramar mantenimiento", parameters: parameters);
+    }
+
+    private async Task HideAddEditCustomerModal(MouseEventArgs e)
+    {
+        await RescheduleModal.HideAsync();
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+    }
+}

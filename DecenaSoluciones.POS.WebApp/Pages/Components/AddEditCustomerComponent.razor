@@ -156,7 +156,6 @@
 
     private void OnUpdateMaintenance(DateTime? newDate, int productIndex)
     {
-        Console.WriteLine("here");
         if (newDate != null)
         {
             var periods = assignableProducts.FirstOrDefault(p => p.Code == newCustomer.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
@@ -221,7 +220,6 @@
                 });
         }
     }
-
 
     private async Task LoadAssignableProducts()
     {
