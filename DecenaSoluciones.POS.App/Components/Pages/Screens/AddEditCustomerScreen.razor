@@ -59,7 +59,7 @@
     <div class="rz-p-sm-12">
         <RadzenAccordion Style="margin: 50px 0">
             <Items>
-                <RadzenAccordionItem Text="Productos" Icon="account_balance_wallet"
+                <RadzenAccordionItem Text="@($"Productos ({productsCount})")" Icon="account_balance_wallet"
                                      ExpandTitle="Ver productos"
                                      ExpandAriaLabel="Ver productos">
                     @foreach (var customerProduct in newCustomer.CustomerProducts!)
@@ -176,6 +176,8 @@
     AddEditCustomer newCustomer = new AddEditCustomer();
     List<ProductViewModel> assignableProducts = new List<ProductViewModel>();
     Variant variant = Variant.Outlined;
+
+    private int productsCount => newCustomer.CustomerProducts!.Count() == 0 ? 0 : newCustomer.CustomerProducts!.Count() - 1;
 
     protected override async Task OnInitializedAsync()
     {
