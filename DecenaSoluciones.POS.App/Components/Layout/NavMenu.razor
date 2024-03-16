@@ -84,22 +84,22 @@
         margin-right: 0.5rem !important;
     }
 </style>
-<div class="top-row ps-3 navbar navbar-header">
+<div class="top-row ps-3 navbar navbar-header" style="background-color:#010166">
     <div class="container-fluid">
-        <button title="Navigation menu" class="navbar-toggler" @onclick="(() => ToggleNavMenu(true))">
+        <button title="Navigation menu" class="navbar-toggler" @onclick="(() => ToggleNavMenu(true))" style="background-color:white !important">
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand d-flex align-items-center" href="" >
-            <span class="navbar-brand-text fw-semibold expanded-only me-2" b-h9l5f7lx3r="">Decena Soluciones Técnicas</span>
+            <span class="navbar-brand-text fw-semibold expanded-only me-2" style="color:white">Decena Soluciones App</span>
         </a>
     </div>
 </div>
 
 <Offcanvas @ref="offcanvas" Title="" Placement="Placement.Start" ShowCloseButton="false">
-    <HeaderTemplate>
+    <HeaderTemplate >
         <div class="navbar-header-menu text-center">
             <div class="col-lg-4 offset-lg-4" style="width:100%;margin-bottom:10px">
-                <img src="/images/logo/Logo-Full.png" alt="logo" style="width:100%;">
+                <img src="/images/logo/MenuLogo.jpeg" alt="logo" style="width:100%;">
             </div>
         </div>
     </HeaderTemplate>

@@ -5,6 +5,8 @@
         public App()
         {
             InitializeComponent();
+            Current.UserAppTheme = AppTheme.Light;
+            this.RequestedThemeChanged += (s, e) => { Current.UserAppTheme = AppTheme.Light; };
 
             MainPage = new MainPage();
         }

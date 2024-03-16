@@ -22,7 +22,7 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>Decena Soluciones App</ApplicationTitle>
+        <ApplicationTitle>DesolApp</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.companyname.decenasoluciones.pos.app</ApplicationId>
@@ -41,9 +41,9 @@
 
     <ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#b9b9ff" />
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#ffffff" />
         <!-- Splash Screen -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" color="#ffffff" />
+        <MauiSplashScreen Include="Resources\Splash\newsplash.svg" color="white" BaseSize="128,128" />
 
         <!-- Images -->
         <MauiImage Include="Resources\Images\*" />
