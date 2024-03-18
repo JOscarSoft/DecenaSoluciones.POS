@@ -1,7 +1,9 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
 using DecenaSoluciones.POS.Shared.Extensions;
+using DecenaSoluciones.POS.Shared.Helper;
 using System.Globalization;
 using System.Net.Http.Json;
+using System.Xml.Linq;
 
 namespace DecenaSoluciones.POS.Shared.Services
 {
@@ -133,6 +135,34 @@ namespace DecenaSoluciones.POS.Shared.Services
             return (receipt, result);
         }
 
+        public async Task<Stream> AddNewMobileSale(AddEditSale sale)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Sale/mobilesale", sale);
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadAsStreamAsync();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+
+            return result;
+        }
+
+        public async Task<Stream> UpdateMobileSale(int id, AddEditSale sale)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/Sale/mobilesale/{id}", sale);
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadAsStreamAsync();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de reportes.");
+
+            return result;
+        }
+
         private async Task<string> GenerateReceipt(AddEditSale sale)
         {
             try
@@ -143,56 +173,7 @@ namespace DecenaSoluciones.POS.Shared.Services
                     await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
                     await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
 
-                string productsHTML = string.Empty;
-                string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
-                string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
-
-                int count = 1;
-                int page = 1;
-                foreach (var product in sale.SaleProducts!)
-                {
-                    productsHTML += $"<tr><td>{count}</td>" +
-                                    $"<td>{product.ProductDescription}</td>" +
-                                    $"<td>{product.Quantity}</td>" +
-                                    $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
-                                    $"<td>{ToMoneyString(product.ITBIS)}</td>" +
-                                    $"<td>{ToMoneyString(product.Total)}</td></tr>";
-                    count++;
-
-                    if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
-                    {
-                        page++;
-                        productsHTML += GetPageBreak();
-                    }
-                }
-
-                if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
-                {
-                    productsHTML += $"<tr><td>000</td><td>Mano de Obra</td><td>000</td>" +
-                                    $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
-                }
-
-                var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
-                if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
-                {
-                    productsHTML += GetPageBreak();
-                }
-
-                htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
-                htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-                htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
-                htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
-                htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
-                htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
-                htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
-                htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
-                htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
-
-                string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
-                htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :
-                    $"<p class=\"ClientP\"><span style=\"font-weight: bold; font-size: 18px\">Condiciones de pago: </span>{payCondition}</p>");
-
-                return htmlTemplate;
+                return Utility.GenerateReceiptHtml(sale, htmlTemplate);
             }
             catch
             {

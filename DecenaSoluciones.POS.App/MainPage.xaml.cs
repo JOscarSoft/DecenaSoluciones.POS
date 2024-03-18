@@ -5,6 +5,7 @@
         public MainPage()
         {
             InitializeComponent();
+            Application.Current.UserAppTheme = AppTheme.Light;
         }
     }
 }

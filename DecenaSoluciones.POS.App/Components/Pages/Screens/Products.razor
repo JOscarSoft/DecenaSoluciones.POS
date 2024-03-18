@@ -1,0 +1,144 @@
+﻿@page "/products"
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.App.Components.Pages.Components
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+
+@attribute [Authorize]
+@inject IProductService productService;
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+
+<style>
+    .danger-product {
+        min-height: 72px;
+        background-color: var(--rz-secondary-lighter);
+    }
+</style>
+
+<div class="text-center">
+    <RadzenStack Gap="0.3rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Style="margin-bottom:15px">
+        <RadzenFormField Text="Nombre del producto..." Variant="Variant.Text" Style="margin-right:20px">
+            <RadzenTextBox @bind-Value=@searchText />
+        </RadzenFormField>
+        <RadzenButton Click=@(FilterProducts) Icon="search" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" />
+        <RadzenButton Click=@(() => {
+            searchText = string.Empty;
+                      FilterProducts();
+                      }) Icon="cancel" ButtonStyle="ButtonStyle.Secondary" Disabled=@(!filtered) Size="ButtonSize.Large" />
+    </RadzenStack>
+    @if (filteredProductList != null && filteredProductList.Count() > 0)
+    {
+        <RadzenDataList AllowVirtualization=false
+                        WrapItems=true
+                        AllowPaging=true
+                        Data="@filteredProductList"
+                        TItem="ProductViewModel"
+                        PageSize="15"
+                        PagerHorizontalAlign="HorizontalAlign.Left">
+            <Template Context="product">
+                <RadzenCard Style="width: 100%; padding: 0;">
+                    <RadzenRow Gap="0">
+                        <RadzenColumn Size="6" Class="danger-product rz-p-4 product-title " @onclick="(() => GoToProduct(product))">
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H5">@($"{product.Code} - {product.Description}")</RadzenText>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6" Class="rz-p-4">
+                            <RadzenRow Gap="0">
+                                <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Stock</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@product.stock</RadzenText>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" class="price-badge" Shade="Shade.Lighter" Style="font-size:14px" Text="@(product.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")))" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-mx-auto rz-my-12">
+            <RadzenImage Path="images/NoResults.png" Style="width: 15rem;" AlternateText="community" />
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H5" Class="rz-mb-0">No se encontraron productos para mostrar</RadzenText>
+        </RadzenStack>
+    }
+    <AuthorizeView Roles="admin, manager" Context="authContext">
+        <RadzenButton Click="@(() => navManager.NavigateTo("/newproduct"))" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Shade="Shade.Darker" class="rz-border-radius-10 rz-shadow-10 floatButtom" />
+    </AuthorizeView>
+
+</div>
+
+@code{
+    string searchText = "";
+    bool filtered = false;
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    IQueryable<ProductViewModel> productList;
+    IQueryable<ProductViewModel> filteredProductList;
+    private Modal RescheduleModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await productService.GetProducts();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                productList = (response.Result!.OrderBy(p => p.Description).ToList() ?? new List<ProductViewModel>()).AsQueryable();
+                filteredProductList = productList;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void GoToProduct(ProductViewModel product)
+    {
+        navManager.NavigateTo($"/newproduct/{product.Id}");
+    }
+
+    private void FilterProducts()
+    {
+        PreloadService!.Show();
+        filtered = false;
+        if(string.IsNullOrEmpty(searchText))
+            filteredProductList = productList;
+        else
+        {
+            filtered = true;
+            filteredProductList = productList.Where(p => p.Description.ToLower().Contains(searchText.Trim().ToLower()));
+        }
+
+
+        PreloadService.Hide();
+    }
+}

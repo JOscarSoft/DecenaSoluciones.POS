@@ -90,7 +90,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand d-flex align-items-center" href="" >
-            <span class="navbar-brand-text fw-semibold expanded-only me-2" style="color:white">Decena Soluciones App</span>
+            <span class="navbar-brand-text fw-semibold expanded-only me-2" style="color:white">@title</span>
         </a>
     </div>
 </div>
@@ -107,7 +107,7 @@
         <div @onclick="(() => ToggleNavMenu(false))">
             <nav class="flex-column">
                 <div class="nav-item">
-                    <NavLink class="nav-link" href="/">
+                    <NavLink class="nav-link" href="/" @onclick="(() => title = HomeTitle)">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-house-door-fill" aria-hidden="true"></i>
                         </span>
@@ -115,7 +115,7 @@
                     </NavLink>
                 </div>
                 <div class="nav-item">
-                    <NavLink class="nav-link" href="/products">
+                    <NavLink class="nav-link" href="/products" @onclick="(() => title = ProductsTitle)">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
                         </span>
@@ -123,7 +123,7 @@
                     </NavLink>
                 </div>
                 <div class="nav-item">
-                    <NavLink class="nav-link" href="/customers">
+                    <NavLink class="nav-link" href="/customers" @onclick="(() => title = CustomersTitle)">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-people-fill" aria-hidden="true"></i>
                         </span>
@@ -131,7 +131,7 @@
                     </NavLink>
                 </div>
                 <div class="nav-item">
-                    <NavLink class="nav-link" href="/sales">
+                    <NavLink class="nav-link" href="/sales" @onclick="(() => title = SalesTitle)">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-cart-check-fill" aria-hidden="true"></i>
                         </span>
@@ -139,7 +139,7 @@
                     </NavLink>
                 </div>
                 <div class="nav-item separator">
-                    <NavLink class="nav-link" href="/quotations">
+                    <NavLink class="nav-link" href="/quotations" @onclick="(() => title = QuotationTitle)">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-receipt" aria-hidden="true"></i>
                         </span>
@@ -175,6 +175,14 @@
     [Parameter]
     public string UserName { get; set; }
     private Offcanvas offcanvas;
+    public string title = "Decena Soluciones App";
+    public string HomeTitle = "Decena Soluciones App";
+    public string SalesTitle = "Ventas";
+    public string QuotationTitle = "Cotizaciones";
+    public string CustomersTitle = "Clientes";
+    public string ProductsTitle = "Productos";
+
+
 
     private async Task ToggleNavMenu(bool setOpen)
     {

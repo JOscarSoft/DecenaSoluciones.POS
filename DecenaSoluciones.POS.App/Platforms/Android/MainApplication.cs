@@ -1,5 +1,6 @@
 ﻿using Android.App;
 using Android.Runtime;
+using AndroidX.AppCompat.App;
 
 namespace DecenaSoluciones.POS.App
 {
@@ -9,6 +10,7 @@ namespace DecenaSoluciones.POS.App
         public MainApplication(IntPtr handle, JniHandleOwnership ownership)
             : base(handle, ownership)
         {
+            AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightNo;
         }
 
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

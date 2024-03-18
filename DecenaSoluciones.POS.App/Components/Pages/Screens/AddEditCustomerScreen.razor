@@ -41,7 +41,7 @@
                     <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newCustomer.PhoneNumber />
                     </ChildContent>
                     <Helper>
-                        <ValidationMessage For="@(() => newCustomer.Name)"></ValidationMessage>
+                        <ValidationMessage For="@(() => newCustomer.PhoneNumber)"></ValidationMessage>
                     </Helper>
             </RadzenFormField>
         </RadzenColumn>

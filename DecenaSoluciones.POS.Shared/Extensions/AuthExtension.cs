@@ -41,11 +41,22 @@ namespace DecenaSoluciones.POS.Shared.Extensions
         {
 
             var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+            var anonymousState = new AuthenticationState(_emptyClaim);
 
             if (userSession == null)
-                return await Task.FromResult(new AuthenticationState(_emptyClaim));
+                return anonymousState;
 
-            var claimPrincipal = userSession.ToClaimsPrincipal();
+            var claimPrincipal = CreateClaimsPrincipalFromToken(userSession.Token);
+
+            // Checks the exp field of the token
+            var expiry = claimPrincipal.Claims.Where(claim => claim.Type.Equals("exp")).FirstOrDefault();
+            if (expiry == null)
+                return anonymousState;
+
+            // The exp field is in Unix time
+            var datetime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expiry.Value));
+            if (datetime.UtcDateTime <= DateTime.UtcNow)
+                return anonymousState;
 
 
             return await Task.FromResult(new AuthenticationState(claimPrincipal));

@@ -1,0 +1,274 @@
+﻿@page "/newproduct"
+@page "/newproduct/{ProductId:int}"
+
+@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+@inject IProductService productService;
+
+<EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Nombre" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox MaxLength="250" @bind-Value=@newProduct.Description Style="width: 50%"/>
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Precio de compra" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Cost />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Precio de venta" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Price />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="% ITBIS" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric TValue="decimal" @bind-Value=@newProduct.ITBIS />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Stock" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric @bind-Value=@newProduct.stock />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Tiempo de garantía (Meses)" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric @bind-Value=@newProduct.WarrantyTime />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Periodo de mantenimientos (Meses)" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric @bind-Value=@newProduct.MaintenancePeriods/>
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newProduct.MaintenancePeriods)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+            <RadzenSwitch @bind-Value="newProduct.Assignable" />
+            <RadzenLabel Text="Asignable a clientes" />
+        </RadzenStack>
+    </RadzenRow>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Guardar" Style="width: 100%" />
+        </AuthorizeView>
+        <RadzenButton Click="@(() => navManager.NavigateTo("/products"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de productos" Style="width: 100%" />
+        <AuthorizeView Roles="admin" Context="authContext">
+            <RadzenButton Click="RemoveProduct" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar Producto" Style="width: 100%" />
+        </AuthorizeView>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int ProductId { get; set; } = 0;
+
+    AddEditProduct newProduct = new AddEditProduct();
+    Variant variant = Variant.Outlined;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadProduct();
+        PreloadService.Hide();
+    }
+
+    private async Task LoadProduct()
+    {
+        try
+        {
+            if (ProductId > 0)
+            {
+                var response = await productService.GetProductById(ProductId);
+                if (response.Success)
+                {
+                    newProduct = new AddEditProduct(response.Result);
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos del producto."),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos del producto."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        PreloadService!.Show();
+        try
+        {
+            if (ProductId == 0)
+            {
+                var response = await productService.AddNewProduct(newProduct);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Producto agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newProduct = new AddEditProduct();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await productService.UpdateProduct(ProductId, newProduct);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Producto modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    navManager.NavigateTo("/products");
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+    
+    private async Task RemoveProduct()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar producto",
+                    Text = "¿Esta seguro de eliminar el producto?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await productService.RemoveProduct(ProductId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Producto eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    navManager.NavigateTo("/products");
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+    }
+}

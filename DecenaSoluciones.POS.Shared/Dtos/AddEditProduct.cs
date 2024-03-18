@@ -11,8 +11,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 
         [Required(ErrorMessage = "El campo Descripción es requerido.")]
         public string Description { get; set; } = string.Empty;
-        public int? MaintenancePeriods { get; set; }
-        public int? WarrantyTime { get; set; }
+        public int? MaintenancePeriods { get; set; } = 6;
+        public int? WarrantyTime { get; set; } = 12;
         public int stock { get; set; }
 
         [Required(ErrorMessage = "El campo Precio es requerido.")]

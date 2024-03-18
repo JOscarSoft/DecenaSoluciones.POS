@@ -1,0 +1,144 @@
+﻿@page "/quotations"
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.App.Components.Pages.Components
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+@inject ISaleService quotationService;
+
+<style>
+    .danger-Quotation {
+        min-height: 72px;
+        background-color: var(--rz-secondary-lighter);
+    }
+</style>
+
+<div class="text-center">
+    <RadzenStack Gap="0.3rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Style="margin-bottom:15px">
+        <RadzenFormField Text="Cliente..." Variant="Variant.Text" Style="margin-right:20px">
+            <RadzenTextBox @bind-Value=@searchText />
+        </RadzenFormField>
+        <RadzenButton Click=@(FilterQuotations) Icon="search" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" />
+        <RadzenButton Click=@(() => {
+                      searchText = string.Empty;
+                      FilterQuotations();
+                      }) Icon="cancel" ButtonStyle="ButtonStyle.Secondary" Disabled=@(!filtered) Size="ButtonSize.Large" />
+    </RadzenStack>
+    @if (filteredQuotationsList != null && filteredQuotationsList.Count() > 0)
+    {
+        <RadzenDataList AllowVirtualization=false
+                        WrapItems=true
+                        AllowPaging=true
+                        Data="@filteredQuotationsList"
+                        TItem="SalesViewModel"
+                        PageSize="15"
+                        PagerHorizontalAlign="HorizontalAlign.Left">
+            <Template Context="quotation">
+                <RadzenCard Style="width: 100%; padding: 0;">
+                    <RadzenRow Gap="0">
+                        <RadzenColumn Size="6" Class="danger-Quotation rz-p-4 product-title " @onclick="(() => GoToQuotation(quotation))">
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H5">@($"{(string.IsNullOrEmpty(quotation.CustomerName) ? quotation.Code : quotation.CustomerName)}")</RadzenText>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6" Class="rz-p-4">
+                            <RadzenRow Gap="0">
+                                <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Fecha de venta</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@quotation.CreationDate.ToString("dd/MM/yyyy")</RadzenText>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" class="price-badge" Shade="Shade.Lighter" Style="font-size:14px" Text="@(quotation.Total != null ? quotation.Total.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")" />
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataList>
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-mx-auto rz-my-12">
+            <RadzenImage Path="images/NoResults.png" Style="width: 15rem;" AlternateText="community" />
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H5" Class="rz-mb-0">No se encontraron cotizacioness para mostrar</RadzenText>
+        </RadzenStack>
+    }
+    <AuthorizeView Roles="admin, manager" Context="authContext">
+        <RadzenButton Click="@(() => navManager.NavigateTo("/newsale"))" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Shade="Shade.Darker" class="rz-border-radius-10 rz-shadow-10 floatButtom" />
+    </AuthorizeView>
+</div>
+
+@code{
+    [Inject] protected PreloadService? preloadService { get; set; }
+    IQueryable<SalesViewModel> quotationList;
+    IQueryable<SalesViewModel> filteredQuotationsList { get; set; }
+    [Parameter] public int quotations { get; set; } = 0;
+    string searchText = "";
+    bool filtered = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        preloadService!.Show();
+        try
+        {
+
+            var response = await quotationService.GetQuotationsList();
+
+            preloadService!.Hide();
+            if (response.Success)
+            {
+                quotationList = (response.Result ?? new List<SalesViewModel>()).AsQueryable();
+                filteredQuotationsList = quotationList;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            preloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void FilterQuotations()
+    {
+        preloadService!.Show();
+        filtered = false;
+        if (string.IsNullOrEmpty(searchText))
+            filteredQuotationsList = quotationList;
+        else
+        {
+            filtered = true;
+            filteredQuotationsList = quotationList.Where(p => p.CustomerName != null && p.CustomerName.ToLower().Contains(searchText.Trim().ToLower()));
+        }
+
+        preloadService.Hide();
+    }
+
+    private void GoToQuotation(SalesViewModel quotation)
+    {
+        navManager.NavigateTo($"newsale/{quotation.Id}/1");
+    }
+}

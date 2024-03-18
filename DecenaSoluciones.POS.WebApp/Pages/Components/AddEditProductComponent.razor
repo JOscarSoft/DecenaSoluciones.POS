@@ -19,7 +19,7 @@
     </div>
     <div class="col-md-8">
         <label class="form-label">Descripción:</label>
-        <InputText class="form-control" @bind-Value="newProduct.Description"></InputText>
+        <InputText maxlength="250" class="form-control" @bind-Value="newProduct.Description"></InputText>
         <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
     </div>
     <div class="col-md-4">

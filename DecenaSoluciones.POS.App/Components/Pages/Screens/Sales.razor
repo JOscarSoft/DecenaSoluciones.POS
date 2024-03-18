@@ -1,0 +1,143 @@
+﻿@page "/sales"
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.App.Components.Pages.Components
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+@inject ISaleService saleService;
+
+<style>
+    .danger-sale {
+        min-height: 72px;
+        background-color: var(--rz-secondary-lighter);
+    }
+</style>
+
+<div class="text-center">
+    <RadzenStack Gap="0.3rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Style="margin-bottom:15px">
+        <RadzenFormField Text="Cliente..." Variant="Variant.Text" Style="margin-right:20px">
+            <RadzenTextBox @bind-Value=@searchText />
+        </RadzenFormField>
+        <RadzenButton Click=@(FilterSales) Icon="search" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" />
+        <RadzenButton Click=@(() => {
+                      searchText = string.Empty;
+                      FilterSales();
+                      }) Icon="cancel" ButtonStyle="ButtonStyle.Secondary" Disabled=@(!filtered) Size="ButtonSize.Large" />
+    </RadzenStack>
+    @if (filteredSalesList != null && filteredSalesList.Count() > 0)
+    {
+        <RadzenDataList AllowVirtualization=false
+                        WrapItems=true
+                        AllowPaging=true
+                        Data="@filteredSalesList"
+                        TItem="SalesViewModel"
+                        PageSize="15"
+                        PagerHorizontalAlign="HorizontalAlign.Left">
+            <Template Context="sale">
+                <RadzenCard Style="width: 100%; padding: 0;">
+                    <RadzenRow Gap="0">
+                        <RadzenColumn Size="6" Class="danger-sale rz-p-4 product-title " @onclick="(() => GoToSale(sale))">
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H5">@($"{(string.IsNullOrEmpty(sale.CustomerName) ? sale.Code : sale.CustomerName)}")</RadzenText>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6" Class="rz-p-4">
+                            <RadzenRow Gap="0">
+                                <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Fecha</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@sale.CreationDate.ToString("dd/MM/yyyy")</RadzenText>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" Class="rz-text-align-lg-end">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" class="price-badge" Shade="Shade.Lighter" Style="font-size:14px" Text="@(sale.Total != null ? sale.Total.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")" />
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataList>
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-mx-auto rz-my-12">
+            <RadzenImage Path="images/NoResults.png" Style="width: 15rem;" AlternateText="community" />
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H5" Class="rz-mb-0">No se encontraron ventas para mostrar</RadzenText>
+        </RadzenStack>
+    }
+    <AuthorizeView Roles="admin, manager" Context="authContext">
+        <RadzenButton Click="@(() => navManager.NavigateTo("/newsale"))" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Shade="Shade.Darker" class="rz-border-radius-10 rz-shadow-10 floatButtom" />
+    </AuthorizeView>
+</div>
+
+@code{
+    [Inject] protected PreloadService? preloadService { get; set; }
+    IQueryable<SalesViewModel> saleList;
+    IQueryable<SalesViewModel> filteredSalesList { get; set; }
+    string searchText = "";
+    bool filtered = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        preloadService!.Show();
+        try
+        {
+
+            var response = await saleService.GetSalesList();
+
+            preloadService!.Hide();
+            if (response.Success)
+            {
+                saleList = (response.Result ?? new List<SalesViewModel>()).AsQueryable();
+                filteredSalesList = saleList;
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las ventas."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            preloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las ventas."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void FilterSales()
+    {
+        preloadService!.Show();
+        filtered = false;
+        if (string.IsNullOrEmpty(searchText))
+            filteredSalesList = saleList;
+        else
+        {
+            filtered = true;
+            filteredSalesList = saleList.Where(p => p.CustomerName != null && p.CustomerName.ToLower().Contains(searchText.Trim().ToLower()));
+        }
+
+        preloadService.Hide();
+    }
+
+    private void GoToSale(SalesViewModel sale)
+    {
+        navManager.NavigateTo($"newsale/{sale.Id}/0");
+    }
+}

@@ -1,0 +1,519 @@
+﻿@page "/newsale"
+@page "/newsale/{SaleId:int}/{inQuotation:int?}"
+
+@using DecenaSoluciones.POS.App.Extensions
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization;
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject NavigationManager navManager;
+@inject IProductService productService;
+@inject ICustomerService customerService;
+@inject ISaleService saleService;
+@inject IJSRuntime JSRuntime
+@inject ILocalStorage _localStorage
+@inject IResourceService resourceService
+
+
+<EditForm Model="newSale" OnValidSubmit="(() => OnValidSubmit(false))" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="rz-p-sm-12">
+        <RadzenAccordion Style="margin: 50px 0">
+            <Items>
+                <RadzenAccordionItem Text="Datos del cliente" Icon="account_balance_wallet"
+                                     ExpandTitle="Ver cliente"
+                                     ExpandAriaLabel="Ver cliente">
+                    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
+                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                            <RadzenFormField Text="Cliente" Variant="@variant" Style="width:100%">
+                                <ChildContent>
+                                    <RadzenDropDown TValue="int"
+                                                    Value=@newSale.Customer!.Id
+                                                    Data=@CustomerList
+                                                    TextProperty="Name"
+                                                    ValueProperty="Id"
+                                                    Change="((customerId) =>  {
+                                                    if(customerId != null) {OnChangeCustomer(Convert.ToInt32(customerId));}
+                                                    })" />
+                                </ChildContent>
+                                <Helper>
+                                    <ValidationMessage For="@(() => newSale.Customer!.Id)"></ValidationMessage>
+                                </Helper>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="Teléfono" Variant="@variant" Style="width:100%">
+                                <ChildContent>
+                                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newSale.Customer.PhoneNumber Disabled="true" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="Dirección" Variant="@variant" Style="width:100%">
+                                <ChildContent>
+                                    <RadzenTextBox @bind-Value=@newSale.Customer.Direction Disabled="true" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenAccordionItem>
+                <RadzenAccordionItem Text="@($"Productos ({productsCount})")" Icon="account_balance_wallet"
+                                     ExpandTitle="Ver productos"
+                                     ExpandAriaLabel="Ver productos">
+                    @foreach (var saleProduct in newSale.SaleProducts!)
+                    {
+                        <RadzenFieldset AllowCollapse="true" Style="width: 100%" ExpandTitle="Mas detalles"
+                                        CollapseTitle="Menos detalles" ExpandAriaLabel="Ver detalles" CollapseAriaLabel="Menos detalles">
+                            <HeaderTemplate>
+                                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">@saleProduct.ProductDescription</RadzenText>
+                                </HeaderTemplate>
+                                <ChildContent>
+                                    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
+                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                            <RadzenFormField Text="Producto" Variant="@variant" Style="width:100%">
+                                                <ChildContent>
+                                                    <RadzenDropDown TValue="string"
+                                                                    Value=@saleProduct.ProductCode
+                                                                    Data=@ProductList
+                                                                    TextProperty="Description"
+                                                                    ValueProperty="Code"
+                                                                    Change="((productCode) => OnChangeProduct(productCode as string, newSale.SaleProducts.ToList().IndexOf(saleProduct)))" />
+                                                </ChildContent>
+                                                <Helper>
+                                                    <ValidationMessage For="@(() => saleProduct.ProductCode)"></ValidationMessage>
+                                                </Helper>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="12">
+                                            <RadzenFormField Text="Cantidad" Variant="@variant" Style="width:100%">
+                                                <ChildContent>
+                                                    <RadzenNumeric @bind-Value=@saleProduct.Quantity @onchange="(() => OnChangeProductDetail(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" />
+                                                </ChildContent>
+                                                <Helper>
+                                                    <ValidationMessage For="@(() => saleProduct.Quantity)"></ValidationMessage>
+                                                </Helper>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="12">
+                                            <RadzenFormField Text="Precio unitario" Variant="@variant" Style="width:100%">
+                                                <ChildContent>
+                                                    <RadzenNumeric @onchange="(() => OnChangeProductDetail(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@saleProduct.UnitPrice />
+                                                </ChildContent>
+                                                <Helper>
+                                                    <ValidationMessage For="@(() => saleProduct.UnitPrice)"></ValidationMessage>
+                                                </Helper>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="12">
+                                            <RadzenFormField Text="Total" Variant="@variant" Style="width:100%">
+                                                <ChildContent>
+                                                    <RadzenNumeric Disabled="true" TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" Value=@saleProduct.Total />
+                                                </ChildContent>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenButton Click="(() => removeProduct(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar" Style="width: 100%" />
+                                    </RadzenRow>
+                                </ChildContent>
+                            </RadzenFieldset>
+                    }
+                </RadzenAccordionItem>
+            </Items>
+        </RadzenAccordion>
+    </div>
+    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Subtotal" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox Value="@subTotal" Disabled="true" />
+                </ChildContent>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Impuestos" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox Value="@totalTaxes" Disabled="true" />
+                </ChildContent>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Mano de obra" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newSale.WorkForceValue />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newSale.WorkForceValue)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Descuento" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newSale.Discount />
+                </ChildContent>
+                <Helper>
+                    <ValidationMessage For="@(() => newSale.Discount)"></ValidationMessage>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Total" Variant="@variant" Style="width:100%">
+                <ChildContent>
+                    <RadzenTextBox Value="@totalAmount" Disabled="true" />
+                </ChildContent>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
+        @if (newSale.Id <= 0 || !newSale.IsAQuotation)
+        {
+            <RadzenButton Click="@(() => OnValidSubmit(false))" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Procesar venta" Style="width: 100%" />
+        }
+
+        @if (newSale.Id <= 0 || newSale.IsAQuotation)
+        {
+            <RadzenButton Click="@(() => OnValidSubmit(true))" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Dark" Text="Generar cotización" Style="width: 100%" />
+        }
+        <RadzenButton Click="@(() => navManager.NavigateTo("/sales"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de ventas" Style="width: 100%" />
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    [Parameter] public int SaleId { get; set; } = 0;
+    [Parameter] public int? inQuotation { get; set; }
+
+    List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
+    List<CustomerViewModel> CustomerList { get; set; } = new List<CustomerViewModel>();
+
+    AddEditSale newSale = new AddEditSale();
+    Variant variant = Variant.Outlined;
+    string newCode = string.Empty;
+    bool TCPayment = false;
+    bool DepositPayment = false;
+    bool isCashSale = true;
+
+    private int productsCount => newSale.SaleProducts!.Count() == 0 ? 0 : newSale.SaleProducts!.Count() - 1;
+
+    string totalAmount => ToMoneyString(GetTotalAmount());
+    string totalTaxes => ToMoneyString(newSale.SaleProducts!.Sum(p => p.ITBIS));
+    string subTotal => ToMoneyString(newSale.SaleProducts!.Sum(p => p.Total) - newSale.SaleProducts!.Sum(p => p.ITBIS));
+
+    private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
+
+    private decimal GetTotalAmount()
+    {
+        decimal calc = 0.0M;
+        calc += newSale.SaleProducts!.Sum(p => p.Total);
+        calc += newSale.WorkForceValue ?? 0.0M;
+        calc -= newSale.Discount ?? 0.0M;
+        return calc;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await Task.WhenAll(LoadProducts(), LoadCustomers());
+        await LoadSale();
+
+        PreloadService.Hide();
+    }
+
+    private void OnChangeCustomer(int customerId)
+    {
+        if (customerId > 0)
+        {
+            var selected = CustomerList.FirstOrDefault(p => p.Id == customerId);
+
+            newSale.Customer!.Id = selected!.Id;
+            newSale.Customer.Name = selected.Name;
+            newSale.Customer.PhoneNumber = selected.PhoneNumber;
+            newSale.Customer.Direction = selected.Direction;
+            return;
+        }
+        newSale.Customer = new AddEditCustomer();
+    }
+
+    private void OnChangeProduct(string? selectedCode, int productIndex)
+    {
+        if (!string.IsNullOrEmpty(selectedCode))
+        {
+            if (productIndex == newSale.SaleProducts!.Count - 1)
+                newSale.SaleProducts.Add(new AddEditSaleProduct());
+
+            var selected = ProductList.FirstOrDefault(p => p.Code == selectedCode);
+
+            newSale.SaleProducts.ElementAt(productIndex).ProductId = selected!.Id;
+            newSale.SaleProducts.ElementAt(productIndex).ProductCode = selected!.Code;
+            newSale.SaleProducts.ElementAt(productIndex).ProductDescription = selected!.Description;
+            newSale.SaleProducts.ElementAt(productIndex).Quantity = 1;
+            newSale.SaleProducts.ElementAt(productIndex).UnitPrice = selected.Price;
+            newSale.SaleProducts.ElementAt(productIndex).ITBIS = selected.ITBIS > 0 ? selected.Price * (selected.ITBIS / 100) : 0M;
+        }
+    }
+
+    private void OnChangeProductDetail(int productIndex)
+    {
+        var element = newSale.SaleProducts!.ElementAt(productIndex);
+        if (element != null && !string.IsNullOrEmpty(element.ProductCode))
+        {
+            var product = ProductList.FirstOrDefault(p => p.Code == element.ProductCode);
+            newSale.SaleProducts!.ElementAt(productIndex).ITBIS = product!.ITBIS > 0 ? element.Quantity * element.UnitPrice * (product!.ITBIS / 100) : 0M;
+        }
+    }
+
+    private void removeProduct(int productIndex)
+    {
+        if (productIndex == newSale.SaleProducts!.Count - 1)
+            return;
+
+        newSale.SaleProducts.Remove(newSale.SaleProducts!.ToList().ElementAt(productIndex));
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            var response = await customerService.GetCustomerList();
+            if (response.Success)
+            {
+                CustomerList = response.Result ?? new List<CustomerViewModel>();
+            }
+            else
+            {
+                PreloadService!.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los clientes."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los clientes."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            var response = await productService.GetProducts();
+            if (response.Success)
+            {
+                ProductList = response.Result ?? new List<ProductViewModel>();
+            }
+            else
+            {
+                PreloadService!.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadSale()
+    {
+        try
+        {
+            if (SaleId > 0)
+            {
+                ApiResponse<AddEditSale> response = new ApiResponse<AddEditSale>();
+
+                if (inQuotation != null && inQuotation > 0)
+                    response = await saleService.GetQuotationById(SaleId);
+                else
+                    response = await saleService.GetSaleById(SaleId);
+
+                if (response.Success)
+                {
+                    var saleResult = response.Result ?? new AddEditSale();
+                    foreach (var salProduct in saleResult.SaleProducts!)
+                    {
+                        var product = ProductList.FirstOrDefault(p => p.Id == salProduct.ProductId);
+                        if (product != null)
+                        {
+                            salProduct.ProductCode = product.Code;
+                            salProduct.ProductDescription = product.Description;
+                        }
+                    }
+                    if (saleResult.CustomerId != null && saleResult.CustomerId > 0)
+                    {
+
+                        var cust = CustomerList.FirstOrDefault(p => p.Id == saleResult.CustomerId);
+                        saleResult.Customer!.Name = cust!.Name;
+                        saleResult.Customer.Id = cust.Id;
+                    }
+                    else
+                    {
+                        saleResult.Customer = new AddEditCustomer();
+                    }
+
+                    TCPayment = saleResult.TCAmount != null && saleResult.TCAmount > 0;
+                    DepositPayment = saleResult.DepositsAmount != null && saleResult.DepositsAmount > 0;
+
+                    newSale = saleResult;
+                }
+                else
+                {
+                    PreloadService!.Hide();
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos."),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            newSale.SaleProducts!.Add(new AddEditSaleProduct());
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private string validateSale()
+    {
+        var products = newSale.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+        if (!products.Any())
+            return "Favor de ingresar al menos un producto.";
+
+        if (products.Any(p => p.Total <= 0))
+            return "Uno de los productos ingresados no tiene datos. Favor de validar.";
+
+        var total = (newSale.TCAmount ?? 0.00M) + (newSale.CashAmount ?? 0.00M) + (newSale.DepositsAmount ?? 0.00M);
+        if (!newSale.IsAQuotation && (TCPayment || DepositPayment) && total != GetTotalAmount())
+            return $"Los montos ingresados no cuadran con el total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
+
+        return string.Empty;
+    }
+
+    private async Task OnValidSubmit(bool isQuotation)
+    {
+        newSale.IsAQuotation = isQuotation;
+        string validations = validateSale();
+
+        if (string.IsNullOrEmpty(validations))
+        {
+            PreloadService!.Show();
+            try
+            {
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                newSale.UserName = userSession!.Username;
+
+                newSale.CreditSale = !isCashSale;
+                newSale.SaleProducts = newSale.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+                if (SaleId == 0)
+                {
+                    var streamReceipt = await saleService.AddNewMobileSale(newSale);
+                    PreloadService.Hide();
+                    if (streamReceipt != null)
+                    {
+                        await resourceService.DownloadPdfReceiptStream(streamReceipt);
+                        newSale = new AddEditSale();
+                        newSale.SaleProducts!.Add(new AddEditSaleProduct());
+
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = isQuotation ? $"Cotización  generada exitosamente." : "Venta procesada exitosamente.",
+                                Icon = SweetAlertIcon.Success
+                            });
+
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Error",
+                                Text = string.Empty.HandleErrorMessage(),
+                                Icon = SweetAlertIcon.Error
+                            });
+                    }
+                }
+                else
+                {
+                    var streamReceipt = await saleService.UpdateMobileSale(SaleId, newSale);
+                    PreloadService.Hide();
+                    if (streamReceipt != null)
+                    {
+                        await resourceService.DownloadPdfReceiptStream(streamReceipt);
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = isQuotation ? $"Cotización generada exitosamente." : "Venta procesada exitosamente.",
+                                Icon = SweetAlertIcon.Success
+                            });
+
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Error",
+                                Text = string.Empty.HandleErrorMessage(),
+                                Icon = SweetAlertIcon.Error
+                            });
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                PreloadService.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = ex.Message.HandleErrorMessage(),
+                        Icon = SweetAlertIcon.Error
+                    });
+
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+}

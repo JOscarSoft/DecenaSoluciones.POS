@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
+using DecenaSoluciones.POS.API.Helper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Helper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
+using SelectPdf;
 
 namespace DecenaSoluciones.POS.API.Controllers
 {
@@ -162,40 +163,58 @@ namespace DecenaSoluciones.POS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateNewSale(AddEditSale sale)
         {
-            var apiResponse = new ApiResponse<AddEditSale>();
-            try
-            {
-                sale.CustomerId = sale.Customer!.Id;
-
-                if (sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
-                {
-                    var newCustomer = await _customerService.AddNewCustomer(sale.Customer);
-                    sale.Customer.Id = newCustomer.Id;
-                    sale.CustomerId = newCustomer.Id;
-                }
-                
-                if (sale.CustomerId == 0)
-                    sale.CustomerId = null;
-
-                if (sale.IsAQuotation)
-                    apiResponse.Result = await _quotationService.AddNewQuotation(_mapper.Map<Quotation>(sale));
-                else
-                    apiResponse.Result = await _saleService.AddNewSale(_mapper.Map<Sale>(sale));
-
-                apiResponse.Success = true;
-            }
-            catch (Exception ex)
-            {
-                apiResponse.Success = false;
-                apiResponse.Message = ex.Message;
-            }
-
-            return Ok(apiResponse);
+            var result = await GoCreateSale(sale);
+            return Ok(result);
         }
 
         [HttpPut]
         [Route("{id}")]
         public async Task<IActionResult> UpdateSale(int id, AddEditSale sale)
+        {
+            var result = await GoUpdateSale(id, sale);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("mobilesale")]
+        public async Task<IActionResult> CreateNewMobileSale(AddEditSale sale)
+        {
+            var result = await GoCreateSale(sale);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
+
+            HtmlToPdf converter = new HtmlToPdf();
+            converter.Options.PdfPageSize = PdfPageSize.Letter;
+            converter.Options.AutoFitWidth = HtmlToPdfPageFitMode.AutoFit;
+            converter.Options.AutoFitHeight = HtmlToPdfPageFitMode.AutoFit;
+            PdfDocument document = converter.ConvertHtmlString(recepitHtml);
+
+            var ms = new MemoryStream();
+            document.Save(ms);
+
+            return File(ms.ToArray(), "application/pdf", $"{sale.Code}.pdf");
+        }
+
+        [HttpPut]
+        [Route("mobilesale/{id}")]
+        public async Task<IActionResult> UpdateMobileSale(int id, AddEditSale sale)
+        {
+            var result = await GoCreateSale(sale);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
+
+            HtmlToPdf converter = new HtmlToPdf();
+            converter.Options.PdfPageSize = PdfPageSize.Letter;
+            converter.Options.AutoFitWidth = HtmlToPdfPageFitMode.AutoFit;
+            converter.Options.AutoFitHeight = HtmlToPdfPageFitMode.AutoFit;
+            PdfDocument document = converter.ConvertHtmlString(recepitHtml);
+
+            var ms = new MemoryStream();
+            document.Save(ms);
+
+            return File(ms.ToArray(), "application/pdf", $"{sale.Code}.pdf");
+        }
+
+        public async Task<ApiResponse<AddEditSale>> GoUpdateSale(int id, AddEditSale sale)
         {
             var apiResponse = new ApiResponse<AddEditSale>();
             try
@@ -226,7 +245,40 @@ namespace DecenaSoluciones.POS.API.Controllers
                 apiResponse.Message = ex.Message;
             }
 
-            return Ok(apiResponse);
+            return apiResponse;
+        }
+
+        private async Task<ApiResponse<AddEditSale>> GoCreateSale(AddEditSale sale)
+        {
+            var apiResponse = new ApiResponse<AddEditSale>();
+            try
+            {
+                sale.CustomerId = sale.Customer!.Id;
+
+                if (sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
+                {
+                    var newCustomer = await _customerService.AddNewCustomer(sale.Customer);
+                    sale.Customer.Id = newCustomer.Id;
+                    sale.CustomerId = newCustomer.Id;
+                }
+
+                if (sale.CustomerId == 0)
+                    sale.CustomerId = null;
+
+                if (sale.IsAQuotation)
+                    apiResponse.Result = await _quotationService.AddNewQuotation(_mapper.Map<Quotation>(sale));
+                else
+                    apiResponse.Result = await _saleService.AddNewSale(_mapper.Map<Sale>(sale));
+
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return apiResponse;
         }
     }
 }
