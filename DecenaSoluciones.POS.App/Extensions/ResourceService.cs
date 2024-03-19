@@ -5,7 +5,6 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static Java.Util.Jar.Attributes;
 
 namespace DecenaSoluciones.POS.App.Extensions
 {
