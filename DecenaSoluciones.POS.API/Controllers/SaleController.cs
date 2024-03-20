@@ -214,7 +214,8 @@ namespace DecenaSoluciones.POS.API.Controllers
             return File(ms.ToArray(), "application/pdf", $"{sale.Code}.pdf");
         }
 
-        public async Task<ApiResponse<AddEditSale>> GoUpdateSale(int id, AddEditSale sale)
+		[NonAction]
+		public async Task<ApiResponse<AddEditSale>> GoUpdateSale(int id, AddEditSale sale)
         {
             var apiResponse = new ApiResponse<AddEditSale>();
             try
@@ -248,7 +249,8 @@ namespace DecenaSoluciones.POS.API.Controllers
             return apiResponse;
         }
 
-        private async Task<ApiResponse<AddEditSale>> GoCreateSale(AddEditSale sale)
+		[NonAction]
+		private async Task<ApiResponse<AddEditSale>> GoCreateSale(AddEditSale sale)
         {
             var apiResponse = new ApiResponse<AddEditSale>();
             try
