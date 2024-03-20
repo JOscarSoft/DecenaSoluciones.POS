@@ -20,6 +20,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public bool IsAQuotation { get; set; } = false;
         public string? UserName { get; set; }
         public bool? CreditSale { get; set; }
+        public string? CompanyName { get; set; }
         public AddEditCustomer? Customer { get; set; } = new AddEditCustomer();
         public ICollection<AddEditSaleProduct>? SaleProducts { get; set; } = new List<AddEditSaleProduct>();
     }

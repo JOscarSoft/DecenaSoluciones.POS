@@ -5,6 +5,7 @@ using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
 using DecenaSoluciones.POS.Shared.Helper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using SelectPdf;
 
@@ -19,12 +20,19 @@ namespace DecenaSoluciones.POS.API.Controllers
         private readonly ISaleService _saleService;
         private readonly ICustomerService _customerService;
         private readonly IMapper _mapper;
-        public SaleController(IQuotationService quotationService, ISaleService saleService, ICustomerService customerService, IMapper mapper)
+        private readonly IWebHostEnvironment _WebHostEnvironment;
+        public SaleController(
+            IQuotationService quotationService, 
+            ISaleService saleService, 
+            ICustomerService customerService, 
+            IMapper mapper,
+            IWebHostEnvironment webHostEnvironment)
         {
             _quotationService = quotationService;
             _saleService = saleService;
             _customerService = customerService;
             _mapper = mapper;
+            _WebHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
@@ -181,7 +189,11 @@ namespace DecenaSoluciones.POS.API.Controllers
         public async Task<IActionResult> CreateNewMobileSale(AddEditSale sale)
         {
             var result = await GoCreateSale(sale);
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
+            sale.Code = result.Result!.Code;
+
+            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
+            var templateString = System.IO.File.ReadAllText(serverPath);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -192,8 +204,11 @@ namespace DecenaSoluciones.POS.API.Controllers
         [Route("mobilesale/{id}")]
         public async Task<IActionResult> UpdateMobileSale(int id, AddEditSale sale)
         {
-            var result = await GoCreateSale(sale);
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
+            await GoUpdateSale(id, sale);
+
+            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
+            var templateString = System.IO.File.ReadAllText(serverPath);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 

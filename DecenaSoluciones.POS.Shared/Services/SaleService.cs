@@ -180,23 +180,6 @@ namespace DecenaSoluciones.POS.Shared.Services
                 return string.Empty;
             }
         }
-        private string GetPageBreak() => "</table><p style=\"page-break-before: always\">" +
-                            "<table class=\"tblProducts\">" +
-                            "<tr><th>ITEMS</th>" +
-                            "<th>PRODUCTO</th>" +
-                            "<th>CANT.</th>" +
-                            "<th>PRECIO</th>" +
-                            "<th>ITBIS</th>" +
-                            "<th>TOTAL</th></tr>";
-
-        private string GetTotalAmount(AddEditSale sale)
-        {
-            decimal calc = 0.0M;
-            calc += sale.SaleProducts!.Sum(p => p.Total);
-            calc += sale.WorkForceValue ?? 0.0M;
-            calc -= sale.Discount ?? 0.0M;
-            return ToMoneyString(calc);
-        }
 
         private string ToMoneyString(decimal? value) => value.HasValue ? $"{value.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}" : "0.00";
     }
