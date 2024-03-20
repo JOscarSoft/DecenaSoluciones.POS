@@ -198,7 +198,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var companyName = await GetCurrentCompanyName();
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -214,7 +214,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var companyName = await GetCurrentCompanyName();
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 

@@ -10,7 +10,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
 {
     public static class Utility
     {
-        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "")
+        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "", bool useTableBreaks = true)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
@@ -26,12 +26,16 @@ namespace DecenaSoluciones.POS.Shared.Helper
                                 $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
                                 $"<td>{ToMoneyString(product.ITBIS)}</td>" +
                                 $"<td>{ToMoneyString(product.Total)}</td></tr>";
-                count++;
 
-                if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
+                if (useTableBreaks)
                 {
-                    page++;
-                    productsHTML += GetPageBreak();
+                    count++;
+
+                    if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
+                    {
+                        page++;
+                        productsHTML += GetPageBreak();
+                    }
                 }
             }
 
@@ -41,10 +45,13 @@ namespace DecenaSoluciones.POS.Shared.Helper
                                 $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
             }
 
-            var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
-            if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
-            {
-                productsHTML += GetPageBreak();
+            if (useTableBreaks)
+            { 
+                var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
+                if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
+                {
+                    productsHTML += GetPageBreak();
+                }
             }
 
             htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
