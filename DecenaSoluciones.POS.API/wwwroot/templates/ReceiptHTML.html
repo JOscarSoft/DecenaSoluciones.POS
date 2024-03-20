@@ -1,196 +1,203 @@
 <html>
-<head>
+  <head>
     <style type="text/css">
-        .mainDiv {
-            position: relative;
-            overflow: hidden;
-            margin: 42px 0px 234px 10px;
-            padding: 0px;
-            width: 980px;
-        }
+      .mainDiv {
+        position: relative;
+        overflow: hidden;
+        margin: 42px 0px 234px 10px;
+        padding: 0px;
+        width: 980px;
+      }
 
-        .leftPanel {
-            float: left;
-            margin: 50px 0px 0px 0px;
-            padding: 0px;
-            width: 590px;
-            overflow: hidden;
-        }
+      .companyTitle {
+        text-align: center;
+      }
 
-        .rightPanel {
-            float: right;
-            margin: 30px 0px 0px 10px;
-            padding: 0px;
-            width: 155px;
-            overflow: hidden;
-            text-align: right;
-        }
+      .leftPanel {
+        float: left;
+        padding: 0px;
+        width: 590px;
+        overflow: hidden;
+      }
 
-            .rightPanel.Bottom {
-                margin: 0 !important;
-                width: 300px !important;
-            }
+      .rightPanel {
+        float: right;
+        margin: 0px 0px 0px 10px;
+        padding: 0px;
+        width: 155px;
+        overflow: hidden;
+        text-align: right;
+      }
 
-        .leftPanel.Bottom {
-            margin: 0 !important;
-            width: 300px !important;
-        }
+      .rightPanel.Bottom {
+        margin: 0 !important;
+        width: 300px !important;
+      }
 
-        .header {
-            position: initial;
-            top: 0px;
-            left: 35px;
-            z-index: -1;
-            width: 760px;
-            height: 160px;
-        }
+      .leftPanel.Bottom {
+        margin: 0 !important;
+        width: 300px !important;
+      }
 
-        .headerImage {
-            width: 760px;
-            height: 160px;
-        }
+      .header {
+        position: initial;
+        top: 0px;
+        left: 35px;
+        z-index: -1;
+        width: 760px;
+        height: 160px;
+      }
 
-        .tblProducts {
-            font-family: "Times New Roman", Times, serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
+      .headerImage {
+        width: 760px;
+        height: 160px;
+      }
 
-            .tblProducts th {
-                border: 1px solid #ddd;
-                padding: 8px;
-            }
+      .tblProducts {
+        font-family: "Times New Roman", Times, serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
 
-            .tblProducts td {
-                border-right: 1px solid #ddd;
-                border-left: 1px solid #ddd;
-            }
+      .tblProducts th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
 
-            .tblProducts tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
+      .tblProducts td {
+        border-right: 1px solid #ddd;
+        border-left: 1px solid #ddd;
+      }
 
-            .tblProducts th {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                text-align: left;
-                background-color: #bfbfbf;
-            }
+      .tblProducts tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
 
-        .rowTotal {
-            background-color: white !important;
-            font-weight: bold;
-        }
+      .tblProducts th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #bfbfbf;
+      }
 
-            .rowTotal.firstTotal {
-                border-top: 1px solid #ddd;
-            }
+      .rowTotal {
+        background-color: white !important;
+        font-weight: bold;
+      }
 
-            .rowTotal td {
-                border-right: 0 !important;
-                border-left: 0 !important;
-                padding-top: 5px;
-            }
+      .rowTotal.firstTotal {
+        border-top: 1px solid #ddd;
+      }
 
-        .cellTotal {
-            border: 0 !important;
-        }
+      .rowTotal td {
+        border-right: 0 !important;
+        border-left: 0 !important;
+        padding-top: 5px;
+      }
 
-        .ClientP {
-            position: relative;
-        }
+      .cellTotal {
+        border: 0 !important;
+      }
 
-            .ClientP:before {
-                content: "";
-                position: absolute;
-                top: 95%; /* line position can be changed according to requirment either top:0, top:50% or bottom:0*/
-                left: 0;
-                width: 100%;
-                height: 1px;
-                background: black;
-            }
+      .ClientP {
+        position: relative;
+      }
 
-            .ClientP span {
-                display: inline-block;
-                background: #fff;
-                position: relative;
-                padding-right: 5px; /*space between text and line*/
-            }
+      .ClientP:before {
+        content: "";
+        position: absolute;
+        top: 95%; /* line position can be changed according to requirment either top:0, top:50% or bottom:0*/
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: black;
+      }
 
-        hr {
-            border: 0;
-            border-top: 2px solid;
-        }
+      .ClientP span {
+        display: inline-block;
+        background: #fff;
+        position: relative;
+        padding-right: 5px; /*space between text and line*/
+      }
+
+      hr {
+        border: 0;
+        border-top: 2px solid;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="mainDiv">
-        <div class="leftPanel">
-            <p class="ClientP">
-                <span style="font-weight: bold; font-size: 18px">Cliente: </span>{{ClientName}}
-            </p>
-            {{PaymentConditions}}
-        </div>
-        <div class="rightPanel">
-            <p>{{CreationDate}}</p>
-            <p class="">{{SaleCode}} <span class="">{{SaleTitle}}</span></p>
-        </div>
+      <div class="companyTitle">
+        <h2>{{CompanyName}}</h2>
+      </div>
+      <div class="leftPanel">
+        <p class="ClientP">
+          <span style="font-weight: bold; font-size: 18px">Cliente: </span
+          >{{ClientName}}
+        </p>
+        {{PaymentConditions}}
+      </div>
+      <div class="rightPanel">
+        <p>{{CreationDate}}</p>
+        <p class="">{{SaleCode}} <span class="">{{SaleTitle}}</span></p>
+      </div>
 
-        <table class="tblProducts">
-            <tr>
-                <th>ITEMS</th>
-                <th>PRODUCTO</th>
-                <th>CANT.</th>
-                <th>PRECIO</th>
-                <th>ITBIS</th>
-                <th>TOTAL</th>
-            </tr>
-            {{Products}}
-            <tr class="rowTotal firstTotal">
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td>SUBTOTAL</td>
-                <td>{{SubTotal}}</td>
-            </tr>
-            <tr class="rowTotal">
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td>ITBIS</td>
-                <td>{{totalTaxes}}</td>
-            </tr>
-            <tr class="rowTotal">
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td>DESCUENTOS</td>
-                <td>{{Discount}}</td>
-            </tr>
-            <tr class="rowTotal">
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td class="cellTotal"></td>
-                <td>TOTAL</td>
-                <td>{{GrandTotal}}</td>
-            </tr>
-        </table>
-        <div class="leftPanel Bottom">
-            <br />
-            <br />
-            <hr />
-            <p style="text-align: center" class="">ENTREGADO</p>
-        </div>
-        <div class="rightPanel Bottom">
-            <br />
-            <br />
-            <hr />
-            <p style="text-align: center" class="">RECIBIDO CONFORME</p>
-        </div>
+      <table class="tblProducts">
+        <tr>
+          <th>ITEMS</th>
+          <th>PRODUCTO</th>
+          <th>CANT.</th>
+          <th>PRECIO</th>
+          <th>ITBIS</th>
+          <th>TOTAL</th>
+        </tr>
+        {{Products}}
+        <tr class="rowTotal firstTotal">
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td>SUBTOTAL</td>
+          <td>{{SubTotal}}</td>
+        </tr>
+        <tr class="rowTotal">
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td>ITBIS</td>
+          <td>{{totalTaxes}}</td>
+        </tr>
+        <tr class="rowTotal">
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td>DESCUENTOS</td>
+          <td>{{Discount}}</td>
+        </tr>
+        <tr class="rowTotal">
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td class="cellTotal"></td>
+          <td>TOTAL</td>
+          <td>{{GrandTotal}}</td>
+        </tr>
+      </table>
+      <div class="leftPanel Bottom">
+        <br />
+        <br />
+        <hr />
+        <p style="text-align: center" class="">ENTREGADO</p>
+      </div>
+      <div class="rightPanel Bottom">
+        <br />
+        <br />
+        <hr />
+        <p style="text-align: center" class="">RECIBIDO CONFORME</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

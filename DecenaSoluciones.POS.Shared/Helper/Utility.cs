@@ -10,7 +10,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
 {
     public static class Utility
     {
-        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate)
+        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "")
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
@@ -49,6 +49,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
             htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", companyName);
             htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
             htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);

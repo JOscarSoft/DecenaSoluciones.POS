@@ -19,20 +19,24 @@ namespace DecenaSoluciones.POS.API.Controllers
         private readonly IQuotationService _quotationService;
         private readonly ISaleService _saleService;
         private readonly ICustomerService _customerService;
+        private readonly ICompanyService _companyService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _WebHostEnvironment;
+
         public SaleController(
             IQuotationService quotationService, 
             ISaleService saleService, 
             ICustomerService customerService, 
             IMapper mapper,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ICompanyService companyService)
         {
             _quotationService = quotationService;
             _saleService = saleService;
             _customerService = customerService;
             _mapper = mapper;
             _WebHostEnvironment = webHostEnvironment;
+            _companyService = companyService;
         }
 
         [HttpGet]
@@ -193,7 +197,8 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString);
+            var companyName = await GetCurrentCompanyName();
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -208,7 +213,8 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
-            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString);
+            var companyName = await GetCurrentCompanyName();
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, companyName);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -282,6 +288,17 @@ namespace DecenaSoluciones.POS.API.Controllers
             }
 
             return apiResponse;
+        }
+
+        [NonAction]
+        private async Task<string> GetCurrentCompanyName()
+        {
+            var companyId = User.Claims.FirstOrDefault(p => p.Type == "Company")?.Value;
+            var companyName = string.IsNullOrEmpty(companyId)
+                ? string.Empty
+                : (await _companyService.GetCompanyById(int.Parse(companyId))).Name;
+
+            return companyName;
         }
     }
 }
