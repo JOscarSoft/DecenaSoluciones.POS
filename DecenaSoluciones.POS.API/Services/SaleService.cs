@@ -9,13 +9,15 @@ namespace DecenaSoluciones.POS.API.Services
     {
         private readonly DecenaSolucionesDBContext _dbContext;
         private readonly IProductService _productService;
+        private readonly ICustomerService _customerService;
         private readonly IMapper _mapper;
 
-        public SaleService(DecenaSolucionesDBContext dbContext, IProductService productService, IMapper mapper)
+        public SaleService(DecenaSolucionesDBContext dbContext, IProductService productService, ICustomerService customerService, IMapper mapper)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _productService = productService;
+            _customerService = customerService;
         }
 
         public async Task<List<SalesViewModel>> GetSalesList()
@@ -55,7 +57,12 @@ namespace DecenaSoluciones.POS.API.Services
                 product.Product = null;
 
             foreach (var item in newSale.SaleProducts!)
+            {
                 await _productService.UpdateProductStock(item.ProductId, item.Quantity * -1);
+
+                if(newSale.CustomerId.HasValue)
+                    await _customerService.AddProductToCustomer(item.ProductId, newSale.CustomerId.Value, item.Quantity);
+            }
 
             _dbContext.ChangeTracker.Clear();
 
@@ -87,7 +94,12 @@ namespace DecenaSoluciones.POS.API.Services
             var removedProducts = oldSale.SaleProducts!.Where(p => !sale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
 
             foreach (var item in newProducts)
+            {
                 await _productService.UpdateProductStock(item.ProductId, item.Quantity * -1);
+
+                if (sale.CustomerId.HasValue)
+                    await _customerService.AddProductToCustomer(item.ProductId, sale.CustomerId.Value, item.Quantity);
+            }
 
             foreach (var item in removedProducts)
                 await _productService.UpdateProductStock(item.ProductId, item.Quantity);

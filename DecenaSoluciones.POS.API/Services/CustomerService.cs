@@ -73,6 +73,36 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<AddEditCustomer>(newCustomer);
         }
 
+        public async Task AddProductToCustomer(int productId, int customerId, int quantity)
+        {
+            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(p => p.Id == customerId);
+
+            if(product != null && customer != null && product.Assignable)
+            {
+                for (int i = 0; i < quantity; i++)
+                {
+                    var customerProduct = new CustomerProduct()
+                    {
+                        CustomerId = customerId,
+                        ProductId = product.Id,
+                        NeedMaintenance = product.MaintenancePeriods != null,
+                        LastMaintenance = product.MaintenancePeriods != null ? DateTime.Now : null,
+                        NextMaintenance = product.MaintenancePeriods != null ? DateTime.Now.AddMonths(product.MaintenancePeriods.Value) : null,
+                        SoldByUs = true,
+                        HasWarranty = product.WarrantyTime != null,
+                        WarrantyEndDate = product.WarrantyTime != null ? DateTime.Now.AddMonths(product.WarrantyTime.Value) : null,
+                        SaleDate = DateTime.Now,
+                        Customer = customer,
+                        Product = product
+                    };
+
+                    _dbContext.CustomerProducts.Add(customerProduct);
+                }
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
         public async Task<bool> RemoveCustomer(int id)
         {
             var existProducts = await _dbContext.CustomerProducts.AnyAsync(p => p.CustomerId == id);

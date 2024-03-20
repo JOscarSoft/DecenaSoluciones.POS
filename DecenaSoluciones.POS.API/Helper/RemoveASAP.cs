@@ -10,7 +10,7 @@
         overflow: hidden;
         margin: 42px 0px 234px 10px;
         padding: 0px;
-        width: 759px;
+        width: 980px;
       }
 
       .leftPanel {

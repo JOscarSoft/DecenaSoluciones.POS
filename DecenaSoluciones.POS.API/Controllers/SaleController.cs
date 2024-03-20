@@ -183,14 +183,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var result = await GoCreateSale(sale);
             var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
 
-            HtmlToPdf converter = new HtmlToPdf();
-            converter.Options.PdfPageSize = PdfPageSize.Letter;
-            converter.Options.AutoFitWidth = HtmlToPdfPageFitMode.AutoFit;
-            converter.Options.AutoFitHeight = HtmlToPdfPageFitMode.AutoFit;
-            PdfDocument document = converter.ConvertHtmlString(recepitHtml);
-
-            var ms = new MemoryStream();
-            document.Save(ms);
+            var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
             return File(ms.ToArray(), "application/pdf", $"{sale.Code}.pdf");
         }
@@ -202,14 +195,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var result = await GoCreateSale(sale);
             var recepitHtml = Utility.GenerateReceiptHtml(sale, RemoveASAP.RemovePlease);
 
-            HtmlToPdf converter = new HtmlToPdf();
-            converter.Options.PdfPageSize = PdfPageSize.Letter;
-            converter.Options.AutoFitWidth = HtmlToPdfPageFitMode.AutoFit;
-            converter.Options.AutoFitHeight = HtmlToPdfPageFitMode.AutoFit;
-            PdfDocument document = converter.ConvertHtmlString(recepitHtml);
-
-            var ms = new MemoryStream();
-            document.Save(ms);
+            var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
             return File(ms.ToArray(), "application/pdf", $"{sale.Code}.pdf");
         }
