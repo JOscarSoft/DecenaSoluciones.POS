@@ -1,0 +1,212 @@
+﻿@page "/AnonymousRegister"
+@layout LoginLayout
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.App.Extensions;
+@using DecenaSoluciones.POS.Shared.Extensions
+@using Microsoft.AspNetCore.Components.Authorization
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager navManager
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+
+<Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+
+<div class="row mt-5 text-center">
+
+    <div class="col-lg-4 offset-lg-4" style="width:100%; margin: auto">
+
+        <img src="/images/logo/LoginLogo.jpeg" alt="logo" style="width:50%;margin-bottom:50px">
+
+        @if (OnCompanyCreation)
+        {
+            <div class="mb-3">
+                <input @bind="model.CompanyName" class="form-control" placeholder="Nombre de la Compañía o Negocio" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            </div>
+
+            <div class="mb-3">
+                <input @bind="model.ContactEmail" class="form-control" placeholder="Correo electrónico" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            </div>
+
+            <div class="mb-3">
+                <input @bind="model.ContactPhone" class="form-control" placeholder="Teléfono" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            </div>
+
+            <div class="mb-3" style="margin-top:50px">
+                <RadzenButton Icon="check_circle" Click="SwitchNextView" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Continuar" Style="width: 75%" />
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <input @bind="model.FirstName" class="form-control" placeholder="Nombre" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            </div>
+
+            <div class="mb-3">
+                <input @bind="model.LastName" class="form-control" placeholder="Apellido" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            </div>
+
+            <div class="mb-3">
+                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            </div>
+
+            <div class="mb-3">
+                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            </div>
+
+            <div class="mb-3">
+                <input type="password" @bind="PasswordConfirmation" class="form-control" placeholder="Confirmar contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            </div>
+
+
+            <div class="mb-3" style="margin-top:50px">
+                <RadzenButton Icon="arrow_back" Click="GoBack" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Secondary" Text="Regresar" Style="width: 37.5%" />
+                <RadzenButton Click="SubmitRegistration" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Registrarme" Style="width: 37.5%" />
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    private AnonymousRegistrationViewModel model = new AnonymousRegistrationViewModel();
+    List<ToastMessage> messages = new List<ToastMessage>();
+    private bool OnCompanyCreation = true;
+    private string PasswordConfirmation;
+    private void ShowMessage(string message, bool cleanPrevious = true) 
+    {
+        if (cleanPrevious)
+        {
+            messages.Clear();
+        }
+        messages.Add(CreateToastMessage(ToastType.Danger, message)); 
+    }
+
+    private ToastMessage CreateToastMessage(ToastType toastType, string message)
+    => new ToastMessage
+        {
+            Type = toastType,
+            Title = "¡Atención!",
+            Message = message,
+        };
+
+    private string validateLogin()
+    {
+        if (string.IsNullOrEmpty(model.Username))
+            return "Favor ingresar el usuario.";
+        if (string.IsNullOrEmpty(model.Password))
+            return "Favor ingresar el contraseña.";
+        if (model.Password != PasswordConfirmation)
+            return "Las contraseñas no coinciden.";
+
+        return string.Empty;
+    }
+
+    private string validateCompanyInfo()
+    {
+        if (string.IsNullOrWhiteSpace(model.CompanyName))
+            return "Favor ingresar el nombre de su compañía o negocio.";
+        if (string.IsNullOrWhiteSpace(model.ContactPhone))
+            return "Favor ingresar un teléfono válido.";
+        if (string.IsNullOrWhiteSpace(model.ContactEmail))
+            return "Favor ingresar un correo electrónico válido.";
+
+        return string.Empty;
+    }
+
+    public void EnterNextView(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+            SwitchNextView();
+    }
+
+    public async Task EnterRegistration(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+            SubmitRegistration();
+    }
+
+    public void SwitchNextView()
+    {
+        var validations = validateCompanyInfo();
+        if (!string.IsNullOrEmpty(validations))
+        {
+            ShowMessage(validations);
+            return;
+        }
+
+        OnCompanyCreation = false;
+    }
+
+    public void GoBack()
+    {
+        OnCompanyCreation = true;
+    }
+
+
+    private async Task SubmitRegistration()
+    {
+        string validations = validateLogin();
+        if (!string.IsNullOrEmpty(validations))
+        {
+            ShowMessage(validations);
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            var response = await authService.AnonymousRegistration(model);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                PreloadService.Hide();
+
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Usuario creado!",
+                        Text = "Registro exitoso, puedes utilizar tu usuario y contraseña para ingresar.",
+                        Icon = SweetAlertIcon.Success
+                    });
+                navManager.NavigateTo("/Login", true);
+            }
+            else
+            {
+                if(response.Result.CompanyId > 0)
+                {
+                    model.CompanyId = response.Result.CompanyId;
+                }
+                else
+                {
+                    OnCompanyCreation = true;
+                }
+
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message,
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Se produjo un error al procesar la petición: " + ex.Message,
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+}

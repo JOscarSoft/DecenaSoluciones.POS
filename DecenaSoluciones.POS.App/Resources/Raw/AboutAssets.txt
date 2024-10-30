@@ -13,3 +13,14 @@ These files will be deployed with you package and will be accessible using Essen
 
         var contents = reader.ReadToEnd();
     }
+
+<CustomTable
+						columns={columns}
+						rows={budgetCodes.data || []}
+						dataNoFound="No se encontraron códigos registrados"
+						page={page}
+						rowsPerPage={rowsPerPage}
+						totalRecords={budgetCodes.totalRecords}
+						onRowPerPageChangeListener={(newRowPerPageSize: number) => setRowsPerPage(newRowPerPageSize)}
+						onPageChangeListener={(newPage: number) => setPage(newPage)}
+					/>

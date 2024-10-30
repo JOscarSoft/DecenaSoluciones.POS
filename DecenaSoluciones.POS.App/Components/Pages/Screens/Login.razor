@@ -49,6 +49,15 @@
             <div class="mb-3" style="margin-top:50px">
                 <RadzenButton Click="SubmitLogin" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Login" Style="width: 75%" />
             </div>
+            <div class="divider"></div>
+            <div class="row">
+                <div class="col"><hr></div>
+                <div class="col-auto">O</div>
+                <div class="col"><hr></div>
+            </div>
+            <div class="mb-3" style="margin-top:10px">
+                <RadzenButton Click="GoRegistration" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Secondary" Text="Registrate!" Style="width: 75%" />
+            </div>
         }
 
     </div>
@@ -122,6 +131,11 @@
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
             await SubmitLogin();
+    }
+
+    private void GoRegistration()
+    {
+        navManager.NavigateTo("/AnonymousRegister");
     }
 
     private async Task SubmitLogin()

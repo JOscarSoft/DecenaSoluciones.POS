@@ -105,7 +105,7 @@ namespace DecenaSoluciones.POS.API.Services
             if (!await userManager.CheckPasswordAsync(user, model.Password))
                 throw new Exception("Contraseña inválida");
             if(user.CompanyId != null && user.Company!.SubscriptionExpiration < DateTime.Now)
-                throw new Exception("Su suscripción se encuentra inactiva, favor contactenos!");
+                throw new Exception("Su suscripción se encuentra inactiva, favor contactenos a traves de nuestro E-mail ventas@decenasoluciones.com");
 
             var userRoles = await userManager.GetRolesAsync(user);
             var authClaims = new List<Claim>

@@ -1,3 +1,4 @@
+using DecenaSoluciones.POS.API.Helper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,7 +8,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -96,6 +96,9 @@ builder.Services.AddAuthentication(options =>
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTKey:Secret"]!))
                 };
             });
+
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
 
 var app = builder.Build();
 

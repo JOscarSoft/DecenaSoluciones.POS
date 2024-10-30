@@ -12,6 +12,20 @@ namespace DecenaSoluciones.POS.Shared.Services
             _httpClient = clientFactory.CreateClient("WebApi");
         }
 
+        public async Task<ApiResponse<AnonymousRegistrationResults>> AnonymousRegistration(AnonymousRegistrationViewModel model)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/Authentication/anonymousregister", model);
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AnonymousRegistrationResults>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de autenticación.");
+
+            return result;
+        }
+
         public async Task<ApiResponse<bool>> ChangePassword(ChangePasswordViewModel model)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Authentication/setpassword", model);
