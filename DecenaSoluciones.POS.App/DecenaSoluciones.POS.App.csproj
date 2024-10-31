@@ -89,12 +89,4 @@
       </Content>
     </ItemGroup>
 
-  <PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
-    <AndroidKeyStore>True</AndroidKeyStore>
-    <AndroidSigningKeyStore>..\key.keystore</AndroidSigningKeyStore>
-    <AndroidSigningStorePass>nuevacont16</AndroidSigningStorePass>
-    <AndroidSigningKeyAlias>DesolAppKeyAlias</AndroidSigningKeyAlias>
-    <AndroidSigningKeyPass>nuevacont16</AndroidSigningKeyPass>
-  </PropertyGroup>
-
 </Project>
