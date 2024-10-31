@@ -113,10 +113,10 @@
     {
         if (string.IsNullOrWhiteSpace(model.CompanyName))
             return "Favor ingresar el nombre de su compañía o negocio.";
-        if (string.IsNullOrWhiteSpace(model.ContactPhone))
-            return "Favor ingresar un teléfono válido.";
-        if (string.IsNullOrWhiteSpace(model.ContactEmail))
+        if (string.IsNullOrWhiteSpace(model.ContactEmail) || !model.ContactEmail.IsValidEmail())
             return "Favor ingresar un correo electrónico válido.";
+        if (string.IsNullOrWhiteSpace(model.ContactPhone) || !model.ContactPhone.IsValidPhone())
+            return "Favor ingresar un teléfono válido.";
 
         return string.Empty;
     }

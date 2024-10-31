@@ -1,4 +1,5 @@
 ﻿@using BlazorBootstrap
+@using DecenaSoluciones.POS.App.Components.Pages.Components
 @using DecenaSoluciones.POS.Shared.Dtos;
 @using DecenaSoluciones.POS.App.Extensions;
 @using DecenaSoluciones.POS.App.Components.Pages;
@@ -38,7 +39,7 @@
     <main>
         <AuthorizeView>
             <div class="sidebar">
-                <NavMenu UserName="@context.User.Identity!.Name" OnLogout="CerrarSesion" OnChangePassword="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" />
+                <NavMenu UserName="@context.User.Identity!.Name" OnLogout="CerrarSesion" OnChangePassword="(() => ShowChangePasswordModal(context.User.Identity?.Name ?? string.Empty))" OnGoWebVersion="GoWebVersion"/>
             </div>
         </AuthorizeView>
 
@@ -62,7 +63,7 @@
         var parameters = new Dictionary<string, object>();
         parameters.Add("userName", userName);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideChangePasswordModal));
-        //await changePasswordModal.ShowAsync<ChangePasswordComponent>(title: $"Actualizar Contraseña - {userName}", parameters: parameters);
+        await changePasswordModal.ShowAsync<ChangePasswordComponent>(title: "Cambiar contraseña", parameters: parameters);
     }
 
     private async Task HideChangePasswordModal(MouseEventArgs e)
@@ -75,6 +76,11 @@
         var autenticacionExt = (AuthExtension)autenticacionProvider;
         await autenticacionExt.UpdateSessionState(string.Empty);
         navManager.NavigateTo("/Login", true);
+    }
+    private async Task GoWebVersion()
+    {
+        Uri uri = new Uri("https://decenasoluciones.com/");
+        await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
     }
 }
 

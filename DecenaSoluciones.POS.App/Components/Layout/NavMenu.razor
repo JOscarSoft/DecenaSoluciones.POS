@@ -147,6 +147,14 @@
                     </NavLink>
                 </div>
                 <div class="nav-item" style="margin-top:35px">
+                    <NavLink class="nav-link" href="javascript:void(0)" @onclick="OnGoWebVersion">
+                        <span class="nav-link-icon me-3" b-jbgvk8pcne>
+                            <i class="bi bi-globe" aria-hidden="true"></i>
+                        </span>
+                        <span class="nav-link-text expanded-only" b-jbgvk8pcne>Version web</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
                     <NavLink class="nav-link" href="javascript:void(0)" @onclick="OnChangePassword">
                         <span class="nav-link-icon me-3" b-jbgvk8pcne>
                             <i class="bi bi-person-fill-gear" aria-hidden="true"></i>
@@ -168,6 +176,8 @@
 </Offcanvas>
 
 @code {
+    [Parameter]
+    public EventCallback OnGoWebVersion { get; set; }
     [Parameter]
     public EventCallback OnLogout { get; set; }
     [Parameter]

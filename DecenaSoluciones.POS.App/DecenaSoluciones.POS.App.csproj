@@ -28,8 +28,8 @@
         <ApplicationId>com.companyname.decenasoluciones.pos.app</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.2</ApplicationDisplayVersion>
+        <ApplicationVersion>3</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -88,5 +88,13 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </Content>
     </ItemGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
+    <AndroidKeyStore>True</AndroidKeyStore>
+    <AndroidSigningKeyStore>..\key.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>nuevacont16</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>DesolAppKeyAlias</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>nuevacont16</AndroidSigningKeyPass>
+  </PropertyGroup>
 
 </Project>
