@@ -18,6 +18,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         [Required(ErrorMessage = "El teléfono del contacto es requerido")]
         public string ContactPhone { get; set; }
         public DateTime SubscriptionExpiration { get; set; } = DateTime.Now;
+        public string? Address { get; set; }
+        public string? Slogan { get; set; }
 
         public AddEditCompany()
         {
@@ -34,6 +36,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
             ContactEmail = companyViewModel.ContactEmail;
             ContactPhone = companyViewModel.ContactPhone;
             SubscriptionExpiration = companyViewModel.SubscriptionExpiration;
+            Address = companyViewModel.Address;
+            Slogan = companyViewModel.Slogan;
         }
     }
 }

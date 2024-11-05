@@ -12,12 +12,14 @@ namespace DecenaSoluciones.POS.Shared.Services
         private readonly HttpClient _httpClient;
         private readonly HttpClient _httpClientLocal;
         private readonly ILocalStorage _localStorage;
+        private readonly ICompanyService _companyService;
 
-        public SaleService(IHttpClientFactory clientFactory, ILocalStorage localStorage)
+        public SaleService(IHttpClientFactory clientFactory, ILocalStorage localStorage, ICompanyService companyService)
         {
             _httpClient = clientFactory.CreateClient("WebApi");
             _httpClientLocal = clientFactory.CreateClient("Local");
             _localStorage = localStorage;
+            _companyService = companyService;
         }
 
         public async Task<ApiResponse<List<SalesViewModel>>> GetSalesList()
@@ -167,7 +169,11 @@ namespace DecenaSoluciones.POS.Shared.Services
         {
             try
             {
+                CompanyViewModel? company = new CompanyViewModel();   
                 var companyId = (await _localStorage.GetStorage<UserInfoExtension>("userSession"))!.CompanyId;
+
+                if(companyId != null)
+                    company = (await _companyService.GetCompany(int.Parse(companyId)))?.Result;
 
                 string htmlTemplate = string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
                     sale.IsAQuotation ? 
@@ -175,7 +181,7 @@ namespace DecenaSoluciones.POS.Shared.Services
                     await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML") :
                     await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
 
-                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate) : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate);
+                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company);
             }
             catch
             {

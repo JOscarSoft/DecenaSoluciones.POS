@@ -22,5 +22,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string ContactPhone { get; set; }
         public DateTime SubscriptionExpiration { get; set; }
         public bool Active { get {  return SubscriptionExpiration > DateTime.Now; } }
+        public string? Address { get; set; }
+        public string? Slogan { get; set; }
     }
 }

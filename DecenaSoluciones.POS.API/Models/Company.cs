@@ -17,6 +17,12 @@ namespace DecenaSoluciones.POS.API.Models
 
         [MaxLength(25)]
         public string? ContactPhone { get; set; }
+
+        [MaxLength(225)]
+        public string? Address { get; set; }
+
+        [MaxLength(80)]
+        public string? Slogan { get; set; }
         public DateTime SubscriptionExpiration { get; set; }
     }
 }

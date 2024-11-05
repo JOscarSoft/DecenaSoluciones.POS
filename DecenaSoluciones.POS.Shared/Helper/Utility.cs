@@ -72,7 +72,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
             return htmlTemplate;
         }
 
-        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "")
+        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
@@ -95,14 +95,17 @@ namespace DecenaSoluciones.POS.Shared.Helper
             }
 
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", companyName);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
+            htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyAddress}}", company?.Address ?? string.Empty);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty);
             htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
             htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
             htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
             htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
             htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
-            htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm t"));
+            htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"));
             htmlTemplate = htmlTemplate.Replace("{{PaymentType}}", sale.GetPaymentType());
             htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
 

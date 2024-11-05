@@ -23,9 +23,24 @@
         <ValidationMessage For="@(() => newCompany.ContactName)"></ValidationMessage>
     </div>
     <div class="col-md-4">
+        <label class="form-label">Email Contacto:</label>
+        <InputText class="form-control" @bind-Value="newCompany.ContactEmail" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newCompany.ContactEmail)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
         <label class="form-label">Telefono Contacto:</label>
         <InputMask @bind-Value="newCompany.ContactPhone" class="form-control" data-mask="(000) 000-0000" />
         <ValidationMessage For="@(() => newCompany.ContactPhone)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Dirección:</label>
+        <InputText class="form-control" @bind-Value="newCompany.Address" maxlength="225"></InputText>
+        <ValidationMessage For="@(() => newCompany.Address)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Eslogan:</label>
+        <InputText class="form-control" @bind-Value="newCompany.Slogan" maxlength="80"></InputText>
+        <ValidationMessage For="@(() => newCompany.Slogan)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Fin suscripción:</label>

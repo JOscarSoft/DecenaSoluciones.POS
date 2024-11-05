@@ -92,7 +92,6 @@
       }
 
       .price::before {
-        content: "\0024";
         font-family: Arial;
         text-align: right;
       }
@@ -108,9 +107,6 @@
       .total.text,
       .total.price {
         text-align: right;
-      }
-      .total.price::before {
-        content: "\0024";
       }
       .line {
         border-top: 1px solid black !important;
@@ -137,14 +133,14 @@
 
   <body>
     <header></header>
-    <p class="center-align" style="font-weight: bold">Ferretería DST</p>
-    <p class="center-align" style="font-size: 12px">Electricidad - Plomería - Pintura - Refrigeración</p>
+    <p class="center-align" style="font-weight: bold">{{CompanyName}}</p>
+    <p class="center-align" style="font-size: 12px">{{CompanySlogan}}</p>
     <br />
     <p class="center-align" style="font-size: 12px">
-      C/24 #49, Barrio Agrario, Sabana Perdida Santo Domingo Norte
+        {{CompanyAddress}}
     </p>
     <p class="center-align" style="font-size: 12px">
-        Tel.: (809) 416-7091
+        Tel.: {{CompanyPhone}}
     </p>
     <table class="bill-details">
       <tbody>
