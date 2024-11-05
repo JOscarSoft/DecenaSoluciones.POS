@@ -10,7 +10,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
 {
     public static class Utility
     {
-        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "", bool useTableBreaks = true)
+        public static string GenerateQuotationReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "", bool useTableBreaks = true)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
@@ -71,6 +71,62 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
             return htmlTemplate;
         }
+
+        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "")
+        {
+            string productsHTML = string.Empty;
+            string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
+            string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
+
+            foreach (var product in sale.SaleProducts!)
+            {
+                productsHTML += $"<tr><td colspan=\"3\">{product.ProductDescription}</td></tr>" +
+                                $"<tr><td>{product.Quantity}</td>" +
+                                $"<td class=\"price\">{ToMoneyString(product.UnitPrice)}</td>" +
+                                $"<td class=\"price\">{ToMoneyString(product.Total)}</td></tr>";
+            }
+
+            if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
+            {
+                productsHTML += $"<tr><td colspan=\"3\">Mano de obra</td></tr>" +
+                                $"<tr><td>000</td>" +
+                                $"<td class=\"price\">000</td>" +
+                                $"<td class=\"price\">{ToMoneyString(sale.WorkForceValue)}</td></tr>";
+            }
+
+            htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", companyName);
+            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
+            htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
+            htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
+            htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
+            htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
+            htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
+            htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm t"));
+            htmlTemplate = htmlTemplate.Replace("{{PaymentType}}", sale.GetPaymentType());
+            htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
+
+            string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
+            htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :
+                $"Condiciones de pago: <span>{payCondition}</span>");
+
+            return htmlTemplate;
+        }
+
+        private static string GetPaymentType(this AddEditSale sale)
+        {
+            if(sale.TCAmount != null && sale.TCAmount > 0)
+            {
+                return "Tarjeta de crédito";
+            }
+            if (sale.TCAmount != null && sale.TCAmount > 0)
+            {
+                return "Transferencia";
+            }
+
+            return "Efectivo";
+        }
+
         private static string GetPageBreak() => "</table><p style=\"page-break-before: always\">" +
                             "<table class=\"tblProducts\">" +
                             "<tr><th>ITEMS</th>" +

@@ -170,10 +170,12 @@ namespace DecenaSoluciones.POS.Shared.Services
                 var companyId = (await _localStorage.GetStorage<UserInfoExtension>("userSession"))!.CompanyId;
 
                 string htmlTemplate = string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
-                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
+                    sale.IsAQuotation ? 
+                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") : 
+                    await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML") :
                     await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
 
-                return Utility.GenerateReceiptHtml(sale, htmlTemplate);
+                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate) : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate);
             }
             catch
             {
