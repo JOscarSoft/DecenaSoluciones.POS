@@ -13,5 +13,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<bool> UpdateInventary(List<UpdateInventory> inventoryItems);
         Task<int> RemoveProduct(int id);
         Task<ProductViewModel> UpdateProductStock(int id, int quantity);
+        Task<LastSaleXProductViewModel> GetLastSaleXProduct(int id);
     }
 }

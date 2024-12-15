@@ -22,6 +22,7 @@ namespace DecenaSoluciones.POS.API.Services
                 .Include(p => p.Customer)
                 .Include(p => p.QuotationProducts)!
                 .ThenInclude(p => p.Product)
+                .OrderByDescending(p => p.CreationDate)
                 .ToListAsync();
             return _mapper.Map<List<SalesViewModel>>(Quotations);
         }

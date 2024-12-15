@@ -34,7 +34,7 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">% ITBIS:</label>
-        <NumberInput TValue="decimal" @bind-Value="newProduct.ITBIS" />
+        <RadzenNumeric TValue="decimal" class="form-control" ShowUpDown="false" @bind-Value=@newProduct.ITBIS />
         <ValidationMessage For="@(() => newProduct.ITBIS)"></ValidationMessage>
     </div>
     <div class="col-md-4">
@@ -55,6 +55,25 @@
     <div class="col-md-4">
         <Switch @bind-Value="newProduct.Assignable" Label="Asignable a clientes" />
     </div>
+
+    @if(lastSale != null && lastSale.ProductId > 0)
+    {
+        <hr />
+        <h5 class="form-label" style="margin-top:15px">Última venta</h5>
+        
+        <div class="col-md-4">
+            <label style="font-weight:bold">Fecha:</label>
+            <label>@lastSale.SaleDate.ToString("dd/MM/yyyy")</label>
+        </div>
+        <div class="col-md-4">
+            <label style="font-weight:bold">Cantidad:</label>
+            <label>@lastSale.Quantity</label>
+        </div>
+        <div class="col-md-4">
+            <label style="font-weight:bold">Precio:</label>
+            <label>@lastSale.SalePrice.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))</label>
+        </div>
+    }
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
         <AuthorizeView Roles="admin, manager" Context="authContext">
@@ -77,11 +96,39 @@
     [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
 
     AddEditProduct newProduct = new AddEditProduct();
+    LastSaleXProductViewModel? lastSale = new LastSaleXProductViewModel();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Product.Id > 0)
+        {
             newProduct = new AddEditProduct(Product);
+            await LoadLastSaleXProduct();
+        }
+    }
+
+
+    private async Task LoadLastSaleXProduct()
+    {
+        try
+        {
+            var response = await productService.GetLastSaleXProduct(Product.Id);
+            if (response.Success)
+            {
+                lastSale = response.Result;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
     }
 
     private async Task CloseModal()

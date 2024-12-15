@@ -86,6 +86,30 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpGet]
+        [Route("GetLastSale/{productId}")]
+        public async Task<IActionResult> GetLastSale(int productId)
+        {
+            var apiResponse = new ApiResponse<LastSaleXProductViewModel>();
+            try
+            {
+                var lastSale = await _productService.GetLastSaleXProduct(productId);
+
+                if (lastSale == null)
+                    throw new Exception("Producto no encontrado o sin ventas");
+
+                apiResponse.Result = lastSale;
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
+        [HttpGet]
         [Route("GetAssignables")]
         public async Task<IActionResult> GetAssignables()
         {

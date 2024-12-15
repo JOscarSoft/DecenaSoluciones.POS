@@ -51,6 +51,17 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<List<ProductViewModel>>(product);
         }
 
+        public async Task<LastSaleXProductViewModel> GetLastSaleXProduct(int id)
+        {
+            var saleProduct = await _dbContext
+                .SaleProducts
+                .Include(p => p.Sale)
+                .OrderByDescending(p => p.Sale.CreationDate)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            return _mapper.Map<LastSaleXProductViewModel>(saleProduct);
+        }
+
         public async Task<List<ProductViewModel>> GetAssignables()
         {
             var product = await _dbContext.Products.Where(p => p.Assignable).ToListAsync();

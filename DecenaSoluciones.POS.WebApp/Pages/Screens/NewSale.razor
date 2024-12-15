@@ -35,9 +35,9 @@
             <thead>
                 <tr class="bg-dark text-white border-bottom-0 headerRow">
                     <th>Producto</th>
+                    <th>Stock</th>
                     <th>Cantidad</th>
                     <th>Precio unitario</th>
-                    <th>ITBIS</th>
                     <th>Total</th>
                     <th></th>
                 </tr>
@@ -56,6 +56,9 @@
                             <InputText hidden="hidden" @bind-Value="productSale.ProductCode" />
                             <ValidationMessage For="@(() => productSale.ProductCode)"></ValidationMessage>
                         </td>
+                        <td>
+                            @GetStock(productSale.ProductCode)
+                        </td>
                         <td style="width:5%">
                             <NumberInput TValue="int" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" />
                             <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
@@ -63,9 +66,6 @@
                         <td>
                             <RadzenNumeric TValue="decimal" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productSale.UnitPrice />
                             <ValidationMessage For="@(() => productSale.UnitPrice)"></ValidationMessage>
-                        </td>
-                        <td>
-                            @productSale.ITBIS.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
                         </td>
                         <td>
                             @productSale.Total.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
@@ -271,6 +271,7 @@
     string subTotal => ToMoneyString(model.SaleProducts!.Sum(p => p.Total) - model.SaleProducts!.Sum(p => p.ITBIS));
 
     private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
+    private string GetStock(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock.ToString() ?? "0";
 
     public void EnterCode(KeyboardEventArgs e)
     {

@@ -40,6 +40,20 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
+        public async Task<ApiResponse<LastSaleXProductViewModel>> GetLastSaleXProduct(int productId)
+        {
+            var response = await _httpClient.GetAsync($"api/Product/GetLastSale/{productId}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<LastSaleXProductViewModel>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Productos.");
+
+            return result;
+        }
+
         public async Task<ApiResponse<ProductViewModel>> GetProductById(int id)
         {
             var response = await _httpClient.GetAsync($"api/Product/{id}");
