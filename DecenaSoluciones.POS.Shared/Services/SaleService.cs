@@ -175,11 +175,11 @@ namespace DecenaSoluciones.POS.Shared.Services
                 if(companyId != null)
                     company = (await _companyService.GetCompany(int.Parse(companyId)))?.Result;
 
-                string htmlTemplate = string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
-                    sale.IsAQuotation ? 
-                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") : 
-                    await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML") :
-                    await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML");
+                string htmlTemplate = sale.IsAQuotation ?
+                    string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
+                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
+                    await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML") :
+                    await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML");
 
                 return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company);
             }

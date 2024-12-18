@@ -57,12 +57,20 @@ namespace DecenaSoluciones.POS.API.Services
             foreach (var product in newSale.SaleProducts!)
                 product.Product = null;
 
-            foreach (var item in newSale.SaleProducts!)
+            var groupedProducts = newSale.SaleProducts!
+                .GroupBy(p => p.ProductId)
+                .Select(p => 
+                new { 
+                    productId = p.Key, 
+                    quantity = p.Sum(a => a.Quantity)
+                });
+
+            foreach (var item in groupedProducts)
             {
-                await _productService.UpdateProductStock(item.ProductId, item.Quantity * -1);
+                await _productService.UpdateProductStock(item.productId, item.quantity * -1);
 
                 if(newSale.CustomerId.HasValue)
-                    await _customerService.AddProductToCustomer(item.ProductId, newSale.CustomerId.Value, item.Quantity);
+                    await _customerService.AddProductToCustomer(item.productId, newSale.CustomerId.Value, item.quantity);
             }
 
             _dbContext.ChangeTracker.Clear();
@@ -94,21 +102,46 @@ namespace DecenaSoluciones.POS.API.Services
             var existingProducts = sale.SaleProducts!.Where(p => oldSale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
             var removedProducts = oldSale.SaleProducts!.Where(p => !sale.SaleProducts!.Select(p => p.ProductId).Contains(p.ProductId));
 
-            foreach (var item in newProducts)
+            var groupedProducts = newProducts!
+                .GroupBy(p => p.ProductId)
+                .Select(p =>
+                new {
+                    productId = p.Key,
+                    quantity = p.Sum(a => a.Quantity)
+                });
+
+            foreach (var item in groupedProducts)
             {
-                await _productService.UpdateProductStock(item.ProductId, item.Quantity * -1);
+                await _productService.UpdateProductStock(item.productId, item.quantity * -1);
 
                 if (sale.CustomerId.HasValue)
-                    await _customerService.AddProductToCustomer(item.ProductId, sale.CustomerId.Value, item.Quantity);
+                    await _customerService.AddProductToCustomer(item.productId, sale.CustomerId.Value, item.quantity);
             }
 
-            foreach (var item in removedProducts)
-                await _productService.UpdateProductStock(item.ProductId, item.Quantity);
+            groupedProducts = removedProducts!
+                .GroupBy(p => p.ProductId)
+                .Select(p =>
+                new {
+                    productId = p.Key,
+                    quantity = p.Sum(a => a.Quantity)
+                });
 
-            foreach (var item in existingProducts)
+            foreach (var item in groupedProducts)
+                await _productService.UpdateProductStock(item.productId, item.quantity);
+
+
+            groupedProducts = existingProducts!
+                .GroupBy(p => p.ProductId)
+                .Select(p =>
+                new {
+                    productId = p.Key,
+                    quantity = p.Sum(a => a.Quantity)
+                });
+
+            foreach (var item in groupedProducts)
             {
-                var newQuantity = item.Quantity - oldSale.SaleProducts!.FirstOrDefault(p => p.ProductId == item.ProductId)!.Quantity;
-                await _productService.UpdateProductStock(item.ProductId, newQuantity * -1);
+                var newQuantity = item.quantity - oldSale.SaleProducts!.Where(p => p.ProductId == item.productId)!.Sum(j => j.Quantity);
+                await _productService.UpdateProductStock(item.productId, newQuantity * -1);
             }
 
             _dbContext.Sale.Update(sale);

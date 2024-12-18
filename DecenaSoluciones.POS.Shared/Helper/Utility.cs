@@ -94,6 +94,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
                                 $"<td class=\"price\">{ToMoneyString(sale.WorkForceValue)}</td></tr>";
             }
 
+            htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
             htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
             htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
