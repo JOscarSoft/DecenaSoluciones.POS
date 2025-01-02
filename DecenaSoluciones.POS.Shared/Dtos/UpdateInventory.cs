@@ -14,14 +14,14 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string? ProductDescription { get; set; }
 
         [Required(ErrorMessage = "El campo Precio es requerido.")]
-        [Range(1.0, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
+        [Range(0.01, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
         public decimal Price { get; set; }
 
         [Required(ErrorMessage = "El campo Costo es requerido.")]
-        [Range(1.0, Double.MaxValue, ErrorMessage = "El costo debe ser mayor de 0.")]
+        [Range(0.01, Double.MaxValue, ErrorMessage = "El costo debe ser mayor de 0.")]
         public decimal Cost { get; set; }
 
         [Required(ErrorMessage = "El campo Cantidad es requerido.")]
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
     }
 }

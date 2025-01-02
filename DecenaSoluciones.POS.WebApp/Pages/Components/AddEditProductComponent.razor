@@ -34,12 +34,12 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">% ITBIS:</label>
-        <RadzenNumeric TValue="decimal" class="form-control" ShowUpDown="false" @bind-Value=@newProduct.ITBIS />
+        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" ShowUpDown="false" @bind-Value=@newProduct.ITBIS />
         <ValidationMessage For="@(() => newProduct.ITBIS)"></ValidationMessage>
     </div>
     <div class="col-md-4">
         <label class="form-label">Stock:</label>
-        <NumberInput TValue="int" @bind-Value="newProduct.stock" />
+        <RadzenNumeric TValue="decimal" @bind-Value="newProduct.stock" Culture="@CultureInfo.CreateSpecificCulture("en-US")" ShowUpDown="false"/>
         <ValidationMessage For="@(() => newProduct.stock)"></ValidationMessage>
     </div>
     <div class="col-md-4">

@@ -33,11 +33,11 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public int ProductId { get; set; }
 
         [Required(ErrorMessage = "La cantidad es requerida.")]
-        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor de 0.")]
-        public int Quantity { get; set; }
+        [Range(0.01, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor de 0.")]
+        public decimal Quantity { get; set; }
 
         [Required(ErrorMessage = "El precio unitario es requerido.")]
-        [Range(1.0, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
+        [Range(0.01, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
         public decimal UnitPrice { get; set; }
         public decimal ITBIS { get; set; }
         public string? Comments { get; set; }

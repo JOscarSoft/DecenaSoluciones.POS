@@ -60,7 +60,7 @@
                             @GetStock(productSale.ProductCode)
                         </td>
                         <td style="width:5%">
-                            <NumberInput TValue="int" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" />
+                            <RadzenNumeric TValue="decimal" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" Culture="@CultureInfo.CreateSpecificCulture("en-US")"/>
                             <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
                         </td>
                         <td>
@@ -288,6 +288,8 @@
                 model.SaleProducts.ElementAt(lastIndex).UnitPrice = newProduct.Price;
                 model.SaleProducts.ElementAt(lastIndex).ITBIS = newProduct.ITBIS > 0 ? newProduct.Price * (newProduct.ITBIS / 100) : 0M;
                 model.SaleProducts!.Add(new AddEditSaleProduct());
+
+                newCode = string.Empty;
                 return;
             }
 

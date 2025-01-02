@@ -1,8 +1,11 @@
 using DecenaSoluciones.POS.API.Helper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
+using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -10,7 +13,15 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var messages = context.ModelState.Values.SelectMany(x => x.Errors.Select(m => m.ErrorMessage)).ToList();
+        return new OkObjectResult(new ApiResponse<object> {Message = string.Join("; ", messages.ToArray()), Result = null, Success = false });
+    };
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>

@@ -13,14 +13,14 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string Description { get; set; } = string.Empty;
         public int? MaintenancePeriods { get; set; } = 6;
         public int? WarrantyTime { get; set; } = 12;
-        public int stock { get; set; }
+        public decimal stock { get; set; }
 
         [Required(ErrorMessage = "El campo Precio es requerido.")]
-        [Range(1.0, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
+        [Range(0.01, Double.MaxValue, ErrorMessage = "El precio debe ser mayor de 0.")]
         public decimal Price { get; set; }
 
         [Required(ErrorMessage = "El campo Costo es requerido.")]
-        [Range(1.0, Double.MaxValue, ErrorMessage = "El costo debe ser mayor de 0.")]
+        [Range(0.01, Double.MaxValue, ErrorMessage = "El costo debe ser mayor de 0.")]
         public decimal Cost { get; set; }
         public bool Assignable { get; set; }
         public decimal ITBIS { get; set; } = 18.0M;

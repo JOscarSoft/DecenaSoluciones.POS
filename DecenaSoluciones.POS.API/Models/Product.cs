@@ -13,7 +13,7 @@ namespace DecenaSoluciones.POS.API.Models
         public required string Description { get; set; }
         public int? MaintenancePeriods { get; set; }
         public int? WarrantyTime { get; set; }
-        public required int stock { get; set; }
+        public required decimal stock { get; set; }
         public required decimal Price { get; set; }
         public required decimal Cost { get; set; }
         public bool Assignable { get; set; }

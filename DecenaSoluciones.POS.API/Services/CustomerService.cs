@@ -73,7 +73,7 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<AddEditCustomer>(newCustomer);
         }
 
-        public async Task AddProductToCustomer(int productId, int customerId, int quantity)
+        public async Task AddProductToCustomer(int productId, int customerId, decimal quantity)
         {
             var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
             var customer = await _dbContext.Customers.FirstOrDefaultAsync(p => p.Id == customerId);

@@ -77,18 +77,25 @@
                                         <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
                                             <RadzenFormField Text="Producto" Variant="@variant" Style="width:100%">
                                                 <ChildContent>
-                                                    <RadzenDropDown TValue="string"
-                                                                    Value=@saleProduct.ProductCode
-                                                                    Data=@ProductList
-                                                                    TextProperty="Description"
-                                                                    ValueProperty="Code"
-                                                                    Change="((productCode) => OnChangeProduct(productCode as string, newSale.SaleProducts.ToList().IndexOf(saleProduct)))" />
+                                                <AutoComplete @bind-Value="saleProduct.ProductDescription"
+                                                              TItem="ProductViewModel"
+                                                              DataProvider="ProductsDataProvider"
+                                                              PropertyName="Description"
+                                                              Placeholder="Ingresa un producto..."
+                                                              OnChanged="(ProductViewModel selected) => OnChangeProduct(selected.Code, newSale.SaleProducts.ToList().IndexOf(saleProduct))" />
                                                 </ChildContent>
                                                 <Helper>
                                                     <ValidationMessage For="@(() => saleProduct.ProductCode)"></ValidationMessage>
                                                 </Helper>
                                             </RadzenFormField>
-                                        </RadzenColumn>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12">
+                                        <RadzenFormField Text="Stock" Variant="@variant" Style="width:100%">
+                                            <ChildContent>
+                                                <RadzenTextBox Disabled="true" class="form-control" Value=@GetStock(saleProduct.ProductCode) />
+                                            </ChildContent>
+                                        </RadzenFormField>
+                                    </RadzenColumn>
                                         <RadzenColumn Size="12">
                                             <RadzenFormField Text="Cantidad" Variant="@variant" Style="width:100%">
                                                 <ChildContent>
@@ -205,6 +212,7 @@
     string subTotal => ToMoneyString(newSale.SaleProducts!.Sum(p => p.Total) - newSale.SaleProducts!.Sum(p => p.ITBIS));
 
     private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
+    private string GetStock(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock.ToString() ?? "0";
 
     private decimal GetTotalAmount()
     {
@@ -213,6 +221,11 @@
         calc += newSale.WorkForceValue ?? 0.0M;
         calc -= newSale.Discount ?? 0.0M;
         return calc;
+    }
+
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(ProductList.OrderBy(prod => prod.Description)));
     }
 
     protected override async Task OnInitializedAsync()

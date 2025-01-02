@@ -27,7 +27,7 @@ namespace DecenaSoluciones.POS.API.Services
             result.SoldProductsPerWeek = sales.Where(p => p.CreationDate >= DateTime.Now.StartOfWeek(DayOfWeek.Monday) && p.CreationDate <= DateTime.Now.StartOfWeek(DayOfWeek.Monday).AddDays(7))
                 .Select(p => p.SaleProducts)
                 .SelectMany(p => p)
-                .Sum(p => p.Quantity);
+                .Sum(p => (int)Math.Round(p.Quantity, MidpointRounding.AwayFromZero));
 
             result.SoldProducts = sales.Select(p => p.SaleProducts).SelectMany(p => p).GroupBy(p => p.Product).Select(p => new SoldProductQuantityViewModel
             {

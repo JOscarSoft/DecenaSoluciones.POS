@@ -9,6 +9,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<AddEditCustomer> AddNewCustomer(AddEditCustomer customer);
         Task<AddEditCustomer> UpdateCustomer(int id, AddEditCustomer customer);
         Task<bool> RemoveCustomer(int id);
-        Task AddProductToCustomer(int productId, int customerId, int quantity);
+        Task AddProductToCustomer(int productId, int customerId, decimal quantity);
     }
 }

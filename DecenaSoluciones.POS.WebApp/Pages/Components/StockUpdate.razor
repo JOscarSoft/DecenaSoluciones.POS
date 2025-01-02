@@ -38,7 +38,7 @@
                         <ValidationMessage For="@(() => productStock.ProductCode)"></ValidationMessage>
                     </td>
                     <td>
-                        <NumberInput TValue="int" @bind-Value="productStock.Quantity" />
+                        <RadzenNumeric TValue="decimal" @bind-Value="productStock.Quantity" ShowUpDown="false" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
                         <ValidationMessage For="@(() => productStock.Quantity)"></ValidationMessage>
                     </td>
                     <td>

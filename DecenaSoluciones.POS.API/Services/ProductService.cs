@@ -103,7 +103,7 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<ProductViewModel>(newProduct);
         }
 
-        public async Task<ProductViewModel> UpdateProductStock(int id, int quantity)
+        public async Task<ProductViewModel> UpdateProductStock(int id, decimal quantity)
         {
             var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
 

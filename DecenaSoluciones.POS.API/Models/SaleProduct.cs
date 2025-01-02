@@ -11,7 +11,7 @@ namespace DecenaSoluciones.POS.API.Models
     {
         public int SaleId { get; set; }
         public int ProductId { get; set; }
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal ITBIS { get; set; }
         public string? Comments { get; set; }
