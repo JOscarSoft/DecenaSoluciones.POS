@@ -57,7 +57,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
             htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
             htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", companyName);
-            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
+            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer?.Name ?? "MOSTRADOR"));
             htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
             htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
@@ -72,11 +72,16 @@ namespace DecenaSoluciones.POS.Shared.Helper
             return htmlTemplate;
         }
 
-        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company)
+        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company, bool duplicate = false)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
             string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
+            List<string> changesText = new List<string>();//!string.IsNullOrEmpty(sale.originalSaleCode) ? "Modificada" : string.Empty;
+            if(!string.IsNullOrEmpty(sale.originalSaleCode))
+                changesText.Add("Modificada");
+            if (duplicate)
+                changesText.Add("Reimpresion");
 
             foreach (var product in sale.SaleProducts!)
             {
@@ -100,7 +105,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
             htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
             htmlTemplate = htmlTemplate.Replace("{{CompanyAddress}}", company?.Address ?? string.Empty);
             htmlTemplate = htmlTemplate.Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer!.Name ?? "MOSTRADOR"));
+            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer?.Name ?? "MOSTRADOR"));
             htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
             htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
@@ -109,6 +114,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
             htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"));
             htmlTemplate = htmlTemplate.Replace("{{PaymentType}}", sale.GetPaymentType());
             htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
+            htmlTemplate = htmlTemplate.Replace("{{DuplicateText}}", changesText.Any() ? string.Join(" - ", changesText) : "");
 
             string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
             htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :

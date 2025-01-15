@@ -23,6 +23,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<List<SalesViewModel>> GetSalesList()
         {
             var sales = await _dbContext.Sale
+                .Include(p => p.DismissedSale)
                 .Include(p => p.Customer)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
@@ -34,22 +35,38 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<AddEditSale> GetSaleById(int id)
         {
             var sale = await _dbContext.Sale
+                .Include(p => p.DismissedSale)
                 .Include(p => p.Customer)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
-            return _mapper.Map<AddEditSale>(sale);
+
+            var result = _mapper.Map<AddEditSale>(sale);
+            if (result != null)
+            {
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+            }
+
+            return result;
         }
 
         public async Task<AddEditSale> GetSaleByCode(string code)
         {
             var sale = await _dbContext.Sale
+                .Include(p => p.DismissedSale)
                 .Include(p => p.Customer)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
                 .FirstOrDefaultAsync(p => p.Code == code);
-            return _mapper.Map<AddEditSale>(sale);
+
+            var result = _mapper.Map<AddEditSale>(sale);
+            if (result != null)
+            {
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+            }
+
+            return result;
         }
         
         public async Task<AddEditSale> AddNewSale(Sale newSale)
@@ -144,21 +161,26 @@ namespace DecenaSoluciones.POS.API.Services
                 await _productService.UpdateProductStock(item.productId, newQuantity * -1);
             }
 
-            _dbContext.Sale.Update(sale);
+            sale.Id = 0;
+            sale.Code = await GetSaleCode();
+            sale.Dismissed = false;
+            sale.CreationDate = DateTime.Now;
+            foreach (var item in sale.SaleProducts)
+                item.Id = 0;
+
+            await _dbContext.Sale.AddAsync(sale);
             await _dbContext.SaveChangesAsync();
+
             _dbContext.ChangeTracker.Clear();
 
-            var Ids = oldSale.SaleProducts!
-                .Where(p => !sale.SaleProducts.Any(n => n.Id == p.Id))
-                .Select(p => p.Id);
-
-            foreach(var saleProdId in Ids)
-            {
-                _dbContext.SaleProducts.Remove(oldSale.SaleProducts!.FirstOrDefault(p=>p.Id == saleProdId)!);
-            }
+            oldSale.Dismissed = true;
+            oldSale.DismissedBySaleId = sale.Id;
+            _dbContext.Sale.Update(oldSale);
             await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<AddEditSale>(sale);
+            var result = _mapper.Map<AddEditSale>(sale);
+            result.originalSaleCode = oldSale.Code;
+            return result;
         }
 
         private async Task<string> GetSaleCode()

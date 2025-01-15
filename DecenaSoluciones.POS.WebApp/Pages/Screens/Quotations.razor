@@ -16,7 +16,7 @@
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(quotationsUrl)">Nueva cotización</Button>
+        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => GoToNewQuotation()">Nueva cotización</Button>
     </div>
 </div>
 
@@ -26,6 +26,11 @@
     [Inject] protected PreloadService? PreloadService { get; set; }
     List<SalesViewModel> salesList = new List<SalesViewModel>();
     string quotationsUrl = "/newsale";
+
+    private void GoToNewQuotation()
+    {
+        navegation.NavigateTo($"{quotationsUrl}/0/1");
+    }
 
     protected override async Task OnInitializedAsync()
     {

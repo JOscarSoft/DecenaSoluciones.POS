@@ -26,6 +26,9 @@ namespace DecenaSoluciones.POS.API.Models
         public bool? CreditSale { get; set; }
         public DateTime CreationDate { get; set; }
         public int CompanyId { get; set; }
+        public bool? Dismissed { get; set; }
+        public int? DismissedBySaleId { get; set; }
+        public virtual Sale? DismissedSale { get; set; }
         public virtual Company Company { get; set; }
         public virtual Customer? Customer { get; set; }
         public virtual ICollection<SaleProduct>? SaleProducts { get; set; }

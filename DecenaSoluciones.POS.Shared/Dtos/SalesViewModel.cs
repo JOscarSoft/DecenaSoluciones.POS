@@ -10,6 +10,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public string? CustomerName { get; set; }
         public DateTime CreationDate { get; set; }
         public bool IsAQuotation { get; set; }
-        public bool CreditSale { get; set; }        
+        public bool CreditSale { get; set; }
+        public string? UserName { get; set; }
+        public bool Dismissed { get; set; }
     }
 }

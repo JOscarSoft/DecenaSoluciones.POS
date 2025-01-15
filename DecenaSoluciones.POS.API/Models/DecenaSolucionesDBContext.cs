@@ -64,6 +64,10 @@ namespace DecenaSoluciones.POS.API.Models
                 }
             }
 
+            builder.Entity<Sale>().HasOne(p => p.DismissedSale)
+                                  .WithMany()
+                                  .HasForeignKey(b => b.DismissedBySaleId);
+
             base.OnModelCreating(builder);
         }
         public DbSet<Customer> Customers { get; set; }

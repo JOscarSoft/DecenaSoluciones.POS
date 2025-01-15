@@ -19,11 +19,41 @@
 @inject ISaleService saleService;
 @inject IJSRuntime JSRuntime
 @inject ILocalStorage _localStorage
+@inject NavigationManager navegation;
 
 
-<h3>@title</h3>
+<div class="row">
+    <div class="col-lg-8">
+        <h3>@title</h3>
+    </div>
+    <div class="col-lg-4">
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+            @if (model.Id > 0)
+            {
+                <Button Color="ButtonColor.Success" Class="float-end" @onclick="() => GoNewSale()"><Icon Name="IconName.PlusCircle" /> Nueva venta</Button>
+            }
+            <Button Color="ButtonColor.Primary" Class="float-end" @onclick="() => BackToList()"><Icon Name="IconName.ArrowBarLeft" /> Historico</Button>
+        </div>
+    </div>
+</div>
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+@if (model.Id > 0 && !string.IsNullOrEmpty(model.UserName))
+{
+    @if (model.Dismissed)
+    {
+        <Alert Color="AlertColor.Danger">
+            <Icon Name="IconName.ExclamationTriangleFill" class="me-2"></Icon>
+            venta desestimada/modificada. Ver <a href="#" @onclick="() => GoToDismissed()" class="alert-link">@model.DismissedBySaleCode</a>.
+        </Alert>
+    }
+    <br />
+    <div class="d-grid gap-2 mt-2">
+        <label>Gestionado por <strong>@model.UserName</strong></label>
+        <label><strong>@model.CreationDate.ToString("dd/MM/yyyy hh:mm tt")</strong></label>
+    </div>
+}
 
 <div class="col-md-3" style="margin-top:45px;margin-bottom:25px;">
     <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode" placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
@@ -48,11 +78,11 @@
                     <tr>
                         <td style="width:45%">
                             <AutoComplete @bind-Value="productSale.ProductDescription"
-                                          TItem="ProductViewModel"
-                                          DataProvider="ProductsDataProvider"
-                                          PropertyName="Description"
-                                          Placeholder="Ingresa un producto..."
-                                          OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.SaleProducts.ToList().IndexOf(productSale))" />
+                            TItem="ProductViewModel"
+                            DataProvider="ProductsDataProvider"
+                            PropertyName="Description"
+                            Placeholder="Ingresa un producto..."
+                            OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.SaleProducts.ToList().IndexOf(productSale))" />
                             <InputText hidden="hidden" @bind-Value="productSale.ProductCode" />
                             <ValidationMessage For="@(() => productSale.ProductCode)"></ValidationMessage>
                         </td>
@@ -60,7 +90,7 @@
                             @GetStock(productSale.ProductCode)
                         </td>
                         <td style="width:5%">
-                            <RadzenNumeric TValue="decimal" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" Culture="@CultureInfo.CreateSpecificCulture("en-US")"/>
+                            <RadzenNumeric TValue="decimal" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
                             <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
                         </td>
                         <td>
@@ -145,11 +175,11 @@
                         <div class="col-md-12">
                             <label class="form-label">Nombre:</label>
                             <AutoComplete @bind-Value="model.Customer!.Name"
-                                          TItem="CustomerViewModel"
-                                          DataProvider="CustomersDataProvider"
-                                          PropertyName="Name"
-                                          Placeholder="Ingresa un cliente..."
-                                          OnChanged="(CustomerViewModel selected) => OnChangeCustomer(selected, false)" />
+                            TItem="CustomerViewModel"
+                            DataProvider="CustomersDataProvider"
+                            PropertyName="Name"
+                            Placeholder="Ingresa un cliente..."
+                            OnChanged="(CustomerViewModel selected) => OnChangeCustomer(selected, false)" />
                             <NumberInput TValue="int" hidden="hidden" @bind-Value="model.Customer.Id" />
                             <ValidationMessage For="@(() => model.Customer.Id)"></ValidationMessage>
                         </div>
@@ -180,14 +210,8 @@
                 </div>
             </CardBody>
         </Card>
-        @if(model.Id > 0 && !string.IsNullOrEmpty(model.UserName))
-        {
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-                <label>Gestionado por <strong>@model.UserName</strong></label>
-            </div>
-        }
     </div>
-    @if (model.Id <= 0 || !model.IsAQuotation)
+    @if ((model.Id <= 0 || !model.IsAQuotation) && !model.Dismissed)
     {
         <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
         <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
@@ -195,15 +219,15 @@
     }
     @if (TCPayment || DepositPayment)
     {
-        <div class="col-lg-4">   
+        <div class="col-lg-4">
             <div class="col-md-12">
                 <label class="form-label">Monto efectivo:</label>
                 <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.CashAmount />
                 <ValidationMessage For="@(() => model.CashAmount)"></ValidationMessage>
             </div>
         </div>
-    }       
-    @if(TCPayment)
+    }
+    @if (TCPayment)
     {
         <div class="col-lg-4">
             <div class="col-md-12">
@@ -215,7 +239,7 @@
                 <label class="form-label">Referencia transacción:</label>
                 <InputText class="form-control" @bind-Value="model.TCReference" maxlength="50"></InputText>
                 <ValidationMessage For="@(() => model.TCReference)"></ValidationMessage>
-            </div>        
+            </div>
         </div>
     }
     @if (DepositPayment)
@@ -235,21 +259,28 @@
     }
 
     <div class="d-grid gap-2 d-md-flex mt-2" style="margin-top:25px!important">
-        @if(model.Id <= 0 || !model.IsAQuotation)
+        @if ((model.Id <= 0 || !model.IsAQuotation) && !model.Dismissed)
         {
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnValidSubmit(false)">Procesar venta</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnValidSubmit(false)">@processSaleText</Button>
         }
 
         @if (model.Id <= 0 || model.IsAQuotation)
         {
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => OnValidSubmit(true)">Generar cotización</Button>
         }
+
+        @if ((model.Id > 0 && !model.IsAQuotation) && !model.Dismissed)
+        {
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="() => ReGenerateReceipt()">Re-imprimir factura</Button>
+        }
+
+
     </div>
 </EditForm>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
-    [Parameter] public int ModelId { get; set; } = 0; 
+    [Parameter] public int ModelId { get; set; } = 0;
     [Parameter] public int? inQuotation { get; set; }
 
     List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
@@ -260,6 +291,7 @@
     private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Warning, message));
 
     string newCode = string.Empty;
+    string processSaleText = "Procesar venta";
     string title = "Nueva venta";
     bool disabledClientFields = true;
     bool TCPayment = false;
@@ -272,6 +304,9 @@
 
     private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
     private string GetStock(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock.ToString() ?? "0";
+    private void BackToList() => navegation.NavigateTo(inQuotation != null && inQuotation > 0 ? "quotations" : "sales"); 
+    private void GoToDismissed() => navegation.NavigateTo($"/newsale/{model.DismissedBySaleId}/0", true);
+    private void GoNewSale() => navegation.NavigateTo($"/newsale", true);
 
     public void EnterCode(KeyboardEventArgs e)
     {
@@ -318,6 +353,9 @@
 
     private void OnChangeCustomer(CustomerViewModel? selected, bool newOne)
     {
+        if (model.Dismissed)
+            return;
+
         if (selected != null)
         {
             disabledClientFields = true;
@@ -338,12 +376,18 @@
         await LoadSale();
         if (ModelId > 0)
         {
+            processSaleText = "Modificar venta";
             title = "Detalles de la venta";
+
             if (model.IsAQuotation)
                 title = "Detalles de la cotización";
 
             title = $"{title} - {model.Code}";
             isCashSale = model.CreditSale == false;
+        }
+        else if (inQuotation != null && inQuotation > 0)
+        {
+            title = "Nueva cotización";
         }
 
         PreloadService.Hide();
@@ -496,6 +540,61 @@
         return string.Empty;
     }
 
+    private async Task ReGenerateReceipt()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await saleService.ReGenerateReceipt(model.Code!);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                if (string.IsNullOrEmpty(response.Result))
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "Se produjo un error generando el recibo.",
+                            Icon = SweetAlertIcon.Error
+                        });
+
+                    return;
+                }
+
+                await JSRuntime.InvokeVoidAsync("printHtmlString", response.Result);
+
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Exito",
+                        Text = $"Recibo generado exitosamente.",
+                        Icon = SweetAlertIcon.Success
+                    });
+
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage(),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
     private async Task OnValidSubmit(bool isQuotation)
     {
         model.IsAQuotation = isQuotation;
@@ -504,7 +603,7 @@
         if (string.IsNullOrEmpty(validations))
         {
             var confirmed = true;
-            
+
             if (model.SaleProducts!
                 .GroupBy(p => p.ProductId)
                 .Any(p => p.Count() > 1))
@@ -547,7 +646,7 @@
                                     {
                                         Title = "Error",
                                         Text = "Se produjo un error generando el recibo.",
-                                        Icon = SweetAlertIcon.Success
+                                        Icon = SweetAlertIcon.Error
                                     });
 
                                 return;
@@ -585,7 +684,7 @@
                                     {
                                         Title = "Error",
                                         Text = "Se produjo un error generando el recibo.",
-                                        Icon = SweetAlertIcon.Success
+                                        Icon = SweetAlertIcon.Error
                                     });
 
                                 return;
@@ -595,10 +694,11 @@
                             await Swal.FireAsync(new SweetAlertOptions
                                 {
                                     Title = "Exito",
-                                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta modificada exitosamente.",
                                     Icon = SweetAlertIcon.Success
                                 });
 
+                            BackToList();
                         }
                         else
                         {
@@ -624,7 +724,7 @@
                         });
 
                 }
-            }            
+            }
         }
         else
         {
@@ -639,6 +739,9 @@
 
     private void removeProduct(int productIndex)
     {
+        if (model.Dismissed)
+            return;
+
         if (productIndex == model.SaleProducts!.Count - 1)
             return;
 
@@ -647,6 +750,9 @@
 
     private void OnChangeProduct(ProductViewModel selected, int productIndex)
     {
+        if (model.Dismissed)
+            return;
+
         if (selected != null)
         {
             if (productIndex == model.SaleProducts!.Count - 1)

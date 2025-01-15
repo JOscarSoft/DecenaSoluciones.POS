@@ -20,6 +20,7 @@ namespace DecenaSoluciones.POS.API.Services
         {
             var result = new DashboardViewModel();
             var sales = await _dbContext.Sale
+                .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
                 .ToListAsync();
@@ -54,6 +55,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly fromDate, DateOnly toDate)
         {
             var sales = await _dbContext.Sale
+                .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.Customer)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
@@ -66,6 +68,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<List<SoldProductsReportViewModel>> GetSoldProductsReport(DateOnly fromDate, DateOnly toDate)
         {
             var sales = await _dbContext.Sale
+                .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
                 .Where(p => p.CreationDate >= fromDate.ToDateTime(TimeOnly.MinValue) && p.CreationDate <= toDate.ToDateTime(TimeOnly.MaxValue))

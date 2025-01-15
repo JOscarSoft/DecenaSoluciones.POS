@@ -20,18 +20,22 @@
           PaginationItemsTextFormat="{0} - {1} de {2} registros"
           EmptyText="No se encontraron registros para mostrar"
           AllowRowClick="true"
-          OnRowClick="OnRowClick">
-        <GridColumn TItem="SalesViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
+          OnRowClick="OnRowClick"
+          RowClass="GetRowClass">
+        <GridColumn TItem="SalesViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" >
             @context.Code
         </GridColumn>
-        <GridColumn TItem="SalesViewModel" HeaderText="Cliente" PropertyName="CustomerName" SortKeySelector="item => item.CustomerName" HeaderTextAlignment="Alignment.Center">
-            @context.CustomerName
-        </GridColumn>
-        <GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" SortKeySelector="item => item.Total" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" SortKeySelector="item => item.Total" >
             @(context.Total != null ? context.Total?.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")
         </GridColumn>
-        <GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true" SortKeySelector="item => item.CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
-            @context.CreationDate.ToString("dd/MM/yyyy")
+        <GridColumn TItem="SalesViewModel" HeaderText="Usuario" PropertyName="UserName" Sortable="true" SortKeySelector="item => item.UserName">
+            @context.UserName
+        </GridColumn>
+        <GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true" SortKeySelector="item => item.CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true">
+            @context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
+        </GridColumn>
+        <GridColumn TItem="SalesViewModel" HeaderText="Cliente" PropertyName="CustomerName" SortKeySelector="item => item.CustomerName">
+            @context.CustomerName
         </GridColumn>
     </Grid>
 </div>
@@ -46,6 +50,14 @@
     private void OnRowClick(GridRowEventArgs<SalesViewModel> args)
     {
         navegation.NavigateTo($"{salesUrl}/{args.Item.Id}/{quotations}");
+    }
+
+    private string GetRowClass(SalesViewModel sale)
+    {
+        if (!sale.IsAQuotation && sale.Dismissed)
+            return "table-secondary";
+
+        return string.Empty;
     }
 
 }

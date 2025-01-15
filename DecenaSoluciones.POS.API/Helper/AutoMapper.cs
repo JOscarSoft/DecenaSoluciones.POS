@@ -29,6 +29,8 @@ namespace DecenaSoluciones.POS.API.Helper
             CreateMap<Sale, AddEditSale>()
                 .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => false))
                 .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.SaleProducts != null ? source.SaleProducts : new List<SaleProduct>()))
+                .ForMember(dest => dest.DismissedBySaleCode, opt => opt.MapFrom(source => source.DismissedSale != null ? source.DismissedSale.Code : null))
+                .ForMember(dest => dest.Dismissed, opt => opt.MapFrom(source => source.Dismissed == true))
                 .ReverseMap();
              CreateMap<Quotation, AddEditSale>()
                   .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
@@ -38,6 +40,7 @@ namespace DecenaSoluciones.POS.API.Helper
             CreateMap<Sale, SalesViewModel>()
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
                 .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
+                .ForMember(dest => dest.Dismissed, opt => opt.MapFrom(source => source.Dismissed == true))
                 .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => false));
             CreateMap<Quotation, SalesViewModel>()
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))

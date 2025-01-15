@@ -122,6 +122,22 @@ namespace DecenaSoluciones.POS.Shared.Services
             return (receipt, result);
         }
 
+        public async Task<ApiResponse<string>> ReGenerateReceipt(string saleCode)
+        {
+            var response = await _httpClient.GetAsync($"api/Sale/GetByCode/{saleCode}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            var receipt = await GenerateReceipt(result.Result!, true);
+
+            return new ApiResponse<string> { Success = true, Result = receipt };
+        }
+
         public async Task<(string, ApiResponse<AddEditSale>)> UpdateSale(int id, AddEditSale sale)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/Sale/{id}", sale);
@@ -133,7 +149,7 @@ namespace DecenaSoluciones.POS.Shared.Services
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
 
-            var receipt = await GenerateReceipt(sale);
+            var receipt = await GenerateReceipt(result.Result);
             return (receipt, result);
         }
 
@@ -165,7 +181,7 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
-        private async Task<string> GenerateReceipt(AddEditSale sale)
+        private async Task<string> GenerateReceipt(AddEditSale sale, bool duplicate = false)
         {
             try
             {
@@ -181,9 +197,9 @@ namespace DecenaSoluciones.POS.Shared.Services
                     await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML") :
                     await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML");
 
-                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company);
+                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
-            catch
+            catch(Exception ex) 
             {
                 return string.Empty;
             }
