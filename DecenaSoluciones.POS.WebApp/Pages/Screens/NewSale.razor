@@ -43,10 +43,20 @@
 {
     @if (model.Dismissed)
     {
-        <Alert Color="AlertColor.Danger">
-            <Icon Name="IconName.ExclamationTriangleFill" class="me-2"></Icon>
-            venta desestimada/modificada. Ver <a href="#" @onclick="() => GoToDismissed()" class="alert-link">@model.DismissedBySaleCode</a>.
-        </Alert>
+        @if(model.DismissedBySaleId != null && model.DismissedBySaleId > 0)
+        {
+            <Alert Color="AlertColor.Warning">
+                <Icon Name="IconName.ExclamationTriangleFill" class="me-2"></Icon>
+                Venta modificada. Ver <a href="#" @onclick="() => GoToDismissed()" class="alert-link">@model.DismissedBySaleCode</a>.
+            </Alert>
+        }
+        else
+        {
+            <Alert Color="AlertColor.Danger">
+                <Icon Name="IconName.TrashFill" class="me-2"></Icon>
+                Venta desestimada.
+            </Alert>
+        }
     }
     <br />
     <div class="d-grid gap-2 mt-2">
@@ -274,6 +284,12 @@
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="() => ReGenerateReceipt()">Re-imprimir factura</Button>
         }
 
+        @if(ModelId > 0 && !model.Dismissed)
+        {
+            <AuthorizeView Roles="admin, manager" Context="authContext">
+                <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Danger" Class="float-end" @onclick="() => DismissSale()">Desestimar venta</Button>
+            </AuthorizeView>
+        }
 
     </div>
 </EditForm>
@@ -592,6 +608,60 @@
                     Icon = SweetAlertIcon.Error
                 });
 
+        }
+    }
+
+    private async Task DismissSale()
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Desestimar venta",
+                        Text = "Esta venta no podrá ser restaurada y el stock de los productos se restablecerá. ¿Está seguro de desestimar la venta?",
+                        Icon = SweetAlertIcon.Question,
+                        ShowCancelButton = true,
+                        CancelButtonText = "Cancelar"
+                    });
+
+        if(result.IsConfirmed)
+        {
+            PreloadService!.Show();
+            try
+            {
+                var response = await saleService.DismissSale(model.Id);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    model = response.Result!;
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = $"Venta desestimada con éxito.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                PreloadService.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = ex.Message.HandleErrorMessage(),
+                        Icon = SweetAlertIcon.Error
+                    });
+
+            }
         }
     }
 

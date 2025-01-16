@@ -12,6 +12,7 @@ namespace DecenaSoluciones.POS.Shared.Services
         Task<ApiResponse<AddEditSale>> GetQuotationByCode(string code);
         Task<(string, ApiResponse<AddEditSale>)> AddNewSale(AddEditSale sale);
         Task<(string, ApiResponse<AddEditSale>)> UpdateSale(int id, AddEditSale sale);
+        Task<ApiResponse<AddEditSale>> DismissSale(int id);
         Task<Stream> AddNewMobileSale(AddEditSale sale);
         Task<Stream> UpdateMobileSale(int id, AddEditSale sale);
         Task<ApiResponse<string>> ReGenerateReceipt(string saleCode);

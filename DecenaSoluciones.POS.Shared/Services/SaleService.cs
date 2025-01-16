@@ -153,6 +153,21 @@ namespace DecenaSoluciones.POS.Shared.Services
             return (receipt, result);
         }
 
+        public async Task<ApiResponse<AddEditSale>> DismissSale(int id)
+        {
+
+            var response = await _httpClient.DeleteAsync($"api/Sale/{id}");
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AddEditSale>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            return result;
+        }
+
         public async Task<Stream> AddNewMobileSale(AddEditSale sale)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/Sale/mobilesale", sale);

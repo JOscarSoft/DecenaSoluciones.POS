@@ -188,6 +188,28 @@ namespace DecenaSoluciones.POS.API.Controllers
             return Ok(result);
         }
 
+        [HttpDelete]
+        [Route("{id}")]
+        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
+        public async Task<IActionResult> DismissSale(int id)
+        {
+            
+            var apiResponse = new ApiResponse<AddEditSale>();
+            try
+            {
+                var result = await _saleService.DismissSale(id);
+                apiResponse.Success = true;
+                apiResponse.Result = result;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
         [HttpPost]
         [Route("mobilesale")]
         public async Task<IActionResult> CreateNewMobileSale(AddEditSale sale)

@@ -183,6 +183,32 @@ namespace DecenaSoluciones.POS.API.Services
             return result;
         }
 
+        public async Task<AddEditSale> DismissSale(int id)
+        {
+            _dbContext.ChangeTracker.Clear();
+            var oldSale = await _dbContext.Sale
+                .Include(p => p.SaleProducts)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró la venta a desestimar.");
+
+            var groupedProducts = oldSale.SaleProducts!
+                .GroupBy(p => p.ProductId)
+                .Select(p =>
+                new {
+                    productId = p.Key,
+                    quantity = p.Sum(a => a.Quantity)
+                });
+
+            foreach (var item in groupedProducts)
+                await _productService.UpdateProductStock(item.productId, item.quantity);
+
+            oldSale.Dismissed = true;
+            _dbContext.Sale.Update(oldSale);
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<AddEditSale>(oldSale);;
+        }
+
         private async Task<string> GetSaleCode()
         {
             int newSequence = 1;
