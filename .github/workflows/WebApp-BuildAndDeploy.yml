@@ -44,4 +44,3 @@ jobs:
         user: ${{ secrets.WEBAPP_FTP_USERNAME }}
         password: ${{ secrets.WEPAPP_FTP_PASSWORD }}
         localDir: "./publishWebApp"
-        options: "--delete --asci"
