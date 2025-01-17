@@ -39,10 +39,10 @@ jobs:
         AppSettings.TestingPeriod: ${{ secrets.TESTING_PERIOD }}
     
     - name: Upload to ftp      
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      uses: sebastianpopp/ftp-action@releases/v2
       with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
+        host: ${{ secrets.FTP_SERVER }}
+        user: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: "./publishApi/"
-        dangerous-clean-slate: true
+        localDir: "./publishApi"
+        options: "--delete --asci"
