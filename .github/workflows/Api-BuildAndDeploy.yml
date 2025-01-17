@@ -41,8 +41,8 @@ jobs:
     - name: Upload to ftp      
       uses: sebastianpopp/ftp-action@releases/v2
       with:
-        host: ${{ secrets.FTP_SERVER }}
-        user: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
+        host: ${{ secrets.API_FTP_SERVER }}
+        user: ${{ secrets.API_FTP_USERNAME }}
+        password: ${{ secrets.API_FTP_PASSWORD }}
         localDir: "./publishApi"
         options: "--delete --asci"

@@ -40,8 +40,8 @@ jobs:
     - name: Upload to ftp      
       uses: sebastianpopp/ftp-action@releases/v2
       with:
-        host: ${{ secrets.FTP_SERVER }}
-        user: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
+        host: ${{ secrets.WEPAPP_FTP_SERVER }}
+        user: ${{ secrets.WEBAPP_FTP_USERNAME }}
+        password: ${{ secrets.WEPAPP_FTP_PASSWORD }}
         localDir: "./publishWebApp"
         options: "--delete --asci"
