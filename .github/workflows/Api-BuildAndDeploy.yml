@@ -38,11 +38,11 @@ jobs:
         ConnectionStrings.DefaultConnection: ${{ secrets.DEFAULT_CONNECTION_STRING }}
         AppSettings.TestingPeriod: ${{ secrets.TESTING_PERIOD }}
     
-    - name: Upload to ftp
-      uses: sebastianpopp/ftp-action@releases/v2
+    - name: Upload to ftp      
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        host: ${{ secrets.FTP_SERVER }}
-        user: ${{ secrets.FTP_USERNAME }}
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        localDir: "./publishApi"
-        options: "--delete --asci"
+        local-dir: "./publishApi"
+        dangerous-clean-slate: true
