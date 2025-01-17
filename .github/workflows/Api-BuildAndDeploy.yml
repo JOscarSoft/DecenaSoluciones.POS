@@ -28,7 +28,7 @@ jobs:
       run: dotnet build ./DecenaSoluciones.POS.API/DecenaSoluciones.POS.API.csproj --configuration Release --no-restore
 
     - name: Dotnet publish
-      run: dotnet publish ./DecenaSoluciones.POS.API/DecenaSoluciones.POS.API.csproj --configuration Release --no-restore --output ./publishApi --self-contained false -p:PublishTrimmed=false
+      run: dotnet publish ./DecenaSoluciones.POS.API/DecenaSoluciones.POS.API.csproj --configuration Release --output ./publishApi --self-contained false -p:PublishTrimmed=false
     
     - name: App Settings
       uses: microsoft/variable-substitution@v1
