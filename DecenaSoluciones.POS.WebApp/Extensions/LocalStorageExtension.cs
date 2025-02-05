@@ -16,10 +16,8 @@ namespace DecenaSoluciones.POS.WebApp.Extensions
             string key, T item
             ) where T : class
         {
-
             var itemJson = JsonSerializer.Serialize(item);
             await sessionStorageService.SetItemAsStringAsync(key, itemJson);
-
         }
 
         public async Task<T?> GetStorage<T>(
