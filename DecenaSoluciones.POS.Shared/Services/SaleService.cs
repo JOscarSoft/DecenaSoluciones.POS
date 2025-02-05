@@ -206,11 +206,17 @@ namespace DecenaSoluciones.POS.Shared.Services
                 if(companyId != null)
                     company = (await _companyService.GetCompany(int.Parse(companyId)))?.Result;
 
-                string htmlTemplate = sale.IsAQuotation ?
-                    string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
-                    await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
-                    await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML") :
-                    await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML");
+                string? htmlTemplate = sale.IsAQuotation ? company?.QuotationsReceipt : company?.SalesReceipt;
+
+                if (string.IsNullOrEmpty(htmlTemplate))
+                {
+                    htmlTemplate = sale.IsAQuotation ?
+                        string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
+                        await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
+                        await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML") :
+                        await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML");
+                }
+
 
                 return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
@@ -219,7 +225,5 @@ namespace DecenaSoluciones.POS.Shared.Services
                 return string.Empty;
             }
         }
-
-        private string ToMoneyString(decimal? value) => value.HasValue ? $"{value.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}" : "0.00";
     }
 }

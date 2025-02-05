@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public DateTime SubscriptionExpiration { get; set; } = DateTime.Now;
         public string? Address { get; set; }
         public string? Slogan { get; set; }
+        public string? QuotationsReceipt { get; set; }
+        public string? SalesReceipt { get; set; }
 
         public AddEditCompany()
         {
@@ -38,6 +41,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
             SubscriptionExpiration = companyViewModel.SubscriptionExpiration;
             Address = companyViewModel.Address;
             Slogan = companyViewModel.Slogan;
+            QuotationsReceipt = companyViewModel.QuotationsReceipt;
+            SalesReceipt = companyViewModel.SalesReceipt;
         }
     }
 }
