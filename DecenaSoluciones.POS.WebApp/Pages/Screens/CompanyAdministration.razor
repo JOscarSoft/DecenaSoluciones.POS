@@ -38,9 +38,14 @@
         <InputText class="form-control" @bind-Value="companyModel.Slogan" maxlength="80"></InputText>
         <ValidationMessage For="@(() => companyModel.Slogan)"></ValidationMessage>
     </div>
-    <div class="col-md-12">
+    <div class="col-md-6">
+        <label class="form-label" style="font-weight:bold">Telefono:</label>
+        <InputMask @bind-Value="companyModel.ContactPhone" class="form-control" data-mask="(000) 000-0000" />
+        <ValidationMessage For="@(() => companyModel.ContactPhone)"></ValidationMessage>
+    </div>
+    <div class="col-md-6">
         <label class="form-label" style="font-weight:bold">Dirección:</label>
-        <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225" rows="4"></InputTextArea>
+        <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225"></InputTextArea>
         <ValidationMessage For="@(() => companyModel.Address)"></ValidationMessage>
     </div>
     <Accordion Flush="true">
