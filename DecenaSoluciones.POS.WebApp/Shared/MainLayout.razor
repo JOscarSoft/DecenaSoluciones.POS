@@ -105,7 +105,11 @@
 
 
         if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
-            navItems = navItems.Append(new NavItem { Id = "8", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios" });
+        {
+            navItems = navItems.Append(new NavItem { Id = "8", IconName = IconName.GearFill, Text = "Configuraciones" });
+            navItems = navItems.Append(new NavItem { Id = "9", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios", ParentId = "8" });
+            navItems = navItems.Append(new NavItem { Id = "10", Href = "/company-administration", IconName = IconName.BuildingFillGear, Text = "Compañía", ParentId = "8" });
+        }
 
         return navItems;
     }

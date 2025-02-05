@@ -1,0 +1,186 @@
+﻿@page "/company-administration"
+
+
+@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject IAuthService authService;
+@inject ICompanyService companyService;
+@inject ILocalStorage _localStorage
+
+<style>
+    .accordion-button {
+        font-weight: bold !important;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-8">
+        <h3>Modificar Datos de la Compañía</h3>
+    </div>
+</div>
+
+<EditForm Model="companyModel" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext" style="margin-top:50px">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+
+    <div class="col-md-6">
+        <label class="form-label" style="font-weight:bold">Nombre:</label>
+        <InputText class="form-control" @bind-Value="companyModel.Name" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => companyModel.Name)"></ValidationMessage>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label" style="font-weight:bold">Eslogan:</label>
+        <InputText class="form-control" @bind-Value="companyModel.Slogan" maxlength="80"></InputText>
+        <ValidationMessage For="@(() => companyModel.Slogan)"></ValidationMessage>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label" style="font-weight:bold">Dirección:</label>
+        <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225" rows="4"></InputTextArea>
+        <ValidationMessage For="@(() => companyModel.Address)"></ValidationMessage>
+    </div>
+    <Accordion Flush="true">
+        <AccordionItem Title="Recibo de ventas">
+            <Content>
+                <div class="col-md-12">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <InputTextArea class="form-control" @bind-Value="companyModel.SalesReceipt" rows="25"></InputTextArea>
+                            <ValidationMessage For="@(() => companyModel.SalesReceipt)"></ValidationMessage>
+                        </div>
+                        <div class="col-md-6" style="border: dashed; height: 615px; overflow-y:scroll;overflow-x:scroll;">
+                            <div>@((MarkupString)(companyModel.SalesReceipt ?? string.Empty))</div>
+                        </div>
+                    </div>
+                </div>
+            </Content>
+        </AccordionItem>
+        <AccordionItem Title="Recibo de cotizaciones">
+            <Content>
+                <div class="col-md-12">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <InputTextArea class="form-control" @bind-Value="companyModel.QuotationsReceipt" rows="25"></InputTextArea>
+                            <ValidationMessage For="@(() => companyModel.QuotationsReceipt)"></ValidationMessage>
+                        </div>
+                        <div class="col-md-6" style="border: dashed; height: 615px; overflow-y:scroll;overflow-x:scroll;">
+                            <div>@((MarkupString)(companyModel.QuotationsReceipt ?? string.Empty))</div>
+                        </div>
+                    </div>
+                </div>
+            </Content>
+        </AccordionItem>
+    </Accordion>   
+    
+    <div style="margin-top:50px">
+        <AuthorizeView Roles="admin" Context="authContext">
+            <button type="submit" Class="btn btn-primary">
+                Guardar Cambios
+            </button>
+        </AuthorizeView>
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    int CompanyId = 0;
+    AddEditCompany companyModel = new AddEditCompany();
+    List<RegistrationViewModel> companyUsers = new List<RegistrationViewModel>();
+    string htmlPreviewContent = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadCompany();
+        PreloadService.Hide();
+    }
+
+    private async Task LoadCompany()
+    {
+        try
+        {
+            var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+            CompanyId = int.Parse(userSession!.CompanyId);
+
+            var response = await companyService.GetCompany(CompanyId);
+            if (response.Success)
+            {
+                companyModel = new AddEditCompany(response.Result);
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos de la compañía."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos de la compañía."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(string.IsNullOrEmpty(companyModel.Name))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el nombre de la compañía.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            var response = await companyService.UpdateCompany(CompanyId, companyModel);
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Exito",
+                        Text = "Datos actualizados exitosamente.",
+                        Icon = SweetAlertIcon.Success
+                    });
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al modificar los datos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+
+    }
+}

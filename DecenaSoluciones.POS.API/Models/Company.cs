@@ -24,5 +24,11 @@ namespace DecenaSoluciones.POS.API.Models
         [MaxLength(80)]
         public string? Slogan { get; set; }
         public DateTime SubscriptionExpiration { get; set; }
+
+        [Column(TypeName = "varchar(MAX)")]
+        public string? QuotationsReceipt { get; set; }
+
+        [Column(TypeName = "varchar(MAX)")]
+        public string? SalesReceipt { get; set; }
     }
 }

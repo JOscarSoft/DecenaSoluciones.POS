@@ -24,5 +24,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
         public bool Active { get {  return SubscriptionExpiration > DateTime.Now; } }
         public string? Address { get; set; }
         public string? Slogan { get; set; }
+        public string? QuotationsReceipt { get; set; }
+        public string? SalesReceipt { get; set; }
     }
 }
