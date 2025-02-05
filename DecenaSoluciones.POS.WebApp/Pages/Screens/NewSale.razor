@@ -221,7 +221,7 @@
             </CardBody>
         </Card>
     </div>
-    @if ((model.Id <= 0 || !model.IsAQuotation) && !model.Dismissed)
+    @if (!model.Dismissed)
     {
         <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
         <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
@@ -269,14 +269,14 @@
     }
 
     <div class="d-grid gap-2 d-md-flex mt-2" style="margin-top:25px!important">
-        @if ((model.Id <= 0 || !model.IsAQuotation) && !model.Dismissed)
+        @if (!model.Dismissed)
         {
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnValidSubmit(false)">@processSaleText</Button>
         }
 
         @if (model.Id <= 0 || model.IsAQuotation)
         {
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => OnValidSubmit(true)">Generar cotización</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => OnValidSubmit(true)">@processQuotationText</Button>
         }
 
         @if ((model.Id > 0 && !model.IsAQuotation) && !model.Dismissed)
@@ -284,7 +284,7 @@
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="() => ReGenerateReceipt()">Re-imprimir factura</Button>
         }
 
-        @if(ModelId > 0 && !model.Dismissed)
+        @if (ModelId > 0 && !model.Dismissed && !model.IsAQuotation)
         {
             <AuthorizeView Roles="admin, manager" Context="authContext">
                 <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Danger" Class="float-end" @onclick="() => DismissSale()">Desestimar venta</Button>
@@ -308,6 +308,7 @@
 
     string newCode = string.Empty;
     string processSaleText = "Procesar venta";
+    string processQuotationText = "Generar cotización";
     string title = "Nueva venta";
     bool disabledClientFields = true;
     bool TCPayment = false;
@@ -392,11 +393,16 @@
         await LoadSale();
         if (ModelId > 0)
         {
+            processQuotationText = "Modificar cotización";
             processSaleText = "Modificar venta";
             title = "Detalles de la venta";
 
             if (model.IsAQuotation)
+            {
+                processSaleText = "Generar venta";
                 title = "Detalles de la cotización";
+                model.CreditSale = false;
+            }
 
             title = $"{title} - {model.Code}";
             isCashSale = model.CreditSale == false;
@@ -667,7 +673,6 @@
 
     private async Task OnValidSubmit(bool isQuotation)
     {
-        model.IsAQuotation = isQuotation;
         string validations = validateSale();
 
         if (string.IsNullOrEmpty(validations))
@@ -703,82 +708,29 @@
                     model.SaleProducts = model.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
                     if (ModelId == 0)
                     {
-                        (var receipt, var response) = await saleService.AddNewSale(model);
-                        PreloadService.Hide();
-                        if (response.Success)
-                        {
-                            model = new AddEditSale();
-                            model.SaleProducts!.Add(new AddEditSaleProduct());
-
-                            if (string.IsNullOrEmpty(receipt))
-                            {
-                                await Swal.FireAsync(new SweetAlertOptions
-                                    {
-                                        Title = "Error",
-                                        Text = "Se produjo un error generando el recibo.",
-                                        Icon = SweetAlertIcon.Error
-                                    });
-
-                                return;
-                            }
-
-                            await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
-
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Exito",
-                                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta procesada exitosamente.",
-                                    Icon = SweetAlertIcon.Success
-                                });
-
-                        }
-                        else
-                        {
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Error",
-                                    Text = response.Message.HandleErrorMessage(),
-                                    Icon = SweetAlertIcon.Error
-                                });
-                        }
+                        model.IsAQuotation = isQuotation;
+                        await goCreateNewSale(isQuotation);
                     }
                     else
                     {
-                        (var receipt, var response) = await saleService.UpdateSale(ModelId, model);
-                        PreloadService.Hide();
-                        if (response.Success)
+                        if(!isQuotation && model.IsAQuotation)
                         {
-                            if (string.IsNullOrEmpty(receipt))
-                            {
-                                await Swal.FireAsync(new SweetAlertOptions
-                                    {
-                                        Title = "Error",
-                                        Text = "Se produjo un error generando el recibo.",
-                                        Icon = SweetAlertIcon.Error
-                                    });
+                            model.Id = 0;
+                            model.Dismissed = false;
+                            model.CreationDate = DateTime.Now;
+                            model.IsAQuotation = false;
+                            foreach (var item in model.SaleProducts)
+                                item.Id = 0;
 
-                                return;
-                            }
-
-                            await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Exito",
-                                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta modificada exitosamente.",
-                                    Icon = SweetAlertIcon.Success
-                                });
-
-                            BackToList();
+                            var newSale = await goCreateNewSale(isQuotation);
+                            if(newSale != null)
+                                navegation.NavigateTo($"/newsale/{newSale.Id}/0", true);
                         }
                         else
                         {
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Error",
-                                    Text = response.Message.HandleErrorMessage(),
-                                    Icon = SweetAlertIcon.Error
-                                });
-                        }
+                            model.IsAQuotation = isQuotation;
+                            await goUpdateSale(isQuotation);
+                        }                       
 
                     }
 
@@ -802,6 +754,90 @@
                 {
                     Title = "Error",
                     Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task<AddEditSale?> goCreateNewSale(bool isQuotation)
+    {
+        (var receipt, var response) = await saleService.AddNewSale(model);
+        PreloadService!.Hide();
+        if (response.Success)
+        {
+            model = new AddEditSale();
+            model.SaleProducts!.Add(new AddEditSaleProduct());
+
+            if (string.IsNullOrEmpty(receipt))
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error generando el recibo.",
+                        Icon = SweetAlertIcon.Error
+                    });
+
+                return null;
+            }
+
+            await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta procesada exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
+            return response.Result;
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = response.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+            return null;
+        }
+    }
+
+    private async Task goUpdateSale(bool isQuotation)
+    {
+        (var receipt, var response) = await saleService.UpdateSale(ModelId, model);
+        PreloadService!.Hide();
+        if (response.Success)
+        {
+            if (string.IsNullOrEmpty(receipt))
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = "Se produjo un error generando el recibo.",
+                        Icon = SweetAlertIcon.Error
+                    });
+
+                return;
+            }
+
+            await JSRuntime.InvokeVoidAsync("printHtmlString", receipt);
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = isQuotation ? $"Cotización {response.Result!.Code} generada exitosamente." : "Venta modificada exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
+            BackToList();
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = response.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
         }
