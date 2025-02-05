@@ -1,4 +1,4 @@
-# DecenaSoluciones.POS
+ # DecenaSoluciones.POS
 
 Point of sales (POS) and customer tracking system. To see production beta click [here](https://decenasoluciones.com/)
 
@@ -12,9 +12,8 @@ This solution constain:
 
 ## Getting started
 
-### Prerequisites
-- .Net 7.0
-- .Net 8.0 (For mobile app)
+### Prerequisites 
+- .Net 8.0
 - Microsoft Sql Server 2017 (or higher)
 - Android SDK
 
