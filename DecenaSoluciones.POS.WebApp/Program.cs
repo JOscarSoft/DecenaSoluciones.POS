@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using DecenaSoluciones.POS.Shared.Services;
 using DecenaSoluciones.POS.Shared.Extensions;
 using DecenaSoluciones.POS.WebApp;
+using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<WebApp>("#app");
@@ -28,5 +29,6 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddSweetAlert2();
+builder.Services.AddScoped<DialogService>();
 
 await builder.Build().RunAsync();
