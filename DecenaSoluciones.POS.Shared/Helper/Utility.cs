@@ -10,7 +10,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
 {
     public static class Utility
     {
-        public static string GenerateQuotationReceiptHtml(AddEditSale sale, string htmlTemplate, string companyName = "", bool useTableBreaks = true)
+        public static string GenerateQuotationReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company, bool useTableBreaks = true)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
@@ -56,14 +56,18 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
             htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", companyName);
-            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer?.Name ?? "MOSTRADOR"));
+            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", sale.Customer?.Name ?? "MOSTRADOR");
             htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
             htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
             htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
             htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
             htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
+            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
+            htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyAddress}}", company?.Address ?? string.Empty);
+            htmlTemplate = htmlTemplate.Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty);
+            htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
 
             string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
             htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :

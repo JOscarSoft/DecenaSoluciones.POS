@@ -219,8 +219,8 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
-            var companyName = await GetCurrentCompanyName();
-            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, companyName, false);
+            var company = await GetCurrentCompany();
+            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, company, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -235,8 +235,8 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
-            var companyName = await GetCurrentCompanyName();
-            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, companyName, false);
+            var company = await GetCurrentCompany();
+            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, company, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -313,14 +313,14 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [NonAction]
-        private async Task<string> GetCurrentCompanyName()
+        private async Task<CompanyViewModel?> GetCurrentCompany()
         {
             var companyId = User.Claims.FirstOrDefault(p => p.Type == "Company")?.Value;
-            var companyName = string.IsNullOrEmpty(companyId)
-                ? string.Empty
-                : (await _companyService.GetCompanyById(int.Parse(companyId))).Name;
+            var company = string.IsNullOrEmpty(companyId)
+                ? null
+                : await _companyService.GetCompanyById(int.Parse(companyId));
 
-            return companyName;
+            return company;
         }
     }
 }

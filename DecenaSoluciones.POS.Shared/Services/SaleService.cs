@@ -239,7 +239,7 @@ namespace DecenaSoluciones.POS.Shared.Services
                 }
 
 
-                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company?.ContactName ?? "") : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company, duplicate);
+                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company) : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
             catch(Exception ex) 
             {
