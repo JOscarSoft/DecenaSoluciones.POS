@@ -11,7 +11,7 @@
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
 @inject ICompanyService companyService;
-@inject ILocalStorage _localStorage
+@inject ILocalStorage _localStorage;
 
 <style>
     .accordion-button {
@@ -38,40 +38,28 @@
         <InputText class="form-control" @bind-Value="companyModel.Slogan" maxlength="80"></InputText>
         <ValidationMessage For="@(() => companyModel.Slogan)"></ValidationMessage>
     </div>
-    <div class="col-md-12">
+    <div class="col-md-6">
+        <label class="form-label" style="font-weight:bold">Telefono:</label>
+        <InputMask @bind-Value="companyModel.ContactPhone" class="form-control" data-mask="(000) 000-0000" />
+        <ValidationMessage For="@(() => companyModel.ContactPhone)"></ValidationMessage>
+    </div>
+    <div class="col-md-6">
         <label class="form-label" style="font-weight:bold">Dirección:</label>
-        <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225" rows="4"></InputTextArea>
+        <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225"></InputTextArea>
         <ValidationMessage For="@(() => companyModel.Address)"></ValidationMessage>
     </div>
+    
     <Accordion Flush="true">
         <AccordionItem Title="Recibo de ventas">
             <Content>
-                <div class="col-md-12">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <InputTextArea class="form-control" @bind-Value="companyModel.SalesReceipt" rows="25"></InputTextArea>
-                            <ValidationMessage For="@(() => companyModel.SalesReceipt)"></ValidationMessage>
-                        </div>
-                        <div class="col-md-6" style="border: dashed; height: 615px; overflow-y:scroll;overflow-x:scroll;">
-                            <div>@((MarkupString)(companyModel.SalesReceipt ?? string.Empty))</div>
-                        </div>
-                    </div>
-                </div>
+                <RadzenHtmlEditor @bind-Value=@companyModel.SalesReceipt Style="height:615px"/>
+                <ValidationMessage For="@(() => companyModel.SalesReceipt)"></ValidationMessage>
             </Content>
         </AccordionItem>
         <AccordionItem Title="Recibo de cotizaciones">
             <Content>
-                <div class="col-md-12">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <InputTextArea class="form-control" @bind-Value="companyModel.QuotationsReceipt" rows="25"></InputTextArea>
-                            <ValidationMessage For="@(() => companyModel.QuotationsReceipt)"></ValidationMessage>
-                        </div>
-                        <div class="col-md-6" style="border: dashed; height: 615px; overflow-y:scroll;overflow-x:scroll;">
-                            <div>@((MarkupString)(companyModel.QuotationsReceipt ?? string.Empty))</div>
-                        </div>
-                    </div>
-                </div>
+                <RadzenHtmlEditor @bind-Value=@companyModel.QuotationsReceipt />
+                <ValidationMessage For="@(() => companyModel.QuotationsReceipt)"></ValidationMessage>
             </Content>
         </AccordionItem>
     </Accordion>   
