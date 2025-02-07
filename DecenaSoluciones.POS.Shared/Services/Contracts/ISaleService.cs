@@ -16,5 +16,7 @@ namespace DecenaSoluciones.POS.Shared.Services
         Task<Stream> AddNewMobileSale(AddEditSale sale);
         Task<Stream> UpdateMobileSale(int id, AddEditSale sale);
         Task<ApiResponse<string>> ReGenerateReceipt(string saleCode);
+        Task<string> GetDefaultSaleTemplateAsync();
+        Task<string> GetDefaultQuotationTemplateAsync(int companyId);
     }
 }

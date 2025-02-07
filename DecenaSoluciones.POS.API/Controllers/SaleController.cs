@@ -217,7 +217,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var result = await GoCreateSale(sale);
             sale.Code = result.Result!.Code;
 
-            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
+            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var companyName = await GetCurrentCompanyName();
             var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, companyName, false);
@@ -233,7 +233,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         {
             await GoUpdateSale(id, sale);
 
-            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\ReceiptHTML.html";
+            var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var companyName = await GetCurrentCompanyName();
             var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, companyName, false);

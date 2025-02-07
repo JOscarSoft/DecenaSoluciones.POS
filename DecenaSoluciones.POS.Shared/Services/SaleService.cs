@@ -196,6 +196,30 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
+        public async Task<string> GetDefaultSaleTemplateAsync()
+        {
+            try
+            {                
+              return await _httpClientLocal.GetStringAsync("templates/SaleReceiptHTML.HTML");
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        public async Task<string> GetDefaultQuotationTemplateAsync(int companyId)
+        {
+            try
+            {
+                return await _httpClientLocal.GetStringAsync(companyId == 1 ? "templates/DecenaQuotationReceiptHTML.HTML" : "templates/QuotationReceiptHTML.HTML");
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
         private async Task<string> GenerateReceipt(AddEditSale sale, bool duplicate = false)
         {
             try
@@ -210,11 +234,8 @@ namespace DecenaSoluciones.POS.Shared.Services
 
                 if (string.IsNullOrEmpty(htmlTemplate))
                 {
-                    htmlTemplate = sale.IsAQuotation ?
-                        string.IsNullOrWhiteSpace(companyId) || int.Parse(companyId) == 1 ?
-                        await _httpClientLocal.GetStringAsync("templates/DecenaReceiptHTML.HTML") :
-                        await _httpClientLocal.GetStringAsync("templates/ReceiptHTML.HTML") :
-                        await _httpClientLocal.GetStringAsync("templates/DecenaFinalReceiptHTML.HTML");
+                    htmlTemplate = 
+                        await _httpClientLocal.GetStringAsync(sale.IsAQuotation ?  "templates/QuotationReceiptHTML.HTML" : "templates/SaleReceiptHTML.HTML");
                 }
 
 
