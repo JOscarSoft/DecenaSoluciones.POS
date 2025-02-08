@@ -18,26 +18,24 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
             int count = 1;
             int page = 1;
+
+            string trProducts = ExtractBetweenMarkers(htmlTemplate, "<tr productLine>", "</tr productLine>");
             foreach (var product in sale.SaleProducts!)
             {
-                productsHTML += $"<tr><td>{count}</td>" +
-                                $"<td>{product.ProductDescription}</td>" +
-                                $"<td>{product.Quantity}</td>" +
-                                $"<td>{ToMoneyString(product.UnitPrice)}</td>" +
-                                $"<td>{ToMoneyString(product.ITBIS)}</td>" +
-                                $"<td>{ToMoneyString(product.Total)}</td></tr>";
+                string trItem = trProducts
+                    .Replace("{{Product.Index}}", count.ToString())
+                    .Replace("{{Product.Code}}", product.ProductCode)
+                    .Replace("{{Product.Description}}", product.ProductDescription)
+                    .Replace("{{Product.Quantity}}", product.Quantity.ToString())
+                    .Replace("{{Product.Price}}", ToMoneyString(product.UnitPrice))
+                    .Replace("{{Product.ITBIS}}", ToMoneyString(product.ITBIS))
+                    .Replace("{{Product.Amount}}", ToMoneyString(product.Total));
 
-                if (useTableBreaks)
-                {
-                    count++;
 
-                    if (sale.SaleProducts.Count >= count && (count + 10) % 40 == 1)
-                    {
-                        page++;
-                        productsHTML += GetPageBreak();
-                    }
-                }
+                productsHTML += trItem;
             }
+
+
 
             if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
             {
@@ -45,15 +43,16 @@ namespace DecenaSoluciones.POS.Shared.Helper
                                 $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
             }
 
-            if (useTableBreaks)
-            { 
-                var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
-                if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
-                {
-                    productsHTML += GetPageBreak();
-                }
-            }
+            //if (useTableBreaks)
+            //{ 
+            //    var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
+            //    if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
+            //    {
+            //        productsHTML += GetPageBreak();
+            //    }
+            //}
 
+            htmlTemplate = ReplaceRange(htmlTemplate, "<tr productLine>", "</tr productLine>", productsHTML);
             htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
             htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
             htmlTemplate = htmlTemplate.Replace("{{ClientName}}", sale.Customer?.Name ?? "MOSTRADOR");
@@ -61,7 +60,6 @@ namespace DecenaSoluciones.POS.Shared.Helper
             htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
             htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
             htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
-            htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
             htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
             htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
             htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
@@ -160,5 +158,34 @@ namespace DecenaSoluciones.POS.Shared.Helper
         }
 
         private static string ToMoneyString(decimal? value) => value.HasValue ? $"{value.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}" : "0.00";
+
+        private static string ReplaceRange(string input, string startMarker, string endMarker, string replacement)
+        {
+            int startIndex = input.IndexOf(startMarker);
+            int endIndex = input.IndexOf(endMarker, startIndex + startMarker.Length);
+
+            if (startIndex != -1 && endIndex != -1)
+            {
+                // Include the markers in the replacement
+                return input.Substring(0, startIndex) + replacement + input.Substring(endIndex + endMarker.Length);
+            }
+
+            return input; // Return original if markers are not found
+        }
+
+        private static string ExtractBetweenMarkers(string input, string startMarker, string endMarker)
+        {
+            int startIndex = input.IndexOf(startMarker);
+            int endIndex = input.IndexOf(endMarker, startIndex + startMarker.Length);
+
+            if (startIndex != -1 && endIndex != -1)
+            {
+                // Move startIndex forward to the content inside markers
+                startIndex += startMarker.Length;
+                return input.Substring(startIndex, endIndex - startIndex);
+            }
+
+            return string.Empty; // Return empty if markers are not found
+        }
     }
 }
