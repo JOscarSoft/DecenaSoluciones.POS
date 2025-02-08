@@ -29,10 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\templates\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="wwwroot\images\logo\Logo-Full.jpeg">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

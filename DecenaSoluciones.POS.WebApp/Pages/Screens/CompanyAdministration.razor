@@ -11,11 +11,12 @@
 @inject SweetAlertService Swal;
 @inject IAuthService authService;
 @inject ICompanyService companyService;
+@inject ISaleService saleService;
 @inject ILocalStorage _localStorage;
 
 <style>
     .accordion-button {
-        font-weight: bold !important;
+    font-weight: bold !important;
     }
 </style>
 
@@ -48,7 +49,7 @@
         <InputTextArea class="form-control" @bind-Value="companyModel.Address" maxlength="225"></InputTextArea>
         <ValidationMessage For="@(() => companyModel.Address)"></ValidationMessage>
     </div>
-    
+
     <Accordion Flush="true">
         <AccordionItem Title="Recibo de ventas">
             <Content>
@@ -63,7 +64,7 @@
             </Content>
         </AccordionItem>
     </Accordion>   
-    
+
     <div style="margin-top:50px">
         <AuthorizeView Roles="admin" Context="authContext">
             <button type="submit" Class="btn btn-primary">
@@ -99,6 +100,8 @@
             if (response.Success)
             {
                 companyModel = new AddEditCompany(response.Result);
+
+                await LoadDefaultTemplates();
             }
             else
             {
@@ -133,6 +136,28 @@
                 });
             return;
         }
+
+        var receiptOK = true;
+
+        if (string.IsNullOrWhiteSpace(companyModel.QuotationsReceipt) || 
+        string.IsNullOrWhiteSpace(companyModel.SalesReceipt))
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Recibo(s) no configurado(s)",
+                    Text = "Si deja la plantilla de los recibos en blanco se usarán la plantilla por defecto.",
+                    Icon = SweetAlertIcon.Warning,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            receiptOK = result.IsConfirmed;
+        }
+
+        if (!receiptOK)
+            return;
+
+
         PreloadService!.Show();
         try
         {
@@ -146,6 +171,8 @@
                         Text = "Datos actualizados exitosamente.",
                         Icon = SweetAlertIcon.Success
                     });
+
+                await LoadDefaultTemplates();
             }
             else
             {
@@ -170,5 +197,20 @@
 
         }
 
+    }
+
+    private async Task LoadDefaultTemplates()
+    {
+        if(string.IsNullOrEmpty(companyModel.QuotationsReceipt))
+        {
+            var defaultQuotationTemplate = await saleService.GetDefaultQuotationTemplateAsync(CompanyId);
+            companyModel.QuotationsReceipt = defaultQuotationTemplate;
+        }
+
+        if (string.IsNullOrEmpty(companyModel.SalesReceipt))
+        {
+            var defaultSaleTemplate = await saleService.GetDefaultSaleTemplateAsync();
+            companyModel.SalesReceipt = defaultSaleTemplate;
+        }
     }
 }
