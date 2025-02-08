@@ -1,25 +1,26 @@
 ﻿using DecenaSoluciones.POS.Shared.Dtos;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DecenaSoluciones.POS.Shared.Helper
 {
     public static class Utility
     {
-        public static string GenerateQuotationReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company, bool useTableBreaks = true)
+        private const string StartProductsIndicator = "<!--StartProductLine-->";
+        private const string EndProductsIndicator = "<!--EndProductLine-->";
+        public static string GenerateReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company, bool duplicate = false)
         {
             string productsHTML = string.Empty;
             string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
             string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
+            List<string> changesText = [];
+            if (!string.IsNullOrEmpty(sale.originalSaleCode))
+                changesText.Add("Modificada");
+            if (duplicate)
+                changesText.Add("Reimpresion");
 
             int count = 1;
-            int page = 1;
 
-            string trProducts = ExtractBetweenMarkers(htmlTemplate, "<tr productLine>", "</tr productLine>");
+            string trProducts = ExtractBetweenMarkers(htmlTemplate, StartProductsIndicator, EndProductsIndicator);
             foreach (var product in sale.SaleProducts!)
             {
                 string trItem = trProducts
@@ -33,94 +34,42 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
 
                 productsHTML += trItem;
-            }
-
-
-
-            if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
-            {
-                productsHTML += $"<tr><td>000</td><td>Mano de Obra</td><td>000</td>" +
-                                $"<td>-</td><td>-</td><td>{ToMoneyString(sale.WorkForceValue)}</td></tr>";
-            }
-
-            //if (useTableBreaks)
-            //{ 
-            //    var lastPageCount = page > 1 ? sale.SaleProducts!.Skip(30 + ((page - 2) * 40)).Count() : 0;
-            //    if ((page == 1 && count >= 20) || (page > 1 && lastPageCount >= 29))
-            //    {
-            //        productsHTML += GetPageBreak();
-            //    }
-            //}
-
-            htmlTemplate = ReplaceRange(htmlTemplate, "<tr productLine>", "</tr productLine>", productsHTML);
-            htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
-            htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", sale.Customer?.Name ?? "MOSTRADOR");
-            htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
-            htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
-            htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
-            htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
-            htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"));
-            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
-            htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyAddress}}", company?.Address ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
-
-            string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
-            htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :
-                $"<p class=\"ClientP\"><span style=\"font-weight: bold; font-size: 18px\">Condiciones de pago: </span>{payCondition}</p>");
-
-            return htmlTemplate;
-        }
-
-        public static string GenerateFinalReceiptHtml(AddEditSale sale, string htmlTemplate, CompanyViewModel? company, bool duplicate = false)
-        {
-            string productsHTML = string.Empty;
-            string totalTaxes = ToMoneyString(sale.SaleProducts!.Sum(p => p.ITBIS));
-            string subTotal = ToMoneyString(sale.SaleProducts!.Sum(p => p.Total) - sale.SaleProducts!.Sum(p => p.ITBIS));
-            List<string> changesText = new List<string>();//!string.IsNullOrEmpty(sale.originalSaleCode) ? "Modificada" : string.Empty;
-            if(!string.IsNullOrEmpty(sale.originalSaleCode))
-                changesText.Add("Modificada");
-            if (duplicate)
-                changesText.Add("Reimpresion");
-
-            foreach (var product in sale.SaleProducts!)
-            {
-                productsHTML += $"<tr><td colspan=\"3\">{product.ProductDescription}</td></tr>" +
-                                $"<tr><td>{product.Quantity}</td>" +
-                                $"<td class=\"price\">{ToMoneyString(product.UnitPrice)}</td>" +
-                                $"<td class=\"price\">{ToMoneyString(product.Total)}</td></tr>";
+                count++;
             }
 
             if (sale.WorkForceValue != null && sale.WorkForceValue > 0)
             {
-                productsHTML += $"<tr><td colspan=\"3\">Mano de obra</td></tr>" +
-                                $"<tr><td>000</td>" +
-                                $"<td class=\"price\">000</td>" +
-                                $"<td class=\"price\">{ToMoneyString(sale.WorkForceValue)}</td></tr>";
+
+                string trItem = trProducts
+                    .Replace("{{Product.Index}}", count.ToString())
+                    .Replace("{{Product.Code}}", "000")
+                    .Replace("{{Product.Description}}", "Mano de Obra")
+                    .Replace("{{Product.Quantity}}", "1")
+                    .Replace("{{Product.Price}}", ToMoneyString(sale.WorkForceValue))
+                    .Replace("{{Product.ITBIS}}", "-")
+                    .Replace("{{Product.Amount}}", ToMoneyString(sale.WorkForceValue));
+
+
+                productsHTML += trItem;
             }
 
-            htmlTemplate = htmlTemplate.Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA");
-            htmlTemplate = htmlTemplate.Replace("{{SaleCode}}", sale.Code);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyName}}", company?.Name ?? "Factura");
-            htmlTemplate = htmlTemplate.Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyAddress}}", company?.Address ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty);
-            htmlTemplate = htmlTemplate.Replace("{{ClientName}}", (sale.Customer?.Name ?? "MOSTRADOR"));
-            htmlTemplate = htmlTemplate.Replace("{{SubTotal}}", subTotal);
-            htmlTemplate = htmlTemplate.Replace("{{totalTaxes}}", totalTaxes);
-            htmlTemplate = htmlTemplate.Replace("{{Discount}}", ToMoneyString(sale.Discount));
-            htmlTemplate = htmlTemplate.Replace("{{GrandTotal}}", GetTotalAmount(sale));
-            htmlTemplate = htmlTemplate.Replace("{{Products}}", productsHTML);
-            htmlTemplate = htmlTemplate.Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"));
-            htmlTemplate = htmlTemplate.Replace("{{PaymentType}}", sale.GetPaymentType());
-            htmlTemplate = htmlTemplate.Replace("{{User}}", sale.UserName);
-            htmlTemplate = htmlTemplate.Replace("{{DuplicateText}}", changesText.Any() ? string.Join(" - ", changesText) : "");
-
-            string payCondition = sale.CreditSale == true ? "CRÉDITO" : "CONTADO";
-            htmlTemplate = htmlTemplate.Replace("{{PaymentConditions}}", sale.IsAQuotation ? "" :
-                $"Condiciones de pago: <span>{payCondition}</span>");
+            htmlTemplate = ReplaceRange(htmlTemplate, StartProductsIndicator, EndProductsIndicator, productsHTML)
+                .Replace("{{SaleTitle}}", sale.IsAQuotation ? "COTIZACIÓN" : "FACTURA")
+                .Replace("{{SaleCode}}", sale.Code)
+                .Replace("{{ClientName}}", sale.Customer?.Name ?? "MOSTRADOR")
+                .Replace("{{SubTotal}}", subTotal)
+                .Replace("{{totalTaxes}}", totalTaxes)
+                .Replace("{{Discount}}", ToMoneyString(sale.Discount))
+                .Replace("{{GrandTotal}}", GetTotalAmount(sale))
+                .Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"))
+                .Replace("{{CompanyName}}", company?.Name ?? "Factura")
+                .Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty)
+                .Replace("{{CompanyAddress}}", company?.Address ?? string.Empty)
+                .Replace("{{CompanyPhone}}", company?.ContactPhone ?? string.Empty)
+                .Replace("{{User}}", sale.UserName)
+                .Replace("{{PaymentType}}", sale.GetPaymentType())
+                .Replace("{{PaymentConditions}}", sale.CreditSale == true ? "CRÉDITO" : "CONTADO")
+                .Replace("{{DuplicateText}}", changesText.Any() ? string.Join(" - ", changesText) : "");
 
             return htmlTemplate;
         }
@@ -138,15 +87,6 @@ namespace DecenaSoluciones.POS.Shared.Helper
 
             return "Efectivo";
         }
-
-        private static string GetPageBreak() => "</table><p style=\"page-break-before: always\">" +
-                            "<table class=\"tblProducts\">" +
-                            "<tr><th>ITEMS</th>" +
-                            "<th>PRODUCTO</th>" +
-                            "<th>CANT.</th>" +
-                            "<th>PRECIO</th>" +
-                            "<th>ITBIS</th>" +
-                            "<th>TOTAL</th></tr>";
 
         private static string GetTotalAmount(AddEditSale sale)
         {

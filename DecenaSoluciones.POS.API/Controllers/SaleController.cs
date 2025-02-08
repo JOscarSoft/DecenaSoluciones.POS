@@ -220,7 +220,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var company = await GetCurrentCompany();
-            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, company, false);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, company, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 
@@ -236,7 +236,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var serverPath = _WebHostEnvironment.WebRootPath + @"\templates\QuotationReceiptHTML.html";
             var templateString = System.IO.File.ReadAllText(serverPath);
             var company = await GetCurrentCompany();
-            var recepitHtml = Utility.GenerateQuotationReceiptHtml(sale, templateString, company, false);
+            var recepitHtml = Utility.GenerateReceiptHtml(sale, templateString, company, false);
 
             var ms = PDFUtility.GeneratePDFFile(recepitHtml);
 

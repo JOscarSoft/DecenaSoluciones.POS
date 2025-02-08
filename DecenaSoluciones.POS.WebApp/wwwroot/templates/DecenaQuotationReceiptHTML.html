@@ -133,7 +133,7 @@
             <p class="ClientP">
                 <span style="font-weight: bold; font-size: 18px">Cliente: </span>{{ClientName}}
             </p>
-            {{PaymentConditions}}
+            <p class="ClientP"><span style="font-weight: bold; font-size: 18px">Condiciones de pago: </span>{{PaymentConditions}}</p>
         </div>
         <div class="rightPanel">
             <p>{{CreationDate}}</p>
@@ -149,7 +149,16 @@
                 <th>ITBIS</th>
                 <th>TOTAL</th>
             </tr>
-            {{Products}}
+            <!--StartProductLine-->
+            <tr>
+                <td>{{Product.Index}}</td>
+                <td>{{Product.Description}}</td>
+                <td>{{Product.Quantity}}</td>
+                <td>{{Product.Price}}</td>
+                <td>{{Product.ITBIS}}</td>
+                <td>{{Product.Amount}}</td>
+            </tr>
+            <!--EndProductLine-->
             <tr class="rowTotal firstTotal">
                 <td class="cellTotal"></td>
                 <td class="cellTotal"></td>

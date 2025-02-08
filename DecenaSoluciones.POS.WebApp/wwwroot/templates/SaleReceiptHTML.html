@@ -160,7 +160,7 @@
                 <td>Cliente: <span>{{ClientName}}</span></td>
             </tr>
             <tr>
-                <td>{{PaymentConditions}}</span></td>
+                <td>Condiciones de pago: <span>{{PaymentConditions}}</span></td>
             </tr>
             <tr>
                 <td style="font-weight: bold">Factura No. {{SaleCode}}</td>
@@ -183,11 +183,16 @@
         </thead>
 
         <tbody>
+            <!--StartProductLine-->
+            <tr>
+                <td colspan="3">{{Product.Description}}</td>
+            </tr>
             <tr>
                 <td>{{Product.Quantity}}</td>
-                <td>{{Product.Price}}</td>
-                <td>{{Product.Amount}}</td>
+                <td class="price">{{Product.Price}}</td>
+                <td class="price">{{Product.Amount}}</td>
             </tr>
+            <!--EndProductLine-->
             <tr>
                 <td colspan="2" class="sum-up line" style="padding-top: 1em">Subtotal</td>
                 <td class="line price">{{SubTotal}}</td>

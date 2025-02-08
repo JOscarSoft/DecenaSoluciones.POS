@@ -149,7 +149,16 @@ namespace DecenaSoluciones.POS.Shared.Services
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
 
-            var receipt = await GenerateReceipt(result.Result);
+            var updatedSale = result.Result;
+
+            foreach (var item in updatedSale!.SaleProducts!) 
+            {
+                var product = sale.SaleProducts!.FirstOrDefault(p => p.ProductId == item.ProductId);
+                item.ProductCode = product?.ProductCode ?? string.Empty;
+                item.ProductDescription = product?.ProductDescription ?? string.Empty;
+            }
+
+            var receipt = await GenerateReceipt(updatedSale);
             return (receipt, result);
         }
 
@@ -239,7 +248,7 @@ namespace DecenaSoluciones.POS.Shared.Services
                 }
 
 
-                return sale.IsAQuotation ? Utility.GenerateQuotationReceiptHtml(sale, htmlTemplate, company) : Utility.GenerateFinalReceiptHtml(sale, htmlTemplate, company, duplicate);
+                return Utility.GenerateReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
             catch(Exception ex) 
             {
