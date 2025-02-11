@@ -96,7 +96,7 @@
             preloadService!.Hide();
             if (response.Success)
             {
-                saleList = (response.Result ?? new List<SalesViewModel>()).AsQueryable();
+                saleList = (response.Result?.Where(p => !p.Dismissed) ?? new List<SalesViewModel>()).AsQueryable();
                 filteredSalesList = saleList;
             }
             else

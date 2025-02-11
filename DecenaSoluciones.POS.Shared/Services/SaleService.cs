@@ -149,9 +149,10 @@ namespace DecenaSoluciones.POS.Shared.Services
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
 
-            var updatedSale = result.Result;
+            var updatedSale = result.Result ?? new AddEditSale();
+            updatedSale.Customer = sale.Customer;
 
-            foreach (var item in updatedSale!.SaleProducts!) 
+            foreach (var item in updatedSale.SaleProducts!) 
             {
                 var product = sale.SaleProducts!.FirstOrDefault(p => p.ProductId == item.ProductId);
                 item.ProductCode = product?.ProductCode ?? string.Empty;
