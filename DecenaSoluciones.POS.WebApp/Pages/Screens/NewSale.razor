@@ -692,6 +692,11 @@
 
     private async Task OnValidSubmit(bool isQuotation)
     {
+        if (!TCPayment && !DepositPayment && (model.CashAmount == null || model.CashAmount == 0m))
+        {
+            model.CashAmount = GetTotalAmount();
+        }
+
         string validations = validateSale();
 
         if (string.IsNullOrEmpty(validations))
