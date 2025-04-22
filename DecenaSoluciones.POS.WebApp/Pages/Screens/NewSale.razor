@@ -473,6 +473,8 @@
                     DepositPayment = saleResult.DepositsAmount != null && saleResult.DepositsAmount > 0;
 
                     model = saleResult;
+                    model.CashAmount = !TCPayment && !DepositPayment ? GetTotalAmount() : saleResult.CashAmount;
+
                 }
                 else
                 {
