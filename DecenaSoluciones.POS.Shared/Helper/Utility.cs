@@ -61,7 +61,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
                 .Replace("{{totalTaxes}}", totalTaxes)
                 .Replace("{{Discount}}", ToMoneyString(sale.Discount))
                 .Replace("{{GrandTotal}}", GetTotalAmount(sale))
-                .Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"))
+                .Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"))
                 .Replace("{{CompanyName}}", company?.Name ?? "Factura")
                 .Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty)
                 .Replace("{{CompanyAddress}}", company?.Address ?? string.Empty)
