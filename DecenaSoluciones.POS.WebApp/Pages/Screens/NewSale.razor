@@ -154,6 +154,22 @@
                         <input type="text" class="form-control" value="@totalAmount" disabled />
                     </div>
                 </div>
+                @if (!TCPayment && !DepositPayment)
+                {
+                    <div class="form-group row mb-2">
+                        <label class="col-md-5 col-form-label">Monto pagado:</label>
+                        <div class="col-md-7">
+                            <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.CashAmount />
+                            <ValidationMessage For="@(() => model.CashAmount)"></ValidationMessage>
+                        </div>
+                    </div>
+                }
+                <div class="form-group row mb-2">
+                    <label class="col-md-5 col-form-label">Devolución:</label>
+                    <div class="col-md-7">
+                        <input type="text" class="form-control" value="@totalDevolution" disabled />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -316,6 +332,7 @@
     bool isCashSale = true;
 
     string totalAmount => ToMoneyString(GetTotalAmount());
+    string totalDevolution => ToMoneyString(((model.CashAmount ?? 0M) + (model.TCAmount ?? 0m) + (model.DepositsAmount ?? 0)) - GetTotalAmount());
     string totalTaxes => ToMoneyString(model.SaleProducts!.Sum(p => p.ITBIS));
     string subTotal => ToMoneyString(model.SaleProducts!.Sum(p => p.Total) - model.SaleProducts!.Sum(p => p.ITBIS));
 
@@ -456,6 +473,8 @@
                     DepositPayment = saleResult.DepositsAmount != null && saleResult.DepositsAmount > 0;
 
                     model = saleResult;
+                    model.CashAmount = !TCPayment && !DepositPayment ? GetTotalAmount() : saleResult.CashAmount;
+
                 }
                 else
                 {
@@ -673,6 +692,11 @@
 
     private async Task OnValidSubmit(bool isQuotation)
     {
+        if (!TCPayment && !DepositPayment && (model.CashAmount == null || model.CashAmount == 0m))
+        {
+            model.CashAmount = GetTotalAmount();
+        }
+
         string validations = validateSale();
 
         if (string.IsNullOrEmpty(validations))

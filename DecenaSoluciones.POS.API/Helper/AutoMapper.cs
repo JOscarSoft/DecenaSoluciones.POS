@@ -49,12 +49,23 @@ namespace DecenaSoluciones.POS.API.Helper
             CreateMap<Sale, SalesReportViewModel>()
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(source => GetCustomerName(source.Customer)))
                 .ForMember(dest => dest.Total, opt => opt.MapFrom(source => GetTotalAmount(source)))
+                .ForMember(dest => dest.PayedAmount, opt => opt.MapFrom(source => GetPayedAmount(source)))
                 .ForMember(dest => dest.ProductsQuantity, opt => opt.MapFrom(source => source.SaleProducts!.Sum(p => p.Quantity)));
             CreateMap<SaleProduct, LastSaleXProductViewModel>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(source => source.Id))
                 .ForMember(dest => dest.Quantity, opt => opt.MapFrom(source => source.Quantity))
                 .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(source => source.UnitPrice))
                 .ForMember(dest => dest.SaleDate, opt => opt.MapFrom(source => source.Sale.CreationDate));
+        }
+
+        private decimal GetPayedAmount(Sale sale)
+        {
+            decimal registeredAmounts = 
+                (sale.TCAmount ?? 0m) +
+                (sale.DepositsAmount ?? 0m) +
+                (sale.CashAmount ?? 0m);
+
+            return registeredAmounts > 0m ? registeredAmounts : GetTotalAmount(sale);
         }
         private string GetCustomerName(Customer? customer)
         {

@@ -285,6 +285,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             try
             {
                 sale.CustomerId = sale.Customer!.Id;
+                sale.CreationDate = DateTime.Now;
 
                 if (sale.Customer.Id == 0 && !string.IsNullOrEmpty(sale.Customer.Name))
                 {

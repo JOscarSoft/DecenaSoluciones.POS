@@ -61,7 +61,7 @@ namespace DecenaSoluciones.POS.Shared.Helper
                 .Replace("{{totalTaxes}}", totalTaxes)
                 .Replace("{{Discount}}", ToMoneyString(sale.Discount))
                 .Replace("{{GrandTotal}}", GetTotalAmount(sale))
-                .Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy"))
+                .Replace("{{CreationDate}}", DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"))
                 .Replace("{{CompanyName}}", company?.Name ?? "Factura")
                 .Replace("{{CompanySlogan}}", company?.Slogan ?? string.Empty)
                 .Replace("{{CompanyAddress}}", company?.Address ?? string.Empty)
@@ -69,9 +69,20 @@ namespace DecenaSoluciones.POS.Shared.Helper
                 .Replace("{{User}}", sale.UserName)
                 .Replace("{{PaymentType}}", sale.GetPaymentType())
                 .Replace("{{PaymentConditions}}", sale.CreditSale == true ? "CRÉDITO" : "CONTADO")
-                .Replace("{{DuplicateText}}", changesText.Any() ? string.Join(" - ", changesText) : "");
+                .Replace("{{DuplicateText}}", changesText.Any() ? string.Join(" - ", changesText) : "")
+                .Replace("{{PayedAmount}}", GetPayedAmount(sale));
 
             return htmlTemplate;
+        }
+
+        private static string GetPayedAmount(AddEditSale sale)
+        {
+            decimal registeredAmounts =
+                (sale.TCAmount ?? 0m) +
+                (sale.DepositsAmount ?? 0m) +
+                (sale.CashAmount ?? 0m);
+
+            return registeredAmounts > 0m ? ToMoneyString(registeredAmounts) : GetTotalAmount(sale);
         }
 
         private static string GetPaymentType(this AddEditSale sale)

@@ -48,12 +48,16 @@ namespace DecenaSoluciones.POS.API.Helper
             sheet1.Row(report.Count() + 2).Cell(4).Value = "Totales";
             sheet1.Row(report.Count() + 2).Cell(5).Value = report.Sum(p => p.ProductsQuantity);
             sheet1.Row(report.Count() + 2).Cell(6).Value = report.Sum(p => p.Total);
+            sheet1.Row(report.Count() + 2).Cell(7).Value = report.Sum(p => p.PayedAmount);
+            sheet1.Row(report.Count() + 2).Cell(8).Value = report.Sum(p => p.Devolution);
             sheet1.Row(report.Count() + 2).CellsUsed().Style.Font.Bold = true;
             sheet1.Row(report.Count() + 2).CellsUsed().Style.Font.Shadow = true;
 
             for (int i = 2; i <= sheet1.RowsUsed().Count(); i++)
             {
                 sheet1.Cell(i, 6).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
+                sheet1.Cell(i, 7).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
+                sheet1.Cell(i, 8).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
             }
 
             sheet1.Columns().AdjustToContents();
@@ -122,12 +126,14 @@ namespace DecenaSoluciones.POS.API.Helper
             dt.Columns.Add("Usuario", typeof(string));
             dt.Columns.Add("Productos", typeof(int));
             dt.Columns.Add("Total", typeof(decimal));
+            dt.Columns.Add("Monto pagado", typeof(decimal));
+            dt.Columns.Add("Devuelta", typeof(decimal));
 
             if (sales.Count > 0)
             {
                 sales.OrderBy(p => p.CreationDate).ToList().ForEach(item =>
                 {
-                    dt.Rows.Add(item.Code, item.CustomerName, DateOnly.FromDateTime(item.CreationDate), item.UserName, item.ProductsQuantity, item.Total);
+                    dt.Rows.Add(item.Code, item.CustomerName, DateOnly.FromDateTime(item.CreationDate), item.UserName, item.ProductsQuantity, item.Total, item.PayedAmount, item.Devolution);
                 });
             }
 
