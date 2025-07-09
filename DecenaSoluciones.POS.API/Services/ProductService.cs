@@ -141,7 +141,7 @@ namespace DecenaSoluciones.POS.API.Services
             var codeDigits = existingCodes.Select(p => new string(p.Code.Where(Char.IsDigit).ToArray()))
                                           .Where(p => !string.IsNullOrEmpty(p))
                                           .Select(p => int.Parse(p)).ToList();
-            if (existingCodes.Any())
+            if (codeDigits.Any())
                 return $"{init}{(codeDigits.Max() + 1).ToString().PadLeft(4, '0')}".ToUpper();
 
             return $"{init}0001".ToUpper();
