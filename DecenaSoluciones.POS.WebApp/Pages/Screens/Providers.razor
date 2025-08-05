@@ -1,0 +1,126 @@
+﻿@page "/providers"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.WebApp.Pages.Components;
+@using DecenaSoluciones.POS.Shared.Services;
+@using System.Text.RegularExpressions;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject IProviderService ProviderService;
+
+<h3>Proveedores</h3>
+
+<Modal @ref="addEditProviderModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">        
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProviderModal(null)">Agregar proveedores</Button>
+        </AuthorizeView>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="ProvidersGrid" TItem="AddEditProvider"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="ProviderList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Proveedores por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} proveedores"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
+        <GridColumn TItem="AddEditProvider" HeaderText="RNC" PropertyName="Name" SortKeySelector="item => item.RNC" HeaderTextAlignment="Alignment.Center">
+            @context.RNC
+        </GridColumn>
+        <GridColumn TItem="AddEditProvider" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="AddEditProvider" HeaderText="Teléfono" PropertyName="PhoneNumber" Sortable="false" HeaderTextAlignment="Alignment.Center">
+            @(context.PhoneNumber == null ? string.Empty : Regex.Replace(context.PhoneNumber, @"(\d{3})(\d{3})(\d{4})", "($1) $2-$3"))
+        </GridColumn>
+        <GridColumn TItem="AddEditProvider" HeaderText="Dirección" PropertyName="Direction" SortKeySelector="item => item.Direction" HeaderTextAlignment="Alignment.Center">
+            @context.Direction
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<AddEditProvider> ProviderList = new List<AddEditProvider>();
+    Grid<AddEditProvider> ProvidersGrid = default!;
+    private Modal addEditProviderModal = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await ProviderService.GetProviderList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                ProviderList = response.Result?.ToList() ?? new List<AddEditProvider>();
+                await ProvidersGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los proveedores."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los proveedores."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task ShowAddEditProviderModal(AddEditProvider? Provider)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("ProviderId", Provider != null ? Provider.Id : 0);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProviderModal));
+        await addEditProviderModal.ShowAsync<AddEditProviderComponent>(title: Provider != null ? "Actualizar proveedor" : "Agregar nuevo proveedor", parameters: parameters);
+    }
+
+    private async Task HideAddEditProviderModal(MouseEventArgs e)
+    {
+        await addEditProviderModal.HideAsync();
+    }
+    private async Task OnRowClick(GridRowEventArgs<AddEditProvider> args)
+    {
+        await ShowAddEditProviderModal(args.Item);
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+    }
+}

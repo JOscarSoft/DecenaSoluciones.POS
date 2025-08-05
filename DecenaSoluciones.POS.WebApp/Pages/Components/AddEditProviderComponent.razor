@@ -1,0 +1,237 @@
+﻿@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject IProviderService ProviderService;
+
+<EditForm Model="newProvider" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+
+    <div class="col-md-4">
+        <label class="form-label">RNC:</label>
+        <InputText class="form-control" @bind-Value="newProvider.RNC" maxlength="11"></InputText>
+        <ValidationMessage For="@(() => newProvider.Name)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Nombre:</label>
+        <InputText class="form-control" @bind-Value="newProvider.Name" maxlength="50"></InputText>
+        <ValidationMessage For="@(() => newProvider.Name)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Teléfono:</label>
+        <InputMask @bind-Value="newProvider.PhoneNumber" class="form-control" data-mask="(000) 000-0000" />
+        <ValidationMessage For="@(() => newProvider.PhoneNumber)"></ValidationMessage>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label">Dirección:</label>
+        <InputText class="form-control" @bind-Value="newProvider.Direction" maxlength="500"></InputText>
+        <ValidationMessage For="@(() => newProvider.Direction)"></ValidationMessage>
+    </div>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <button type="submit" Class="btn btn-primary">
+                Guardar
+            </button>
+        </AuthorizeView>
+        @if (ProviderId > 0)
+        {
+            <AuthorizeView Roles="admin" Context="authContext">
+                <Button Color="ButtonColor.Danger" @onclick="RemoveProvider" style="margin-right:15px">
+                    Eliminar
+                </Button>
+            </AuthorizeView>
+        } 
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public int ProviderId { get; set; } = 0;
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    AddEditProvider newProvider = new AddEditProvider();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService!.Show();
+        await LoadProvider();
+        PreloadService.Hide();
+    }
+
+    private async Task LoadProvider()
+    {
+        try
+        {
+            if (ProviderId > 0)
+            {
+                var response = await ProviderService.GetProviderById(ProviderId);
+                if (response.Success)
+                {
+                    newProvider = response.Result ?? new AddEditProvider();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los datos del proveedor."),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los datos del proveedor."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(string.IsNullOrEmpty(newProvider.Name))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el nombre del proveedor.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            if (ProviderId == 0)
+            {
+                var response = await ProviderService.AddNewProvider(newProvider);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Proveedor agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newProvider = new AddEditProvider();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await ProviderService.UpdateProvider(ProviderId, newProvider);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Proveedor modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+
+    }
+    
+    private async Task RemoveProvider()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar proveedor",
+                    Text = "¿Esta seguro de eliminar el proveedor?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await ProviderService.RemoveProvider(ProviderId);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Proveedor eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+    }
+}

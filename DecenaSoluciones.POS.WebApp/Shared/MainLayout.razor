@@ -97,17 +97,18 @@
                 new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Inicio", Match = NavLinkMatch.All},
                 new NavItem { Id = "2", Href = "/products", IconName = IconName.BoxSeamFill, Text = "Productos"},
                 new NavItem { Id = "3", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
-                new NavItem { Id = "4", IconName = IconName.CartCheckFill, Text = "Ventas"},
-                new NavItem { Id = "5", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="4"},
-                new NavItem { Id = "6", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="4"},
-                new NavItem { Id = "7", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="4"},
+                new NavItem { Id = "4", Href = "/providers", IconName = IconName.PersonPlusFill, Text = "Proveedores"},
+                new NavItem { Id = "5", IconName = IconName.CartCheckFill, Text = "Ventas"},
+                new NavItem { Id = "6", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="5"},
+                new NavItem { Id = "7", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="5"},
+                new NavItem { Id = "8", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="5"},
             };
 
             if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
             {
-                navItems = navItems.Append(new NavItem { Id = "8", IconName = IconName.GearFill, Text = "Configuraciones" });
-                navItems = navItems.Append(new NavItem { Id = "9", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios", ParentId = "8" });
-                navItems = navItems.Append(new NavItem { Id = "10", Href = "/company-administration", IconName = IconName.BuildingFillGear, Text = "Compañía", ParentId = "8" });
+                navItems = navItems.Append(new NavItem { Id = "9", IconName = IconName.GearFill, Text = "Configuraciones" });
+                navItems = navItems.Append(new NavItem { Id = "10", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios", ParentId = "9" });
+                navItems = navItems.Append(new NavItem { Id = "11", Href = "/company-administration", IconName = IconName.BuildingFillGear, Text = "Compañía", ParentId = "9" });
             }
         }
 

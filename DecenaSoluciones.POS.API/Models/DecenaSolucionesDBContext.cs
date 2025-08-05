@@ -80,5 +80,10 @@ namespace DecenaSoluciones.POS.API.Models
         public DbSet<SaleProduct> SaleProducts { get; set; }
         public DbSet<SaleSequence> SaleSequence { get; set; }
         public DbSet<Company> Companies { get; set; }
+        public DbSet<Provider> Providers { get; set; }
+        public DbSet<InventoryEntryType> InventoryEntryTypes { get; set; }
+        public DbSet<InventoryEntry> InventoryEntries { get; set; }
+        public DbSet<InventoryEntryDetail> InventoryEntryDetails { get; set; }
+
     }
 }
