@@ -13,7 +13,7 @@
         //printWindow.document.open();
         //printWindow.document.write(htmlString);
         //printWindow.document.close();
-        delay(500).then(() => {
+        delay(2000).then(() => {
             //alert("here");
             
             window.frames["frame1"].focus();

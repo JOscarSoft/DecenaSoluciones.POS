@@ -56,6 +56,8 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.Quantity, opt => opt.MapFrom(source => source.Quantity))
                 .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(source => source.UnitPrice))
                 .ForMember(dest => dest.SaleDate, opt => opt.MapFrom(source => source.Sale.CreationDate));
+            CreateMap<Provider, AddEditProvider>()
+                .ReverseMap();
         }
 
         private decimal GetPayedAmount(Sale sale)

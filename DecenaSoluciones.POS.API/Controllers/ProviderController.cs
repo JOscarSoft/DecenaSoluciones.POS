@@ -11,21 +11,21 @@ namespace DecenaSoluciones.POS.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class CustomerController : ControllerBase
+    public class ProviderController : ControllerBase
     {
-        private readonly ICustomerService _customerService;
-        public CustomerController(ICustomerService customerService)
+        private readonly IProviderService _providerService;
+        public ProviderController(IProviderService providerService)
         {
-            _customerService = customerService;
+            _providerService = providerService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var apiResponse = new ApiResponse<List<CustomerViewModel>>();
+            var apiResponse = new ApiResponse<List<AddEditProvider>>();
             try
             {
-                apiResponse.Result = await _customerService.GetCustomerList();
+                apiResponse.Result = await _providerService.GetProvidersList();
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -41,15 +41,15 @@ namespace DecenaSoluciones.POS.API.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
+            var apiResponse = new ApiResponse<AddEditProvider>();
             try
             {
-                var customer = await _customerService.GetCustomerById(id);
+                var provider = await _providerService.GetProviderById(id);
 
-                if (customer == null)
-                    throw new Exception("Cliente no encontrado");
+                if (provider == null)
+                    throw new Exception("Proveedor no encontrado");
 
-                apiResponse.Result = customer;
+                apiResponse.Result = provider;
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -63,12 +63,12 @@ namespace DecenaSoluciones.POS.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
-        public async Task<IActionResult> CreateNewCustomer(AddEditCustomer customer)
+        public async Task<IActionResult> CreateNewProvider(AddEditProvider provider)
         {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
+            var apiResponse = new ApiResponse<AddEditProvider>();
             try
             {
-                apiResponse.Result = await _customerService.AddNewCustomer(customer);
+                apiResponse.Result = await _providerService.AddNewProvider(provider);
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -83,12 +83,12 @@ namespace DecenaSoluciones.POS.API.Controllers
         [HttpPut]
         [Route("{id}")]
         [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
-        public async Task<IActionResult> UpdateCustomer(int id, AddEditCustomer customer)
+        public async Task<IActionResult> UpdateProvider(int id, AddEditProvider provider)
         {
-            var apiResponse = new ApiResponse<AddEditCustomer>();
+            var apiResponse = new ApiResponse<AddEditProvider>();
             try
             {
-                apiResponse.Result = await _customerService.UpdateCustomer(id, customer);
+                apiResponse.Result = await _providerService.UpdateProvider(id, provider);
                 apiResponse.Success = true;
             }
             catch (Exception ex)
@@ -103,12 +103,12 @@ namespace DecenaSoluciones.POS.API.Controllers
         [HttpDelete]
         [Route("{id}")]
         [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> DeleteCustomer(int id)
+        public async Task<IActionResult> DeleteProvider(int id)
         {
             var apiResponse = new ApiResponse<bool>();
             try
             {
-                apiResponse.Result = await _customerService.RemoveCustomer(id);
+                apiResponse.Result = await _providerService.RemoveProvider(id);
                 apiResponse.Success = true;
             }
             catch (Exception ex)
