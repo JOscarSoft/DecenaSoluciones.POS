@@ -73,7 +73,8 @@ namespace DecenaSoluciones.POS.API.Services
             var existCustomer = await _dbContext.CustomerProducts.AnyAsync(p => p.ProductId == id);
             var existQuotation = await _dbContext.QuotationProducts.AnyAsync(p => p.ProductId == id);
             var existSale = await _dbContext.SaleProducts.AnyAsync(p => p.ProductId == id);
-            if (existCustomer || existQuotation || existSale)
+            var existInventory = await _dbContext.InventoryEntryDetails.AnyAsync(p => p.ProductId == id);
+            if (existCustomer || existQuotation || existSale || existInventory)
                 throw new Exception("El producto no puede ser eliminado porque existen registros asociados a el.");
 
             var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a eliminar.");

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace DecenaSoluciones.POS.API.Helper
@@ -57,6 +58,17 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(source => source.UnitPrice))
                 .ForMember(dest => dest.SaleDate, opt => opt.MapFrom(source => source.Sale.CreationDate));
             CreateMap<Provider, AddEditProvider>()
+                .ReverseMap();
+            CreateMap<InventoryEntry, InventoryEntryViewModel>()
+                .ForMember(dest => dest.InventoryEntryType, opt => opt.MapFrom(source => source.InventoryEntryTypeId))
+                .ForMember(dest => dest.TotalCost, opt => opt.MapFrom(source => source.InventoryEntryDetails != null ? source.InventoryEntryDetails.Sum(p => p.TotalCost) : 0))
+                .ReverseMap();
+            CreateMap<InventoryEntryDetail, InventoryEntryDetailViewModel>()
+                .ReverseMap();
+
+            CreateMap<InventoryEntryDetailViewModel, UpdateInventory>()
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(source => source.UnitPrice))
+                .ForMember(dest => dest.Cost, opt => opt.MapFrom(source => source.UnitCost))
                 .ReverseMap();
         }
 
