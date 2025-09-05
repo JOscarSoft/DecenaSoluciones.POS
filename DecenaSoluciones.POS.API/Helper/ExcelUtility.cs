@@ -65,7 +65,7 @@ namespace DecenaSoluciones.POS.API.Helper
             return wb;
         }
 
-        public static XLWorkbook GenerateInventoryExcelReport(List<InventoryReportViewModel> result)
+        public static XLWorkbook GenerateProductsExcelReport(List<ProductsReportViewModel> result)
         {
             var wb = new XLWorkbook();
 
@@ -140,7 +140,7 @@ namespace DecenaSoluciones.POS.API.Helper
             return dt;
         }
 
-        private static DataTable GetInventoryReportDataTable(List<InventoryReportViewModel> products)
+        private static DataTable GetInventoryReportDataTable(List<ProductsReportViewModel> products)
         {
             var dt = new DataTable();
             dt.TableName = "InventoryReport";

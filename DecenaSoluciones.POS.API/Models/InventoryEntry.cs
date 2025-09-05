@@ -11,7 +11,7 @@ namespace DecenaSoluciones.POS.API.Models
         public DateTime CreationDate { get; set; } = DateTime.Now;
         public int CompanyId { get; set; }
         public required int InventoryEntryTypeId { get; set; }
-        public virtual InventoryEntryType InventoryEntryType { get; set; }
+        public virtual InventoryEntryType? InventoryEntryType { get; set; }
         public virtual Company Company { get; set; }
         public virtual Provider? Provider { get; set; }
         public virtual ICollection<InventoryEntryDetail>? InventoryEntryDetails { get; set; }

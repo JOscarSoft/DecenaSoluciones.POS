@@ -7,6 +7,6 @@ namespace DecenaSoluciones.POS.Shared.Services
     {
         Task<ApiResponse<DashboardViewModel>> GetDashboardReport();
         Task<Stream> GenerateReport(DateOnly fromDate, DateOnly toDate, EnumReportType type);
-        Task<Stream> GenerateInventoryReport();
+        Task<Stream> GenerateProductsReport();
     }
 }

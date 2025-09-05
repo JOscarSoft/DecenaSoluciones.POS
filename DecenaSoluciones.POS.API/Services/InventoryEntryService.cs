@@ -23,6 +23,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<List<InventoryEntryViewModel>> GetInventoryEntryList()
         {
             var inventoryEntries = await _dbContext.InventoryEntries
+                .Include(p => p.InventoryEntryType)
                 .Include(p => p.Provider)
                 .Include(p => p.InventoryEntryDetails)!
                 .ThenInclude(p => p.Product)
@@ -34,6 +35,7 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<InventoryEntryViewModel> GetInventoryEntryById(int id)
         {
             var inventoryEntry = await _dbContext.InventoryEntries
+                .Include(p => p.InventoryEntryType)
                 .Include(p => p.Provider)
                 .Include(p => p.InventoryEntryDetails)!
                 .ThenInclude(p => p.Product)
@@ -62,6 +64,7 @@ namespace DecenaSoluciones.POS.API.Services
             _dbContext.ChangeTracker.Clear();
 
             inventoryEntry.Provider = null;
+            inventoryEntry.InventoryEntryType = null;
             _dbContext.InventoryEntries.Add(inventoryEntry);
 
             await _dbContext.SaveChangesAsync();
@@ -106,6 +109,7 @@ namespace DecenaSoluciones.POS.API.Services
 
 
             inventoryEntry.Provider = null;
+            inventoryEntry.InventoryEntryType = null;
             _dbContext.InventoryEntries.Update(inventoryEntry);
             await _dbContext.SaveChangesAsync();
 

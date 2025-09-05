@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DecenaSoluciones.POS.Shared.Dtos
 {
-    public class InventoryReportViewModel
+    public class ProductsReportViewModel
     {
         public string Code { get; set; }
         public string Description { get; set; }

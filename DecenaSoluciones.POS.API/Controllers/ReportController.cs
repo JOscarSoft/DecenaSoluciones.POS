@@ -69,12 +69,12 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpGet]
-        [Route("GetInventoryReport")]
-        public async Task<IActionResult> GetInventoryReport()
+        [Route("GetProductsReport")]
+        public async Task<IActionResult> GetProductsReport()
         {
-            var result = await _reportService.GetInventoryReport();
+            var result = await _reportService.GetProductsReport();
 
-            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
+            var excelReport = ExcelUtility.GenerateProductsExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);

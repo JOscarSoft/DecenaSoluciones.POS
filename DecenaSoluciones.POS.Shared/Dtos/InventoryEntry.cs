@@ -7,16 +7,18 @@ namespace DecenaSoluciones.POS.Shared.Dtos
     {
         public int Id { get; set; }
         public int? ProviderId { get; set; }
+        public string? ProviderName { get; set; }
         public DateTime CreationDate { get; set; } = DateTime.Now;
-        public InventoryEntryType InventoryEntryType { get; set; }
+        public InventoryEntryType InventoryEntryType { get; set; } = InventoryEntryType.In;
         public string? UserName { get; set; }
         public decimal? TotalCost { get; set; }
-        public ICollection<InventoryEntryDetailViewModel>? Details { get; set; } = new List<InventoryEntryDetailViewModel>();
+        public List<InventoryEntryDetailViewModel> Details { get; set; } = new List<InventoryEntryDetailViewModel>();
     }
 
     public class InventoryEntryDetailViewModel
     {
         public int Id { get; set; }
+        public int ProductId { get; set; }
 
         [Required(ErrorMessage = "El producto es requerido")]
         public string? ProductCode { get; set; }
@@ -33,6 +35,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 
         [Required(ErrorMessage = "El campo Cantidad es requerido.")]
         public decimal Quantity { get; set; }
+        public string? Comments { get; set; }
         public decimal TotalCost { 
             get { 
                 return UnitCost * Quantity; 

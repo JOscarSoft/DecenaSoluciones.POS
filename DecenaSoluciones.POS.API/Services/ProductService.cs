@@ -119,7 +119,7 @@ namespace DecenaSoluciones.POS.API.Services
         {
             foreach(var inventoryItem in inventoryItems) 
             {
-                var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Code == inventoryItem.ProductCode);
+                var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == inventoryItem.productId || p.Code == inventoryItem.ProductCode ); 
 
                 if(product != null) 
                 { 

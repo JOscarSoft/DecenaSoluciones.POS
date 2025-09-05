@@ -28,9 +28,9 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
-        public async Task<Stream> GenerateInventoryReport()
+        public async Task<Stream> GenerateProductsReport()
         {
-            var response = await _httpClient.GetAsync("api/Report/GetInventoryReport");
+            var response = await _httpClient.GetAsync("api/Report/GetProductsReport");
 
             response.EnsureResponseStatus();
 

@@ -3,6 +3,7 @@ using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
 using DecenaSoluciones.POS.Shared.Enums;
 using Microsoft.Extensions.Logging;
+using InventoryEntryType = DecenaSoluciones.POS.API.Models.InventoryEntryType;
 
 namespace DecenaSoluciones.POS.API.Helper
 {
@@ -11,7 +12,7 @@ namespace DecenaSoluciones.POS.API.Helper
         public AutoMapper()
         {
             CreateMap<Product, ProductViewModel>();
-            CreateMap<Product, InventoryReportViewModel>();
+            CreateMap<Product, ProductsReportViewModel>();
             CreateMap<Product, AddEditProduct>().ReverseMap();
             CreateMap<Company, CompanyViewModel>();
             CreateMap<Company, AddEditCompany>().ReverseMap();
@@ -61,12 +62,19 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ReverseMap();
             CreateMap<InventoryEntry, InventoryEntryViewModel>()
                 .ForMember(dest => dest.InventoryEntryType, opt => opt.MapFrom(source => source.InventoryEntryTypeId))
+                .ForMember(dest => dest.Details, opt => opt.MapFrom(source => source.InventoryEntryDetails))
                 .ForMember(dest => dest.TotalCost, opt => opt.MapFrom(source => source.InventoryEntryDetails != null ? source.InventoryEntryDetails.Sum(p => p.TotalCost) : 0))
-                .ReverseMap();
+                .ForMember(dest => dest.ProviderName, opt => opt.MapFrom(source => source.Provider != null ? source.Provider.Name : ""));
+            CreateMap<InventoryEntryViewModel, InventoryEntry>()
+                 .ForMember(dest => dest.InventoryEntryType, opt => opt.MapFrom(source => new InventoryEntryType() { Id = (int)source.InventoryEntryType }))
+                 .ForMember(dest => dest.InventoryEntryTypeId, opt => opt.MapFrom(source => (int)source.InventoryEntryType))
+                 .ForMember(dest => dest.InventoryEntryDetails, opt => opt.MapFrom(source => source.Details));
+
             CreateMap<InventoryEntryDetail, InventoryEntryDetailViewModel>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(source => source.ProductId))
                 .ReverseMap();
 
-            CreateMap<InventoryEntryDetailViewModel, UpdateInventory>()
+            CreateMap<InventoryEntryDetail, UpdateInventory>()
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(source => source.UnitPrice))
                 .ForMember(dest => dest.Cost, opt => opt.MapFrom(source => source.UnitCost))
                 .ReverseMap();

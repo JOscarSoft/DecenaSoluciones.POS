@@ -29,6 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Pages\Screens\Inventory.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
     <Content Update="Pages\Screens\Providers.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>

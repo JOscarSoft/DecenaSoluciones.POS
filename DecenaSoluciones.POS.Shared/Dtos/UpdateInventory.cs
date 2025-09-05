@@ -9,6 +9,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 {
     public class UpdateInventory
     {
+        public int? productId { get; set; }
+
         [Required(ErrorMessage = "El producto a actualizar es requerido")]
         public string? ProductCode { get; set; }
         public string? ProductDescription { get; set; }
