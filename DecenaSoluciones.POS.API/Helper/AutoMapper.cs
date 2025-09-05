@@ -69,15 +69,33 @@ namespace DecenaSoluciones.POS.API.Helper
                  .ForMember(dest => dest.InventoryEntryType, opt => opt.MapFrom(source => new InventoryEntryType() { Id = (int)source.InventoryEntryType }))
                  .ForMember(dest => dest.InventoryEntryTypeId, opt => opt.MapFrom(source => (int)source.InventoryEntryType))
                  .ForMember(dest => dest.InventoryEntryDetails, opt => opt.MapFrom(source => source.Details));
-
             CreateMap<InventoryEntryDetail, InventoryEntryDetailViewModel>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(source => source.ProductId))
                 .ReverseMap();
-
             CreateMap<InventoryEntryDetail, UpdateInventory>()
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(source => source.UnitPrice))
                 .ForMember(dest => dest.Cost, opt => opt.MapFrom(source => source.UnitCost))
                 .ReverseMap();
+            CreateMap<InventoryEntry, InventoryInReport>()
+                .ForMember(dest => dest.ProviderName, opt => opt.MapFrom(source => source.Provider!.Name))
+                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count));
+            CreateMap<InventoryEntry, InventoryOutReport>()
+                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count));
+            CreateMap<InventoryEntryDetail, InventoryInDetailReport>()
+                .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(source => source.Product.Code))
+                .ForMember(dest => dest.ProductDescription, opt => opt.MapFrom(source => source.Product.Description));
+            CreateMap<InventoryEntryDetail, InventoryOutDetailReport>()
+                .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(source => source.Product.Code))
+                .ForMember(dest => dest.ProductDescription, opt => opt.MapFrom(source => source.Product.Description));
+            CreateMap<List<InventoryEntry>, InventoryReportViewModel>()
+                .ForMember(dest => dest.inventoryInEntries, opt => opt.MapFrom(source => source.Where(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In)))
+                .ForMember(dest => dest.inventoryOutEntries, opt => opt.MapFrom(source => source.Where(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.Out)))
+                .ForMember(dest => dest.inventoryInEntriesDetails, opt => opt.MapFrom(source => source.Where(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In)
+                                                                                                        .Select(p => p.InventoryEntryDetails)
+                                                                                                        .SelectMany(p => p!)))
+                .ForMember(dest => dest.inventoryOutEntriesDetails, opt => opt.MapFrom(source => source.Where(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.Out)
+                                                                                                        .Select(p => p.InventoryEntryDetails)
+                                                                                                        .SelectMany(p => p!)));
         }
 
         private decimal GetPayedAmount(Sale sale)

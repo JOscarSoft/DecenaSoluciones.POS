@@ -8,5 +8,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<List<ProductsReportViewModel>> GetProductsReport();
         Task<List<SalesReportViewModel>> GetSalesReport(DateOnly fromDate, DateOnly toDate);
         Task<List<SoldProductsReportViewModel>> GetSoldProductsReport(DateOnly fromDate, DateOnly toDate);
+        Task<InventoryReportViewModel> GetInventoryReport(DateOnly fromDate, DateOnly toDate);
     }
 }

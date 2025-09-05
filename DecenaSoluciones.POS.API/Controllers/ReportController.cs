@@ -53,6 +53,24 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpGet]
+        [Route("GetInventoryReport/{fromDate}/{toDate}")]
+        public async Task<IActionResult> GetInventoryReport(string fromDate, string toDate)
+        {
+            var fromDateFormated = DateOnly.ParseExact(fromDate, "dd-MM-yyyy");
+            var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
+            var result = await _reportService.GetInventoryReport(fromDateFormated, toDateFormated);
+
+            return Ok(result);
+            /*
+            var excelReport = ExcelUtility.GenerateSalesExcelReport(result);
+
+            using var ms = new MemoryStream();
+            excelReport.SaveAs(ms);
+
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de ventas.xlsx");*/
+        }
+
+        [HttpGet]
         [Route("GetSoldProductsReport/{fromDate}/{toDate}")]
         public async Task<IActionResult> GetSoldProductsReport(string fromDate, string toDate)
         {
