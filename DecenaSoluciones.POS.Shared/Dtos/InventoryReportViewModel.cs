@@ -5,6 +5,8 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 {
     public class InventoryReportViewModel
     {
+        public DateOnly? From { get; set; }
+        public DateOnly? To { get; set; }
         public List<InventoryInReport> inventoryInEntries { get; set; } = new List<InventoryInReport>();
         public List<InventoryInDetailReport> inventoryInEntriesDetails { get; set; } = new List<InventoryInDetailReport>();
         public List<InventoryOutReport> inventoryOutEntries { get; set; } = new List<InventoryOutReport>();
@@ -30,6 +32,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 
     public class InventoryInDetailReport
     {
+        public string ProviderName { get; set; }
         public string ProductCode { get; set; }
 
         public string ProductDescription { get; set; }

@@ -1,4 +1,4 @@
-﻿using DecenaSoluciones.POS.API.Helper;
+﻿using DecenaSoluciones.POS.API.Helper.ExcelReports;
 using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -59,15 +59,15 @@ namespace DecenaSoluciones.POS.API.Controllers
             var fromDateFormated = DateOnly.ParseExact(fromDate, "dd-MM-yyyy");
             var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
             var result = await _reportService.GetInventoryReport(fromDateFormated, toDateFormated);
+            result.From = fromDateFormated;
+            result.To = toDateFormated;
 
-            return Ok(result);
-            /*
-            var excelReport = ExcelUtility.GenerateSalesExcelReport(result);
+            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
 
-            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de ventas.xlsx");*/
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de inventario.xlsx");
         }
 
         [HttpGet]

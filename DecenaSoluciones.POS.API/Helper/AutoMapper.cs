@@ -78,10 +78,15 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ReverseMap();
             CreateMap<InventoryEntry, InventoryInReport>()
                 .ForMember(dest => dest.ProviderName, opt => opt.MapFrom(source => source.Provider!.Name))
-                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count));
+                .ForMember(dest => dest.CreationDate, opt => opt.MapFrom(source => source.CreationDate.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count))
+                .ForMember(dest => dest.TotalCost, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Sum(p => p.TotalCost)));
             CreateMap<InventoryEntry, InventoryOutReport>()
-                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count));
+                .ForMember(dest => dest.ProductQuantity, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Count))
+                .ForMember(dest => dest.CreationDate, opt => opt.MapFrom(source => source.CreationDate.ToString("dd/MM/yyyy")))
+                .ForMember(dest => dest.TotalCost, opt => opt.MapFrom(source => source.InventoryEntryDetails!.Sum(p => p.TotalCost)));
             CreateMap<InventoryEntryDetail, InventoryInDetailReport>()
+                .ForMember(dest => dest.ProviderName, opt => opt.MapFrom(source => source.InventoryEntry.Provider!.Name))
                 .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(source => source.Product.Code))
                 .ForMember(dest => dest.ProductDescription, opt => opt.MapFrom(source => source.Product.Description));
             CreateMap<InventoryEntryDetail, InventoryOutDetailReport>()

@@ -22,6 +22,27 @@
 
 <Modal @ref="inventoryModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
 
+
+
+<Modal @ref="reportsModal" title="Generar reporte" UseStaticBackdrop="true" Size="ModalSize.Large">
+    <BodyTemplate>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Desde:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateFrom" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Hasta:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateTo" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="SubmitGenerateReport">Generar</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideReportModalClick">Cancelar</Button>
+    </FooterTemplate>
+</Modal>
+
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-2">     
         <AuthorizeView Roles="admin, manager">
@@ -32,6 +53,7 @@
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
         <AuthorizeView Roles="admin, manager">
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateProductsReport">Reporte de productos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Reporte de inventario</Button>
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowAddProductModal()">Agregar productos</Button>
         </AuthorizeView>
     </div>
@@ -105,7 +127,10 @@
     List<AddEditProvider> providerList = new List<AddEditProvider>();
     List<ProductViewModel> productList = new List<ProductViewModel>();
     List<InventoryEntryViewModel> entriesList = new List<InventoryEntryViewModel>();
+    private DateOnly reportDateFrom = DateOnly.FromDateTime(DateTime.Now.AddDays(-7));
+    private DateOnly reportDateTo = DateOnly.FromDateTime(DateTime.Now);
     Grid<InventoryEntryViewModel> entrieGrid = default!;
+    private Modal reportsModal = default!;
     private Modal inventoryModal = default!;
     private bool productsModal = false;
     private bool allLoadForEntries = false;
@@ -287,9 +312,53 @@
         }
     }
 
+    private async Task SubmitGenerateReport()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await reportService.GenerateInventoryReport(reportDateFrom, reportDateTo);
+
+            var fileName = $"Reporte de inventario {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
+
+            using var streamRef = new DotNetStreamReference(stream: response);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            PreloadService.Hide();
+            await reportsModal.HideAsync();
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = "Reporte generado exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
     private async Task HideInventoryModal(MouseEventArgs e)
     {
         await inventoryModal.HideAsync();
+    }
+
+    private async Task OnHideReportModalClick(MouseEventArgs e)
+    {
+        await reportsModal.HideAsync();
+    }
+
+    private async Task ShowReportsModal()
+    {
+        await reportsModal.ShowAsync();
     }
 
     private async Task OnModalHiding()
