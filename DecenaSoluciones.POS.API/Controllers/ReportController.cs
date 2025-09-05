@@ -1,4 +1,4 @@
-﻿using DecenaSoluciones.POS.API.Helper;
+﻿using DecenaSoluciones.POS.API.Helper.ExcelReports;
 using DecenaSoluciones.POS.API.Services;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -53,6 +53,43 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpGet]
+        [Route("GetInventoryReport/{fromDate}/{toDate}")]
+        public async Task<IActionResult> GetInventoryReport(string fromDate, string toDate)
+        {
+            var fromDateFormated = DateOnly.ParseExact(fromDate, "dd-MM-yyyy");
+            var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
+            var result = await _reportService.GetInventoryReport(fromDateFormated, toDateFormated);
+            result.From = fromDateFormated;
+            result.To = toDateFormated;
+
+            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
+
+            using var ms = new MemoryStream();
+            excelReport.SaveAs(ms);
+
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de inventario.xlsx");
+        }
+
+        [HttpGet]
+        [Route("GetExpenseAndIncomeReport/{fromDate}/{toDate}")]
+        public async Task<IActionResult> GetExpenseAndIncomeReport(string fromDate, string toDate)
+        {
+            var fromDateFormated = DateOnly.ParseExact(fromDate, "dd-MM-yyyy");
+            var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
+            var inventoryResult = await _reportService.GetInventoryReport(fromDateFormated, toDateFormated);
+            var salesResult = await _reportService.GetSalesReport(fromDateFormated, toDateFormated);
+            inventoryResult.From = fromDateFormated;
+            inventoryResult.To = toDateFormated;
+
+            var excelReport = ExcelUtility.GenerateExpenseAndIncomeExcelReport(salesResult, inventoryResult);
+
+            using var ms = new MemoryStream();
+            excelReport.SaveAs(ms);
+
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte de ingresos y gastos.xlsx");
+        }
+
+        [HttpGet]
         [Route("GetSoldProductsReport/{fromDate}/{toDate}")]
         public async Task<IActionResult> GetSoldProductsReport(string fromDate, string toDate)
         {
@@ -69,12 +106,12 @@ namespace DecenaSoluciones.POS.API.Controllers
         }
 
         [HttpGet]
-        [Route("GetInventoryReport")]
-        public async Task<IActionResult> GetInventoryReport()
+        [Route("GetProductsReport")]
+        public async Task<IActionResult> GetProductsReport()
         {
-            var result = await _reportService.GetInventoryReport();
+            var result = await _reportService.GetProductsReport();
 
-            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
+            var excelReport = ExcelUtility.GenerateProductsExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);

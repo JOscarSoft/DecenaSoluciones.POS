@@ -18,7 +18,6 @@
             
             window.frames["frame1"].focus();
             window.frames["frame1"].print();
-            alert("printed");
             document.body.removeChild(frame1);
 
             //printWindow.print();

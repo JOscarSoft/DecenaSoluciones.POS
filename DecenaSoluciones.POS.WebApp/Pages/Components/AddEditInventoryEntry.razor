@@ -1,0 +1,364 @@
+﻿@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using System.Globalization;
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject SweetAlertService Swal;
+@inject IInventoryService inventoryService;
+@inject ILocalStorage _localStorage
+
+<Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+
+<EditForm Model="model" OnValidSubmit="OnValidSubmit" class="row g-3">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
+    {
+        <div class="col-md-4">
+            <RadzenDropDown 
+                Placeholder="Seleccione un proveedor..." 
+                AllowClear="true" 
+                LoadData="FilterProviders"
+                AllowFiltering="true" @bind-Value=model.ProviderId 
+                Data=@FilteredProviderList 
+                TextProperty="Name"
+                ValueProperty="Id" 
+                Name="DropDownProviders"
+                Style="width:100%"/>
+        </div>
+    }
+    <div class="col-md-4">
+        <RadzenDatePicker TValue="DateTime" @bind-Value="model.CreationDate" ShowTime="true" ShowTimeOkButton="false"/>
+        <ValidationMessage For="@(() => model.CreationDate)"></ValidationMessage>
+    </div>
+    <hr />
+    <div class="col-md-4">
+        <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode" placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
+    </div>
+    <table class="table">
+        <thead>
+            <tr class="bg-dark text-white border-bottom-0 headerRow">
+                <th>Producto</th>
+                <th>Cantidad</th>
+                @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)                
+                {
+                    <th>Precio compra</th>
+                    <th>Precio venta</th>
+                }
+                else
+                {
+                    <th>Comentario</th>
+                }
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var productStock in model.Details)
+            {
+                <tr>
+                    <td>
+                        <AutoComplete @bind-Value="productStock.ProductDescription"
+                        TItem="ProductViewModel"
+                        DataProvider="ProductsDataProvider"
+                        PropertyName="Description"
+                        Placeholder="Ingresa un producto..."
+                        OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.Details.IndexOf(productStock))" />
+                        <InputText hidden="hidden" @bind-Value="productStock.ProductCode" />
+                        <ValidationMessage For="@(() => productStock.ProductCode)"></ValidationMessage>
+                    </td>
+                    <td>
+                        <RadzenNumeric TValue="decimal" @bind-Value="productStock.Quantity" ShowUpDown="false" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
+                        <ValidationMessage For="@(() => productStock.Quantity)"></ValidationMessage>
+                    </td>
+                    @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
+                    {
+                        <td>
+                            <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.UnitCost />
+                            <ValidationMessage For="@(() => productStock.UnitCost)"></ValidationMessage>
+                        </td>
+                        <td>
+                            <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.UnitPrice />
+                            <ValidationMessage For="@(() => productStock.UnitPrice)"></ValidationMessage>
+                        </td>
+
+                    }
+                    else
+                    {
+                        <td>
+                            <RadzenTextBox TValue="string" class="form-control" @bind-Value=@productStock.Comments />
+                            <ValidationMessage For="@(() => productStock.Comments)"></ValidationMessage>
+                        </td>
+                    }
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(model.Details.IndexOf(productStock)))">
+                            <Icon Name="IconName.Trash" />
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <AuthorizeView Roles="admin, manager" Context="authContext">
+            <button type="submit" Class="btn btn-primary">
+                Guardar
+            </button>
+        </AuthorizeView>
+        @if (InventoryEntry.Id > 0)
+        {
+            <AuthorizeView Roles="admin" Context="authContext">
+                <Button Color="ButtonColor.Danger" @onclick="RemoveEntry" style="margin-right:15px">
+                    Eliminar
+                </Button>
+            </AuthorizeView>
+        } 
+    </div>
+</EditForm>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+
+    [Parameter] public List<AddEditProvider> ProviderList { get; set; } = new List<AddEditProvider>();
+    [Parameter] public List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
+    [Parameter] public InventoryEntryViewModel InventoryEntry { get; set; } = new InventoryEntryViewModel();
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+    private List<AddEditProvider> FilteredProviderList { get; set; } = new List<AddEditProvider>();
+
+    InventoryEntryViewModel model = new InventoryEntryViewModel();
+    List<ToastMessage> messages = new List<ToastMessage>();
+    private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Warning, message));
+
+    string newCode = string.Empty;
+
+
+    void FilterProviders(LoadDataArgs args)
+    {
+        FilteredProviderList = ProviderList;
+
+        if (!string.IsNullOrEmpty(args.Filter))
+            FilteredProviderList = ProviderList.Where(c => c.Name != null && c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void EnterCode(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            var newProduct = ProductList.FirstOrDefault(p => p.Code.ToUpper() == newCode.ToUpper());
+            if (newProduct != null)
+            {
+                model.Details.ElementAt(model.Details.Count - 1).ProductId = newProduct.Id;
+                model.Details.ElementAt(model.Details.Count - 1).ProductCode = newProduct.Code;
+                model.Details.ElementAt(model.Details.Count - 1).ProductDescription = newProduct.Description;
+                model.Details.ElementAt(model.Details.Count - 1).UnitCost = newProduct.Cost;
+                model.Details.ElementAt(model.Details.Count - 1).UnitPrice = newProduct.Price;
+                model.Details.Add(new InventoryEntryDetailViewModel());
+                return;
+            }
+
+            ShowMessage("Producto no encontrado");
+        }
+    }
+
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    {
+        return await Task.FromResult(request.ApplyTo(ProductList.OrderBy(prod => prod.Description)));
+    }
+
+    protected override void OnInitialized()
+    {
+        model = InventoryEntry;
+        model.Details.Add(new InventoryEntryDetailViewModel());
+        FilteredProviderList = ProviderList;
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private string validateStock()
+    {
+        var products = model.Details.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+        if (!products.Any())
+            return "Favor de ingresar al menos un producto.";
+
+        if (products.Any(p => p.Quantity <= 0))
+            return "Uno de los productos ingresados no tiene cantidad. Favor de validar.";
+
+        if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
+        {
+            if (model.ProviderId == null || model.ProviderId <= 0)
+                return "Favor ingresar el proveedor";
+
+            if (products.Any(p => p.UnitCost <= 0))
+                return "Uno de los productos ingresados no tiene precio de compra. Favor de validar.";
+
+            if (products.Any(p => p.UnitPrice <= 0))
+                return "Uno de los productos ingresados no tiene precio de venta. Favor de validar.";
+        }
+        else
+        {
+            if (products.Any(p => string.IsNullOrWhiteSpace(p.Comments)))
+                return "Uno de los productos ingresados no tiene comentario. Favor de validar.";
+
+        }
+
+        return string.Empty;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        string validations = validateStock();
+
+        if (string.IsNullOrEmpty(validations))
+        {
+            PreloadService!.Show();
+            try
+            {
+                model.Details = model.Details.Where(p => !string.IsNullOrEmpty(p.ProductCode)).ToList();
+                var response = new ApiResponse<InventoryEntryViewModel>();
+                var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+                if (userSession != null)
+                    model.UserName = userSession.Username;
+                if(model.Id > 0)
+                {
+                    response = await inventoryService.UpdateInventoryEntry(model.Id, model);
+                }
+                else
+                {
+                    response = await inventoryService.AddNewInventoryEntry(model);
+                }
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Inventario actualizado",
+                            Text = "El inventario ha sido actualizado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                PreloadService.Hide();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = ex.Message.HandleErrorMessage(),
+                        Icon = SweetAlertIcon.Error
+                    });
+
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = validations,
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private void removeProduct(int productIndex)
+    {
+        if (productIndex == model.Details.Count - 1)
+            return;
+
+        model.Details.RemoveAt(productIndex);
+    }
+
+    private void OnChangeProduct(ProductViewModel selected, int productIndex)
+    {
+        if (selected != null)
+        {
+            if (productIndex == model.Details.Count - 1)
+                model.Details.Add(new InventoryEntryDetailViewModel());
+
+            model.Details.ElementAt(productIndex).ProductId = selected!.Id;
+            model.Details.ElementAt(productIndex).ProductCode = selected!.Code;
+            model.Details.ElementAt(productIndex).ProductDescription = selected!.Description;
+            model.Details.ElementAt(productIndex).UnitCost = selected!.Cost;
+            model.Details.ElementAt(productIndex).UnitPrice = selected!.Price;
+            model.Details.ElementAt(productIndex).Comments = model.Details.ElementAt(productIndex - 1).Comments;
+            return;
+        }
+
+        model.Details.ElementAt(productIndex).UnitCost = 0;
+        model.Details.ElementAt(productIndex).UnitPrice = 0;
+    }
+
+    private async Task RemoveEntry()
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar registro",
+                    Text = "¿Esta seguro de eliminar este registro de inventario?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await inventoryService.RemoveInventoryEntry(model.Id);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Registro eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    await OnClose.InvokeAsync();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+    private ToastMessage CreateToastMessage(ToastType toastType, string message)
+    => new ToastMessage
+        {
+            Type = toastType,
+            Title = "Aviso",
+            Message = message,
+        };
+}

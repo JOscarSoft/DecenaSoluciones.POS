@@ -35,6 +35,10 @@
             --bb-sidebar-nav-item-background-hover-color: #000080;
             --bb-sidebar-nav-item-group-background-color: rgba(0,0,0,0.08);
         }
+
+        .nav-item-group .nav-item {
+            margin-left: 15px
+        }
     </style>
     <Sidebar @ref="sidebar"
              ImageSrc="/images/logo/LoginLogo.svg"
@@ -95,20 +99,22 @@
             navItems = new List<NavItem>
             {
                 new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Inicio", Match = NavLinkMatch.All},
-                new NavItem { Id = "2", Href = "/products", IconName = IconName.BoxSeamFill, Text = "Productos"},
-                new NavItem { Id = "3", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
-                new NavItem { Id = "4", Href = "/providers", IconName = IconName.PersonPlusFill, Text = "Proveedores"},
-                new NavItem { Id = "5", IconName = IconName.CartCheckFill, Text = "Ventas"},
-                new NavItem { Id = "6", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="5"},
-                new NavItem { Id = "7", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="5"},
-                new NavItem { Id = "8", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="5"},
+                new NavItem { Id = "2", IconName = IconName.CartCheckFill, Text = "Ventas"},
+                new NavItem { Id = "3", Href = "/newsale", IconName = IconName.Receipt, Text = "Nueva venta", ParentId="2"},
+                new NavItem { Id = "4", Href = "/sales", IconName = IconName.FolderSymlinkFill, Text = "Historico ventas", ParentId="2"},
+                new NavItem { Id = "5", Href = "/quotations", IconName = IconName.FolderSymlinkFill, Text = "Historico cotizaciones", ParentId="2"},
+                new NavItem { Id = "6", IconName = IconName.BoxSeamFill, Text = "Productos"},
+                new NavItem { Id = "7", Href = "/products", IconName = IconName.Boxes, Text = "Listado de Productos", ParentId="6"},
+                new NavItem { Id = "8", Href = "/inventory", IconName = IconName.CardChecklist, Text = "Inventario", ParentId="6"},
+                new NavItem { Id = "9", Href = "/providers", IconName = IconName.PersonPlusFill, Text = "Proveedores"},
+                new NavItem { Id = "10", Href = "/customers", IconName = IconName.PeopleFill, Text = "Clientes"},
             };
 
             if (userSession != null && userSession.Roles.Any(p => p == UserRoles.Admin))
             {
-                navItems = navItems.Append(new NavItem { Id = "9", IconName = IconName.GearFill, Text = "Configuraciones" });
-                navItems = navItems.Append(new NavItem { Id = "10", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios", ParentId = "9" });
-                navItems = navItems.Append(new NavItem { Id = "11", Href = "/company-administration", IconName = IconName.BuildingFillGear, Text = "Compañía", ParentId = "9" });
+                navItems = navItems.Append(new NavItem { Id = "11", IconName = IconName.GearFill, Text = "Configuraciones" });
+                navItems = navItems.Append(new NavItem { Id = "12", Href = "/users", IconName = IconName.FilePersonFill, Text = "Usuarios", ParentId = "11" });
+                navItems = navItems.Append(new NavItem { Id = "13", Href = "/company-administration", IconName = IconName.BuildingFillGear, Text = "Compañía", ParentId = "11" });
             }
         }
 

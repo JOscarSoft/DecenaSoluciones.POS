@@ -1,0 +1,390 @@
+﻿@page "/inventory"
+
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using DecenaSoluciones.POS.Shared.Enums
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.Shared.Services;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using DecenaSoluciones.POS.WebApp.Pages.Components;
+@using System.Globalization;
+
+@attribute [Authorize]
+@inject SweetAlertService Swal;
+@inject IProviderService providerService;
+@inject IInventoryService inventoryService;
+@inject IProductService productService;
+@inject IReportService reportService;
+@inject IJSRuntime JS;
+
+<h3>Entrada y Salida de Inventario</h3>
+
+<Modal @ref="inventoryModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
+
+
+
+<Modal @ref="reportsModal" title="Generar reporte" UseStaticBackdrop="true" Size="ModalSize.Large">
+    <BodyTemplate>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Desde:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateFrom" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Hasta:</label>
+                <DateInput TValue="DateOnly" @bind-Value="@reportDateTo" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="() => SubmitGenerateReport()">Generar</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideReportModalClick">Cancelar</Button>
+    </FooterTemplate>
+</Modal>
+
+<div class="row" style="margin-top:50px">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-2">     
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Success" Class="float-end" @onclick="() => ShowInventoryInModal(null, InventoryEntryType.In)">Entrada de inventario</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Danger" Class="float-end" @onclick="() => ShowInventoryInModal(null, InventoryEntryType.Out)">Salida de inventario</Button>
+        </AuthorizeView>
+    </div>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <AuthorizeView Roles="admin, manager">
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateProductsReport">Reporte de productos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(true)">Reporte de inventario</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(false)">Reporte de ingresos y gastos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddProductModal()">Agregar productos</Button>
+        </AuthorizeView>
+    </div>
+</div>
+
+<div style="margin-top:25px">
+    <Grid @ref="entrieGrid" TItem="InventoryEntryViewModel"
+          Class="table table-hover"
+          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+          Data="entriesList"
+          AllowFiltering="true"
+          AllowPaging="true"
+          PageSize="50"
+          AllowSorting="true"
+          AllowSelection="false"
+          Responsive="true"
+          PageSizeSelectorVisible="true"
+          ItemsPerPageText="Entradas por página"
+          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+          PaginationItemsTextFormat="{0} - {1} de {2} Entradas"
+          EmptyText="No se encontraron registros para mostrar"
+          AllowRowClick="true"
+          OnRowClick="OnRowClick">
+        <GridColumn 
+            TItem="InventoryEntryViewModel" 
+            SortKeySelector="item => item.InventoryEntryType" 
+            Filterable="false" 
+            Sortable="true" 
+            HeaderText="Tipo"
+            PropertyName="InventoryEntryType">
+            <ChildContent>
+                @if (context.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
+                {
+                    <Button Color="ButtonColor.Success">Entrada</Button>
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Danger">Salida</Button>
+                }
+            </ChildContent>
+        </GridColumn>
+        <GridColumn 
+        TItem="InventoryEntryViewModel"
+        HeaderTextAlignment="Alignment.Center" 
+        TextAlignment="Alignment.Center"
+        HeaderText="Fecha" 
+        PropertyName="CreationDate" 
+        Sortable="true" 
+        SortKeySelector="item => item.CreationDate" 
+        SortDirection="SortDirection.Descending" 
+        IsDefaultSortColumn="true">
+            @context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
+        </GridColumn>
+        <GridColumn TItem="InventoryEntryViewModel" HeaderText="QTY Productos" Sortable="false">
+            @context.Details.Count
+        </GridColumn>
+        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Costo total" PropertyName="TotalCost">
+            @context.TotalCost!.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+        </GridColumn>
+        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Proveedor" PropertyName="context.ProviderName" SortKeySelector="item => item.ProviderName">
+            @context.ProviderName
+        </GridColumn>
+        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Usuario" PropertyName="UserName" SortKeySelector="item => item.UserName">
+            @context.UserName
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    List<AddEditProvider> providerList = new List<AddEditProvider>();
+    List<ProductViewModel> productList = new List<ProductViewModel>();
+    List<InventoryEntryViewModel> entriesList = new List<InventoryEntryViewModel>();
+    private DateOnly reportDateFrom = DateOnly.FromDateTime(DateTime.Now.AddDays(-7));
+    private DateOnly reportDateTo = DateOnly.FromDateTime(DateTime.Now);
+    Grid<InventoryEntryViewModel> entrieGrid = default!;
+    private Modal reportsModal = default!;
+    private Modal inventoryModal = default!;
+    private bool productsModal = false;
+    private bool allLoadForEntries = false;
+    private bool inventoryReportOnly = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateData();
+        await LoadProducts();
+        await LoadProviders();
+    }
+
+    private async Task UpdateData()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await inventoryService.GetInventoryEntryList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                entriesList = response.Result ?? new List<InventoryEntryViewModel>();
+                await entrieGrid.RefreshDataAsync();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las entradas de inventario."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las entradas de inventario."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            var response = await productService.GetProducts();
+            if (response.Success)
+            {
+                productList = response.Result ?? new List<ProductViewModel>();
+                allLoadForEntries = productList.Any() && providerList.Any();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los productos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+        finally
+        {
+            if (productsModal)
+            {
+                PreloadService!.Hide();
+                productsModal = false;
+            }
+        }
+    }
+    private async Task LoadProviders()
+    {
+
+        try
+        {
+            var response = await providerService.GetProviderList();
+            if (response.Success)
+            {
+                providerList = response.Result?.ToList() ?? new List<AddEditProvider>();
+                allLoadForEntries = productList.Any() && providerList.Any();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los proveedores."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los proveedores."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task ShowAddProductModal()
+    {
+        productsModal = true;
+        var productParam = new ProductViewModel();
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("Product", productParam);
+        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideInventoryModal));
+        await inventoryModal.ShowAsync<AddEditProductComponent>(title: "Agregar nuevo producto", parameters: parameters);
+    }
+
+    private async Task ShowInventoryInModal(InventoryEntryViewModel? inventoryEntry, InventoryEntryType entryType)
+    {
+        if (allLoadForEntries)
+        {
+            var model = inventoryEntry ?? new InventoryEntryViewModel() { InventoryEntryType = entryType };
+            var parameters = new Dictionary<string, object>();
+            parameters.Add("ProductList", productList);
+            parameters.Add("ProviderList", providerList);
+            parameters.Add("InventoryEntry", model);
+            parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideInventoryModal));
+            await inventoryModal.ShowAsync<AddEditInventoryEntry>(title: model.InventoryEntryType == InventoryEntryType.In ? "Entrada de inventario" : "Salida de inventario", parameters: parameters);
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "No se ha cargado la información para las entradas de inventario, intentelo de nuevo en unos segundos. Si el error persiste favor comunicarse con el servicio de soporte.",
+                    Icon = SweetAlertIcon.Warning
+                });
+        }
+    }
+
+    private async Task GenerateProductsReport()
+    {
+        PreloadService!.Show();
+        try
+        {
+            var response = await reportService.GenerateProductsReport();
+
+            var fileName = "Reporte de inventario.xlsx";
+
+            using var streamRef = new DotNetStreamReference(stream: response);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            PreloadService.Hide();
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = "Reporte generado exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+    private async Task SubmitGenerateReport()
+    {
+        PreloadService!.Show();
+        try
+        {
+            Stream response;
+            if (inventoryReportOnly)
+            {
+                response = await reportService.GenerateInventoryReport(reportDateFrom, reportDateTo);
+            }
+            else
+            {
+                response = await reportService.GenerateExpenseAndIncomeReport(reportDateFrom, reportDateTo);
+            }
+
+            var fileName = inventoryReportOnly ? $"Reporte de inventario {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx" : $"Reporte de ingresos y gastos {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
+
+            using var streamRef = new DotNetStreamReference(stream: response);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            PreloadService.Hide();
+            await reportsModal.HideAsync();
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Exito",
+                    Text = "Reporte generado exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+        }
+        catch (Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+    }
+
+    private async Task HideInventoryModal(MouseEventArgs e)
+    {
+        await inventoryModal.HideAsync();
+    }
+
+    private async Task OnHideReportModalClick(MouseEventArgs e)
+    {
+        await reportsModal.HideAsync();
+    }
+
+    private async Task ShowReportsModal(bool inventoryOnly)
+    {
+        inventoryReportOnly = inventoryOnly;
+        await reportsModal.ShowAsync();
+    }
+
+    private async Task OnModalHiding()
+    {
+        await UpdateData();
+
+        if(productsModal)
+        {
+            PreloadService!.Show();
+            await LoadProducts();
+        }
+    }
+
+    private async Task OnRowClick(GridRowEventArgs<InventoryEntryViewModel> args)
+    {
+        await ShowInventoryInModal(args.Item, args.Item.InventoryEntryType);
+    }
+}

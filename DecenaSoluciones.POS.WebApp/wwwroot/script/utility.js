@@ -1,13 +1,17 @@
 ﻿function printHtmlString(htmlString) {
     if (htmlString) {
         var printWindow = window.open('', '_blank');
-        printWindow.document.open();
-        printWindow.document.write(htmlString);
-        printWindow.document.close();
-        delay(500).then(() => {
-            printWindow.print();
-            printWindow.close();
-        });
+        if (printWindow.document) {
+            printWindow.document.open();
+            printWindow.document.write(htmlString);
+            printWindow.document.close();
+            delay(800).then(() => {
+                printWindow.print();
+                printWindow.close();
+            });
+        } else {
+            alert("El navegador bloqueó la pantalla de impresión, intentelo de nuevo.");
+        }
     }
 }
 function delay(time) {

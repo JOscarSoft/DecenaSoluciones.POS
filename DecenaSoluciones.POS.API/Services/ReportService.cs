@@ -2,6 +2,7 @@
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace DecenaSoluciones.POS.API.Services
 {
@@ -46,10 +47,24 @@ namespace DecenaSoluciones.POS.API.Services
             return result;
         }
 
-        public async Task<List<InventoryReportViewModel>> GetInventoryReport()
+        public async Task<List<ProductsReportViewModel>> GetProductsReport()
         {
             var products = await _dbContext.Products.ToListAsync();
-            return _mapper.Map<List<InventoryReportViewModel>>(products);
+            return _mapper.Map<List<ProductsReportViewModel>>(products);
+        }
+
+        public async Task<InventoryReportViewModel> GetInventoryReport(DateOnly fromDate, DateOnly toDate)
+        {
+            var inventoryEntries = await _dbContext.InventoryEntries
+                .Include(p => p.InventoryEntryType)
+                .Include(p => p.Provider)
+                .Include(p => p.InventoryEntryDetails)!
+                .ThenInclude(p => p.Product)
+                .Where(p => p.CreationDate >= fromDate.ToDateTime(TimeOnly.MinValue) && p.CreationDate <= toDate.ToDateTime(TimeOnly.MaxValue))
+                .OrderByDescending(p => p.CreationDate)
+                .ToListAsync();
+
+            return _mapper.Map<InventoryReportViewModel>(inventoryEntries);
         }
 
         public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly fromDate, DateOnly toDate)
