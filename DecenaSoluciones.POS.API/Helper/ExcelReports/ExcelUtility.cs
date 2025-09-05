@@ -23,21 +23,23 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 
         public static XLWorkbook GenerateInventoryExcelReport(InventoryReportViewModel report)
         {
-            try
-            {
-                var wb = new XLWorkbook();
-                InventoryExcelReports.GetInventoryResumeWorkSheet(report, wb);
-                InventoryExcelReports.GetInventoryInWorkSheet(report.inventoryInEntries, wb);
-                InventoryExcelReports.GetInventoryInDetailedWorkSheet(report.inventoryInEntriesDetails, wb);
-                InventoryExcelReports.GetInventoryOutWorkSheet(report.inventoryOutEntries, wb);
-                InventoryExcelReports.GetInventoryOutDetailedWorkSheet(report.inventoryOutEntriesDetails, wb);
-                return wb;
-            }
-            catch (Exception ex)
-            {
+            var wb = new XLWorkbook();
+            InventoryExcelReports.GetInventoryResumeWorkSheet(report, wb);
+            InventoryExcelReports.GetInventoryInWorkSheet(report.inventoryInEntries, wb);
+            InventoryExcelReports.GetInventoryInDetailedWorkSheet(report.inventoryInEntriesDetails, wb);
+            InventoryExcelReports.GetInventoryOutWorkSheet(report.inventoryOutEntries, wb);
+            InventoryExcelReports.GetInventoryOutDetailedWorkSheet(report.inventoryOutEntriesDetails, wb);
+            return wb;
+        }
 
-                throw  ex;
-            }
+        public static XLWorkbook GenerateExpenseAndIncomeExcelReport(List<SalesReportViewModel> salesReport, InventoryReportViewModel inventoryReport)
+        {
+            var wb = new XLWorkbook();
+            SalesExcelReports.GetSalesAndInventoryResumeWorkSheet(inventoryReport, salesReport, wb);
+            SalesExcelReports.GetSalesReportWorkSheet(salesReport, wb);
+            InventoryExcelReports.GetInventoryInWorkSheet(inventoryReport.inventoryInEntries, wb);
+            InventoryExcelReports.GetInventoryOutWorkSheet(inventoryReport.inventoryOutEntries, wb);
+            return wb;
         }
 
         public static XLWorkbook GenerateProductsExcelReport(List<ProductsReportViewModel> result)

@@ -9,5 +9,6 @@ namespace DecenaSoluciones.POS.Shared.Services
         Task<Stream> GenerateReport(DateOnly fromDate, DateOnly toDate, EnumReportType type);
         Task<Stream> GenerateProductsReport();
         Task<Stream> GenerateInventoryReport(DateOnly fromDate, DateOnly toDate);
+        Task<Stream> GenerateExpenseAndIncomeReport(DateOnly fromDate, DateOnly toDate);
     }
 }

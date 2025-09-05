@@ -7,7 +7,6 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 {
     internal class InventoryExcelReports
     {
-
         public static void GetInventoryResumeWorkSheet(InventoryReportViewModel report, XLWorkbook wb)
         {
             var sheet1 = wb.AddWorksheet("Resumen de inventario");

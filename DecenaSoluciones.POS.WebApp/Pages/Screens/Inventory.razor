@@ -38,7 +38,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="SubmitGenerateReport">Generar</Button>
+        <Button Color="ButtonColor.Primary" @onclick="() => SubmitGenerateReport()">Generar</Button>
         <Button Color="ButtonColor.Secondary" @onclick="OnHideReportModalClick">Cancelar</Button>
     </FooterTemplate>
 </Modal>
@@ -53,8 +53,9 @@
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
         <AuthorizeView Roles="admin, manager">
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateProductsReport">Reporte de productos</Button>
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Reporte de inventario</Button>
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowAddProductModal()">Agregar productos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(true)">Reporte de inventario</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(false)">Reporte de ingresos y gastos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddProductModal()">Agregar productos</Button>
         </AuthorizeView>
     </div>
 </div>
@@ -134,6 +135,7 @@
     private Modal inventoryModal = default!;
     private bool productsModal = false;
     private bool allLoadForEntries = false;
+    private bool inventoryReportOnly = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -317,9 +319,17 @@
         PreloadService!.Show();
         try
         {
-            var response = await reportService.GenerateInventoryReport(reportDateFrom, reportDateTo);
+            Stream response;
+            if (inventoryReportOnly)
+            {
+                response = await reportService.GenerateInventoryReport(reportDateFrom, reportDateTo);
+            }
+            else
+            {
+                response = await reportService.GenerateExpenseAndIncomeReport(reportDateFrom, reportDateTo);
+            }
 
-            var fileName = $"Reporte de inventario {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
+            var fileName = inventoryReportOnly ? $"Reporte de inventario {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx" : $"Reporte de ingresos y gastos {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
 
             using var streamRef = new DotNetStreamReference(stream: response);
             await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
@@ -356,8 +366,9 @@
         await reportsModal.HideAsync();
     }
 
-    private async Task ShowReportsModal()
+    private async Task ShowReportsModal(bool inventoryOnly)
     {
+        inventoryReportOnly = inventoryOnly;
         await reportsModal.ShowAsync();
     }
 
