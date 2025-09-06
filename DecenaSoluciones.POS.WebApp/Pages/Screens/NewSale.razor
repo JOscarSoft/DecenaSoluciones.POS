@@ -576,7 +576,7 @@
 
         var total = (model.TCAmount ?? 0.00M) + (model.CashAmount ?? 0.00M) + (model.DepositsAmount ?? 0.00M);
         if (!model.IsAQuotation && total < GetTotalAmount())
-            return $"Los montos ingresados no cuadran con el total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
+            return $"Montos ingresados no cuadran con total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
 
         return string.Empty;
     }
