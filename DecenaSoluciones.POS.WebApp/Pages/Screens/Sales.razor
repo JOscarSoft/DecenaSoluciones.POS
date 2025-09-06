@@ -25,6 +25,7 @@
                 <select class="form-select" @onchange="ChangeReportType">
                     <option value="1" selected>Reporte de ventas</option>
                     <option value="2">Productos vendidos</option>
+                    <option value="3">Reporte de ingresos y gastos</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -101,7 +102,7 @@
     {
         if (e.Value?.ToString() != null)
         {
-            reportType = e.Value?.ToString() == "1" ? EnumReportType.Sales : EnumReportType.SoldProducts;
+            reportType = (EnumReportType)int.Parse(e.Value!.ToString()!);
             return;
         }
 
@@ -124,9 +125,17 @@
         PreloadService!.Show();
         try
         {
-            var response = await reportService.GenerateReport(reportDateFrom, reportDateTo, reportType);
+            Stream response;
+            if (reportType == EnumReportType.ExpenseAndIncome)
+                response = await reportService.GenerateExpenseAndIncomeReport(reportDateFrom, reportDateTo);
+            else
+                response = await reportService.GenerateReport(reportDateFrom, reportDateTo, reportType);
 
-            var fileName = reportType == EnumReportType.Sales ? "Reporte de ventas.xlsx" : "Ventas por productos.xlsx";
+            var fileName = reportType == EnumReportType.Sales ? "Reporte de ventas" :
+                reportType == EnumReportType.ExpenseAndIncome ? "Reporte de ingresos y gastos" :
+                "Ventas por productos";
+
+            fileName = $"{fileName} {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
 
             using var streamRef = new DotNetStreamReference(stream: response);
             await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);

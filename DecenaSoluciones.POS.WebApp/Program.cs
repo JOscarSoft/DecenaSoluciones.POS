@@ -28,6 +28,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IProviderService, ProviderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IMiscellaneousExpenseService, MiscellaneousExpenseService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddSweetAlert2();

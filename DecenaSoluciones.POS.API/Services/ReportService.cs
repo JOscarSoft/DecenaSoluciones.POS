@@ -80,6 +80,14 @@ namespace DecenaSoluciones.POS.API.Services
             return _mapper.Map<List<SalesReportViewModel>>(sales);
         }
 
+        public async Task<List<ExpensesReportViewModel>> GetMiscellaneousExpensesReport(DateOnly fromDate, DateOnly toDate)
+        {
+            var expenses = await _dbContext.MiscellaneousExpenses
+                .Where(p => p.CreationDate >= fromDate.ToDateTime(TimeOnly.MinValue) && p.CreationDate <= toDate.ToDateTime(TimeOnly.MaxValue))
+                .ToListAsync();
+            return _mapper.Map<List<ExpensesReportViewModel>>(expenses);
+        }
+
         public async Task<List<SoldProductsReportViewModel>> GetSoldProductsReport(DateOnly fromDate, DateOnly toDate)
         {
             var sales = await _dbContext.Sale

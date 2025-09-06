@@ -43,22 +43,20 @@
     </FooterTemplate>
 </Modal>
 
-<div class="row" style="margin-top:50px">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-2">     
-        <AuthorizeView Roles="admin, manager">
+<AuthorizeView Roles="admin, manager">
+    <div class="row" style="margin-top:50px">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-2">     
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Success" Class="float-end" @onclick="() => ShowInventoryInModal(null, InventoryEntryType.In)">Entrada de inventario</Button>
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Danger" Class="float-end" @onclick="() => ShowInventoryInModal(null, InventoryEntryType.Out)">Salida de inventario</Button>
-        </AuthorizeView>
-    </div>
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <AuthorizeView Roles="admin, manager">
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateProductsReport">Reporte de productos</Button>
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(true)">Reporte de inventario</Button>
             <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal(false)">Reporte de ingresos y gastos</Button>
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddProductModal()">Agregar productos</Button>
-        </AuthorizeView>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowExpensesModal()">Gastos miscelaneos</Button>
+        </div>
     </div>
-</div>
+</AuthorizeView>
 
 <div style="margin-top:25px">
     <Grid @ref="entrieGrid" TItem="InventoryEntryViewModel"
@@ -247,15 +245,11 @@
                 });
         }
     }
-
-    private async Task ShowAddProductModal()
+    private async Task ShowExpensesModal()
     {
-        productsModal = true;
-        var productParam = new ProductViewModel();
         var parameters = new Dictionary<string, object>();
-        parameters.Add("Product", productParam);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideInventoryModal));
-        await inventoryModal.ShowAsync<AddEditProductComponent>(title: "Agregar nuevo producto", parameters: parameters);
+        await inventoryModal.ShowAsync<AddEditMiscExpenseComponent>(title: "Gastos miscelaneos", parameters: parameters);
     }
 
     private async Task ShowInventoryInModal(InventoryEntryViewModel? inventoryEntry, InventoryEntryType entryType)
