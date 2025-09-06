@@ -473,7 +473,7 @@
                     DepositPayment = saleResult.DepositsAmount != null && saleResult.DepositsAmount > 0;
 
                     model = saleResult;
-                    model.CashAmount = !TCPayment && !DepositPayment ? GetTotalAmount() : saleResult.CashAmount;
+                    model.CashAmount = TCPayment || DepositPayment ? GetTotalAmount() : saleResult.CashAmount;
 
                 }
                 else
@@ -575,7 +575,7 @@
             return "Uno de los productos ingresados no tiene datos. Favor de validar.";
 
         var total = (model.TCAmount ?? 0.00M) + (model.CashAmount ?? 0.00M) + (model.DepositsAmount ?? 0.00M);
-        if (!model.IsAQuotation && (TCPayment || DepositPayment) && total != GetTotalAmount())
+        if (!model.IsAQuotation && total < GetTotalAmount())
             return $"Los montos ingresados no cuadran con el total facturado. Facturado: {ToMoneyString(GetTotalAmount())}. Ingresado: {ToMoneyString(total)}.";
 
         return string.Empty;
