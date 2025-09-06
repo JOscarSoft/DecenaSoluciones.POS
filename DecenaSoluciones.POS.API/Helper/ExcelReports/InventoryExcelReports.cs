@@ -14,44 +14,49 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 
             decimal inCost = report.inventoryInEntriesDetails.Sum(p => p.TotalCost);
             decimal outCost = report.inventoryOutEntriesDetails.Sum(p => p.TotalCost);
-            sheet1.Cell(1 ,1).Value = $"Resumen de inventario desde {report.From!.Value:dd/MM/yyyy} hasta {report.To!.Value:dd/MM/yyyy}";
-            sheet1.Cell(2, 1).Value = "Total de entradas";
-            sheet1.Cell(3, 1).Value = "Productos ingresados";
-            sheet1.Cell(4, 1).Value = "Costo total de productos ingresados";
-            sheet1.Cell(5, 1).Value = "Total de salidas";
-            sheet1.Cell(6, 1).Value = "Productos retirados";
-            sheet1.Cell(7, 1).Value = "Costo total de productos retirados";
-            sheet1.Cell(8, 1).Value = "Diferencia entradas/salidas";
-            sheet1.Cell(2, 2).Value = report.inventoryInEntries.Count.ToString();
-            sheet1.Cell(3, 2).Value = report.inventoryInEntriesDetails.Sum(p => p.Quantity).ToString();
-            sheet1.Cell(4, 2).Value = inCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(5, 2).Value = report.inventoryOutEntries.Count.ToString();
-            sheet1.Cell(6, 2).Value = report.inventoryOutEntriesDetails.Sum(p => p.Quantity).ToString();
-            sheet1.Cell(7, 2).Value = outCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(8, 2).Value = (inCost - outCost).ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
+            sheet1.Cell(2, 2).Value = $"Resumen de inventario desde {report.From!.Value:dd/MM/yyyy} hasta {report.To!.Value:dd/MM/yyyy}";
+            sheet1.Cell(3, 2).Value = "Total de entradas";
+            sheet1.Cell(3, 3).Value = report.inventoryInEntries.Count.ToString();
+
+            sheet1.Cell(4, 2).Value = "Productos ingresados";
+            sheet1.Cell(4, 3).Value = report.inventoryInEntriesDetails.Sum(p => p.Quantity).ToString().Replace(".00", "");
+
+            sheet1.Cell(5, 2).Value = "Costo total de productos ingresados";
+            sheet1.Cell(5, 3).Value = inCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
+            sheet1.Cell(5, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
+            sheet1.Cell(5, 3).Style.Font.Bold = true;
+
+            sheet1.Cell(6, 2).Value = "Total de salidas";
+            sheet1.Cell(6, 3).Value = report.inventoryOutEntries.Count.ToString();
+
+            sheet1.Cell(7, 2).Value = "Productos retirados";
+            sheet1.Cell(7, 3).Value = report.inventoryOutEntriesDetails.Sum(p => p.Quantity).ToString().Replace(".00", "");
+
+            sheet1.Cell(8, 2).Value = "Costo total de productos retirados";
+            sheet1.Cell(8, 3).Value = outCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
+            sheet1.Cell(8, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
+            sheet1.Cell(8, 3).Style.Font.Bold = true;
 
 
-            sheet1.Range(sheet1.Cell(1, 1), sheet1.Cell(1, 2)).Merge();
-            sheet1.Range(sheet1.Cell(2, 1), sheet1.Cell(8, 2)).Style.Font.FontSize = 13;
-            sheet1.Row(1).CellsUsed().Style.Fill.BackgroundColor = XLColor.AliceBlue;
-            sheet1.Row(1).Style.Font.Bold = true;
-            sheet1.Row(1).Style.Font.Shadow = true;
-            sheet1.Row(1).Style.Font.FontSize = 16;
+            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(2, 3)).Merge();
+            sheet1.Range(sheet1.Cell(3, 2), sheet1.Cell(8, 3)).Style.Font.FontSize = 13;
+            sheet1.Row(2).CellsUsed().Style.Fill.BackgroundColor = XLColor.AliceBlue;
+            sheet1.Row(2).Style.Font.Bold = true;
+            sheet1.Row(2).Style.Font.Shadow = true;
+            sheet1.Row(2).Style.Font.FontSize = 16;
 
-            for (int i = 2; i <= sheet1.RowsUsed().Count(); i++)
+            for (int i = 3; i <= 8; i++)
             {
-                sheet1.Cell(i, 1).Style.Font.Bold = true;
-                sheet1.Cell(i, 1).Style.Font.Shadow = true;
-                sheet1.Cell(i, 1).Style.Fill.BackgroundColor = XLColor.AliceBlue;
+                sheet1.Cell(i, 2).Style.Font.Bold = true;
+                sheet1.Cell(i, 2).Style.Font.Shadow = true;
+                sheet1.Cell(i, 2).Style.Fill.BackgroundColor = XLColor.AliceBlue;
             }
-            sheet1.Cell(3, 2).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(6, 2).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(7, 2).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(3, 2).Style.Font.Bold = true;
-            sheet1.Cell(6, 2).Style.Font.Bold = true;
-            sheet1.Cell(7, 2).Style.Font.Bold = true;
 
-            sheet1.Columns(1, 2).Width = 45;
+            sheet1.Columns(1, 1).Width = 5;
+            sheet1.Columns(2, 2).Width = 50;
+            sheet1.Columns(3, 3).Width = 30;
+            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(8, 3)).Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(8, 3)).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
         }
 
         public static void GetInventoryInWorkSheet(List<InventoryInReport> inventoryInEntries, XLWorkbook wb)

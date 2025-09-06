@@ -1,0 +1,300 @@
+﻿@using BlazorInputMask
+@using DecenaSoluciones.POS.Shared.Dtos;
+@using DecenaSoluciones.POS.WebApp.Extensions;
+@using DecenaSoluciones.POS.Shared.Services;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+
+@inject SweetAlertService Swal;
+@inject IMiscellaneousExpenseService MiscellaneousExpenseService;
+@inject ILocalStorage _localStorage
+
+<style>
+    .tdActions {
+    width: 10%;
+    }
+</style>
+
+<EditForm Model="newExpense" OnValidSubmit="OnValidSubmit" class="row g-3" Context="EditFormContext">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="col-md-4">
+        <label class="form-label">Descripción:</label>
+        <InputText class="form-control" @bind-Value="newExpense.Comments"></InputText>
+        <ValidationMessage For="@(() => newExpense.Comments)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Monto:</label>
+        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newExpense.TotalCost />
+        <ValidationMessage For="@(() => newExpense.TotalCost)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Fecha:</label>
+        <DateInput TValue="DateTime" @bind-Value="newExpense.CreationDate" />
+        <ValidationMessage For="@(() => newExpense.CreationDate)"></ValidationMessage>
+    </div>
+    <div class="col-md-4">
+        @if(newExpense.Id > 0)
+        {
+            <button type="submit" Class="btn btn-primary">
+                Actualizar
+            </button>
+            <Button Color="ButtonColor.Danger" @onclick="(() => {newExpense = new AddEditMiscellaneousExpense();})" style="margin-right:15px">
+                Cancelar
+            </Button>
+        }
+        else
+        {
+            <button type="submit" Class="btn btn-primary">
+                Guardar
+            </button>
+        }
+    </div>
+</EditForm>
+<hr />
+
+
+<div style="margin-top:25px">
+    <Grid @ref="ExpensesGrid" TItem="AddEditMiscellaneousExpense"
+    Class="table table-hover"
+    HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+    Data="ExpensesList"
+    AllowFiltering="true"
+    AllowPaging="true"
+    PageSize="50"
+    AllowSorting="true"
+    AllowSelection="false"
+    Responsive="true"
+    PageSizeSelectorVisible="true"
+    ItemsPerPageText="Gastos por página"
+    PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+    PaginationItemsTextFormat="{0} - {1} de {2} gastos"
+    EmptyText="No se encontraron registros para mostrar"
+    AllowRowClick="true">
+        <GridColumn TItem="AddEditMiscellaneousExpense"
+        HeaderTextAlignment="Alignment.Center"
+        TextAlignment="Alignment.Center"
+        HeaderText="Fecha"
+        PropertyName="CreationDate"
+        Sortable="true"
+        SortKeySelector="item => item.CreationDate"
+        SortDirection="SortDirection.Descending"
+        IsDefaultSortColumn="true">
+            @context.CreationDate.ToString("dd/MM/yyyy hh:mm")
+        </GridColumn>
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Descripción" PropertyName="Comments" SortKeySelector="item => item.Comments" HeaderTextAlignment="Alignment.Center">
+            @context.Comments
+        </GridColumn>
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Monto" PropertyName="TotalCost" HeaderTextAlignment="Alignment.Center">
+            @context.TotalCost!.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+        </GridColumn>
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Usuario" PropertyName="Username" SortKeySelector="item => item.UserName" HeaderTextAlignment="Alignment.Center">
+            @context.UserName
+        </GridColumn>
+        <GridColumn TItem="AddEditMiscellaneousExpense" Filterable="false" Sortable="false" ColumnClass="@(x => "tdActions")">
+            <ChildContent>
+                <Button Color="ButtonColor.Primary" @onclick="(() => {newExpense = context;})"><Icon Name="IconName.Pencil" /></Button>
+                <Button Color="ButtonColor.Danger" @onclick="(() => RemoveExpense(context.Id))"><Icon Name="IconName.Trash" /></Button>
+            </ChildContent>
+        </GridColumn>
+    </Grid>
+</div>
+
+@code {
+    [Inject] protected PreloadService? PreloadService { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    AddEditMiscellaneousExpense newExpense = new AddEditMiscellaneousExpense();
+    List<AddEditMiscellaneousExpense> ExpensesList = new List<AddEditMiscellaneousExpense>();
+    Grid<AddEditMiscellaneousExpense> ExpensesGrid = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadExpenses();
+    }
+
+    private async Task LoadExpenses()
+    {
+        try
+        {
+            PreloadService!.Show();
+            var response = await MiscellaneousExpenseService.GetMiscellaneousExpenseList();
+            PreloadService.Hide();
+            if (response.Success)
+            {
+                ExpensesList = response.Result ?? new List<AddEditMiscellaneousExpense>();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Error",
+                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener los gastos."),
+                        Icon = SweetAlertIcon.Error
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los gastos."),
+                    Icon = SweetAlertIcon.Error
+                });
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(string.IsNullOrEmpty(newExpense.Comments))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar la descripción del gasto.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        if (newExpense.TotalCost <= 0)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = "Favor ingresar el monto del gasto.",
+                    Icon = SweetAlertIcon.Error
+                });
+            return;
+        }
+        PreloadService!.Show();
+        try
+        {
+            var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+            if (userSession != null)
+                newExpense.UserName = userSession.Username;
+
+            if (newExpense.Id == 0)
+            {
+                var response = await MiscellaneousExpenseService.AddNewMiscellaneousExpense(newExpense);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Gasto agregado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+
+                    newExpense = new AddEditMiscellaneousExpense();
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+            else
+            {
+                var response = await MiscellaneousExpenseService.UpdateMiscellaneousExpense(newExpense.Id, newExpense);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Exito",
+                            Text = "Gasto modificado exitosamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+
+            }
+
+        }
+        catch(Exception ex)
+        {
+            PreloadService.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+
+        }
+        await LoadExpenses();
+
+    }
+    
+    private async Task RemoveExpense(int id)
+    {
+        try
+        {
+            var result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Eliminar gasto",
+                    Text = "¿Esta seguro de eliminar el gasto?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    CancelButtonText = "Cancelar"
+                });
+
+            if (result.IsConfirmed)
+            {
+                PreloadService!.Show();
+                var response = await MiscellaneousExpenseService.RemoveMiscellaneousExpense(id);
+                PreloadService.Hide();
+                if (response.Success)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Eliminado",
+                            Text = "Gasto eliminado exitosamente",
+                            Icon = SweetAlertIcon.Success
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage(),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            PreloadService!.Hide();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message.HandleErrorMessage(),
+                    Icon = SweetAlertIcon.Error
+                });
+            
+        }
+        await LoadExpenses();
+    }
+}

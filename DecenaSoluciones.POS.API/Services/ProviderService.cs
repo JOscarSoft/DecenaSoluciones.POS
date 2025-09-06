@@ -42,7 +42,7 @@ namespace DecenaSoluciones.POS.API.Services
 
         public async Task<AddEditProvider> UpdateProvider(int id, AddEditProvider provider)
         {
-            var oldCustomer = await _dbContext.Providers
+            var oldProvider = await _dbContext.Providers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el proveedor a editar.");
 

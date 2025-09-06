@@ -8,8 +8,9 @@ namespace DecenaSoluciones.POS.Shared.Enums
 {
     public enum EnumReportType
     {
-        SoldProducts,
-        Sales
+        Sales = 1,
+        SoldProducts = 2,
+        ExpenseAndIncome = 3,
     }
 
     public enum InventoryEntryType

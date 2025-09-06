@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DecenaSoluciones.POS.API.Helper.ExcelReports;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
 using DecenaSoluciones.POS.Shared.Enums;
@@ -101,6 +102,9 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.inventoryOutEntriesDetails, opt => opt.MapFrom(source => source.Where(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.Out)
                                                                                                         .Select(p => p.InventoryEntryDetails)
                                                                                                         .SelectMany(p => p!)));
+            CreateMap<AddEditMiscellaneousExpense, MiscellaneousExpense>()
+                .ReverseMap();
+            CreateMap<MiscellaneousExpense, ExpensesReportViewModel>();
         }
 
         private decimal GetPayedAmount(Sale sale)
