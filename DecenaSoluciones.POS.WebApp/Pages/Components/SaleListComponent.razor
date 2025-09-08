@@ -42,8 +42,6 @@
 </div>
 
 @code {
-
-	//[Parameter] public List<SalesViewModel> salesList { get; set; } = default!;
 	[Parameter]
 	public GridDataProviderDelegate<SalesViewModel> salesDataProvider { get; set; } = default!;
 	
@@ -65,22 +63,4 @@
 
 		return string.Empty;
 	}
-
-				/*
-				@* DataProvider="SalesDataProvider" *@
-	private async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel> request)
-		{
-		string sortString = "";
-		SortDirection sortDirection = SortDirection.None;
-
-		if (request.Sorting is not null && request.Sorting.Any())
-			{
-			// Note: Multi column sorting is not supported at this moment
-			sortString = request.Sorting.FirstOrDefault()!.SortString;
-			sortDirection = request.Sorting.FirstOrDefault()!.SortDirection;
-		}
-		//var result = await _customerService.GetCustomersAsync(request.Filters, request.PageNumber, request.PageSize, sortString, sortDirection, request.CancellationToken);
-		var result = salesList;
-		return await Task.FromResult(new GridDataProviderResult<SalesViewModel> { Data = result, TotalCount = result.Count });
-			}*/
 }
