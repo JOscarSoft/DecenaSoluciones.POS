@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using DecenaSoluciones.POS.API.Helper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.API.Services;
@@ -57,6 +58,25 @@ namespace DecenaSoluciones.POS.API.Controllers
             return Ok(apiResponse);
         }
 
+        [HttpPost]
+        [Route("GetFilterdSales")]
+        public async Task<IActionResult> GetFilterdSales([FromBody] GridRequest request)
+        {
+            var apiResponse = new ApiResponse<GridResponse<SalesViewModel>>();
+            try
+            {
+                apiResponse.Result = await _saleService.GetFilteredSalesList(request);
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
         [HttpGet]
         [Route("quotation")]
         public async Task<IActionResult> GetAllQuotations()
@@ -65,6 +85,25 @@ namespace DecenaSoluciones.POS.API.Controllers
             try
             {
                 apiResponse.Result = await _quotationService.GetQuotationsList();
+                apiResponse.Success = true;
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = ex.Message;
+            }
+
+            return Ok(apiResponse);
+        }
+
+        [HttpPost]
+        [Route("GetFilterdQuotations")]
+        public async Task<IActionResult> GetFilterdQuotations([FromBody] GridRequest request)
+        {
+            var apiResponse = new ApiResponse<GridResponse<SalesViewModel>>();
+            try
+            {
+                apiResponse.Result = await _quotationService.GetFilteredQuotationsList(request);
                 apiResponse.Success = true;
             }
             catch (Exception ex)

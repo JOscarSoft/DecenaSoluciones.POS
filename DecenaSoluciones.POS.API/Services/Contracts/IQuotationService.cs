@@ -6,6 +6,7 @@ namespace DecenaSoluciones.POS.API.Services
     public interface IQuotationService
     {
         Task<List<SalesViewModel>> GetQuotationsList();
+        Task<GridResponse<SalesViewModel>> GetFilteredQuotationsList(GridRequest request);
         Task<AddEditSale> GetQuotationById(int id);
         Task<AddEditSale> GetQuotationByCode(string code);
         Task<AddEditSale> AddNewQuotation(Quotation Quotation);

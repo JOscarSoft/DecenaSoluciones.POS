@@ -18,4 +18,24 @@ namespace DecenaSoluciones.POS.Shared.Enums
         In = 1,
         Out = 2,
     }
+
+    public enum FilterOperator
+    {
+        None,
+        Equals,
+        NotEquals,
+        LessThan,
+        LessThanOrEquals,
+        GreaterThan,
+        GreaterThanOrEquals,
+        Contains,
+        StartsWith,
+        EndsWith,
+        DoesNotContain,
+        IsNull,
+        IsEmpty,
+        IsNotNull,
+        IsNotEmpty,
+        Clear
+    }
 }

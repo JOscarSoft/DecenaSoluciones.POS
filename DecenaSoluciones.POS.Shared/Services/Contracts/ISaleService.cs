@@ -5,9 +5,11 @@ namespace DecenaSoluciones.POS.Shared.Services
     public interface ISaleService
     {
         Task<ApiResponse<List<SalesViewModel>>> GetSalesList();
+        Task<ApiResponse<GridResponse<SalesViewModel>>> GetFilteredSalesList(GridRequest request);
         Task<ApiResponse<AddEditSale>> GetSaleById(int id);
         Task<ApiResponse<AddEditSale>> GetSaleByCode(string code);
         Task<ApiResponse<List<SalesViewModel>>> GetQuotationsList();
+        Task<ApiResponse<GridResponse<SalesViewModel>>> GetFilteredQuotationsList(GridRequest request);
         Task<ApiResponse<AddEditSale>> GetQuotationById(int id);
         Task<ApiResponse<AddEditSale>> GetQuotationByCode(string code);
         Task<(string, ApiResponse<AddEditSale>)> AddNewSale(AddEditSale sale);
