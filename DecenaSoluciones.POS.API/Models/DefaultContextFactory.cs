@@ -21,7 +21,7 @@ namespace DecenaSoluciones.POS.API.Models
 
         public DecenaSolucionesDBContext CreateContext()
         {
-            string company = string.Empty;
+            string? company = string.Empty;
 
             if (_httpContextAccessor.HttpContext?.User != null)
                 company = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(p => p.Type == "Company")?.Value;

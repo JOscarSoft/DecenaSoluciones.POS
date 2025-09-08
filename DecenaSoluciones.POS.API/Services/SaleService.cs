@@ -7,20 +7,16 @@ using System.Linq.Dynamic.Core;
 
 namespace DecenaSoluciones.POS.API.Services
 {
-    public class SaleService : ISaleService
+    public class SaleService (
+        DecenaSolucionesDBContext dbContext, 
+        IProductService productService,
+        ICustomerService customerService,
+        IMapper mapper) : ISaleService
     {
-        private readonly DecenaSolucionesDBContext _dbContext;
-        private readonly IProductService _productService;
-        private readonly ICustomerService _customerService;
-        private readonly IMapper _mapper;
-
-        public SaleService(DecenaSolucionesDBContext dbContext, IProductService productService, ICustomerService customerService, IMapper mapper)
-        {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _productService = productService;
-            _customerService = customerService;
-        }
+        private readonly DecenaSolucionesDBContext _dbContext = dbContext;
+        private readonly IProductService _productService = productService;
+        private readonly ICustomerService _customerService = customerService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<List<SalesViewModel>> GetSalesList()
         {
@@ -58,7 +54,7 @@ namespace DecenaSoluciones.POS.API.Services
                 }
                 else if(field == "CreationDate")
                 {
-                    value = !string.IsNullOrWhiteSpace(value) && value.Length > 10 ? value.Substring(0, 10) : value;
+                    value = !string.IsNullOrWhiteSpace(value) && value.Length > 10 ? value[..10] : value;
                     field = "CreationDate.Date";
                 }
 
@@ -150,7 +146,7 @@ namespace DecenaSoluciones.POS.API.Services
             var result = _mapper.Map<AddEditSale>(sale);
             if (result != null)
             {
-                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale!.Id))?.Code;
             }
 
             return result;
@@ -168,7 +164,7 @@ namespace DecenaSoluciones.POS.API.Services
             var result = _mapper.Map<AddEditSale>(sale);
             if (result != null)
             {
-                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale!.Id))?.Code;
             }
 
             return result;

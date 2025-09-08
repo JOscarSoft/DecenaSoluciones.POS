@@ -279,7 +279,7 @@ namespace DecenaSoluciones.POS.Shared.Services
 
                 return Utility.GenerateReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
-            catch(Exception ex) 
+            catch
             {
                 return string.Empty;
             }
