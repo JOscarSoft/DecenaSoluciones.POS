@@ -8,6 +8,7 @@ namespace DecenaSoluciones.POS.Shared.Dtos
 {
     public class DashboardViewModel
     {
+        public string CompanyName { get; set; } = string.Empty;
         public int ExpiredMaintenances { get; set; } = 0;
         public int SoldProductsPerWeek { get; set; } = 0;
         public int ProductsWithEmptyStock { get; set; } = 0;

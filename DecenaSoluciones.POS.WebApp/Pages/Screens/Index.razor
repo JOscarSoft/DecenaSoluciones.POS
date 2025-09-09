@@ -16,7 +16,14 @@
     }
 </style>
 
-<h1 style="margin-bottom:50px">Bienvenido!</h1>
+@if (string.IsNullOrWhiteSpace(viewModel.CompanyName))
+{
+    <h1 style="margin-bottom:50px">¡Bienvenido!</h1>
+}
+else
+{
+    <h1 style="margin-bottom:50px">@viewModel.CompanyName</h1>
+}
 <div style="display:flex; justify-content:center">
     <DoughnutChart @ref="doughnutChart" Width="350" Class="charDiv" />
 </div>

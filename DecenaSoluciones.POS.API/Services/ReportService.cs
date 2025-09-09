@@ -2,25 +2,18 @@
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace DecenaSoluciones.POS.API.Services
 {
-    public class ReportService : IReportService
+    public class ReportService(
+        DecenaSolucionesDBContext dbContext,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor) : IReportService
     {
-        private readonly DecenaSolucionesDBContext _dbContext;
-        private readonly IMapper _mapper;
-
-        public ReportService(DecenaSolucionesDBContext dbContext, IMapper mapper)
-        {
-            _dbContext = dbContext;
-            _mapper = mapper;
-        }
-
         public async Task<DashboardViewModel> GetDashboardReport()
         {
             var result = new DashboardViewModel();
-            var sales = await _dbContext.Sale
+            var sales = await dbContext.Sale
                 .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
@@ -37,25 +30,37 @@ namespace DecenaSoluciones.POS.API.Services
                 Quantity = p.Sum(p => p.Quantity)
             }).OrderByDescending(p => p.Quantity).Take(5).ToList();
 
-            result.ExpiredMaintenances = (await _dbContext.CustomerProducts.Where(p => p.NextMaintenance.HasValue).ToListAsync())
+            result.ExpiredMaintenances = (await dbContext.CustomerProducts.Where(p => p.NextMaintenance.HasValue).ToListAsync())
                 .Where(p => (p.NextMaintenance!.Value - DateTime.Now).TotalDays < 15)
                 .Select(p => p.CustomerId)
                 .Distinct().Count();
             
-            result.ProductsWithEmptyStock = await _dbContext.Products.Where(p => p.stock <= 5).CountAsync();
+            result.ProductsWithEmptyStock = await dbContext.Products.Where(p => p.stock <= 5).CountAsync();
+
+
+
+            if (httpContextAccessor.HttpContext?.User != null)
+            {
+                string? companyId = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(p => p.Type == "Company")?.Value;
+
+                if (!string.IsNullOrWhiteSpace(companyId))
+                {
+                    result.CompanyName = (await dbContext.Companies.FirstOrDefaultAsync(p => p.Id == int.Parse(companyId)))?.Name ?? string.Empty;
+                }
+            }
 
             return result;
         }
 
         public async Task<List<ProductsReportViewModel>> GetProductsReport()
         {
-            var products = await _dbContext.Products.ToListAsync();
-            return _mapper.Map<List<ProductsReportViewModel>>(products);
+            var products = await dbContext.Products.ToListAsync();
+            return mapper.Map<List<ProductsReportViewModel>>(products);
         }
 
         public async Task<InventoryReportViewModel> GetInventoryReport(DateOnly fromDate, DateOnly toDate)
         {
-            var inventoryEntries = await _dbContext.InventoryEntries
+            var inventoryEntries = await dbContext.InventoryEntries
                 .Include(p => p.InventoryEntryType)
                 .Include(p => p.Provider)
                 .Include(p => p.InventoryEntryDetails)!
@@ -64,12 +69,12 @@ namespace DecenaSoluciones.POS.API.Services
                 .OrderByDescending(p => p.CreationDate)
                 .ToListAsync();
 
-            return _mapper.Map<InventoryReportViewModel>(inventoryEntries);
+            return mapper.Map<InventoryReportViewModel>(inventoryEntries);
         }
 
         public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly fromDate, DateOnly toDate)
         {
-            var sales = await _dbContext.Sale
+            var sales = await dbContext.Sale
                 .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.Customer)
                 .Include(p => p.SaleProducts)!
@@ -77,20 +82,20 @@ namespace DecenaSoluciones.POS.API.Services
                 .Where(p => p.CreationDate >= fromDate.ToDateTime(TimeOnly.MinValue) && p.CreationDate <= toDate.ToDateTime(TimeOnly.MaxValue))
                 .ToListAsync();
 
-            return _mapper.Map<List<SalesReportViewModel>>(sales);
+            return mapper.Map<List<SalesReportViewModel>>(sales);
         }
 
         public async Task<List<ExpensesReportViewModel>> GetMiscellaneousExpensesReport(DateOnly fromDate, DateOnly toDate)
         {
-            var expenses = await _dbContext.MiscellaneousExpenses
+            var expenses = await dbContext.MiscellaneousExpenses
                 .Where(p => p.CreationDate >= fromDate.ToDateTime(TimeOnly.MinValue) && p.CreationDate <= toDate.ToDateTime(TimeOnly.MaxValue))
                 .ToListAsync();
-            return _mapper.Map<List<ExpensesReportViewModel>>(expenses);
+            return mapper.Map<List<ExpensesReportViewModel>>(expenses);
         }
 
         public async Task<List<SoldProductsReportViewModel>> GetSoldProductsReport(DateOnly fromDate, DateOnly toDate)
         {
-            var sales = await _dbContext.Sale
+            var sales = await dbContext.Sale
                 .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
