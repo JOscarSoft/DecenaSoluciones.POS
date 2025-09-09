@@ -1,24 +1,22 @@
 ﻿using AutoMapper;
 using DecenaSoluciones.POS.API.Models;
 using DecenaSoluciones.POS.Shared.Dtos;
+using DecenaSoluciones.POS.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace DecenaSoluciones.POS.API.Services
 {
-    public class SaleService : ISaleService
+    public class SaleService (
+        DecenaSolucionesDBContext dbContext, 
+        IProductService productService,
+        ICustomerService customerService,
+        IMapper mapper) : ISaleService
     {
-        private readonly DecenaSolucionesDBContext _dbContext;
-        private readonly IProductService _productService;
-        private readonly ICustomerService _customerService;
-        private readonly IMapper _mapper;
-
-        public SaleService(DecenaSolucionesDBContext dbContext, IProductService productService, ICustomerService customerService, IMapper mapper)
-        {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _productService = productService;
-            _customerService = customerService;
-        }
+        private readonly DecenaSolucionesDBContext _dbContext = dbContext;
+        private readonly IProductService _productService = productService;
+        private readonly ICustomerService _customerService = customerService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<List<SalesViewModel>> GetSalesList()
         {
@@ -30,6 +28,109 @@ namespace DecenaSoluciones.POS.API.Services
                 .OrderByDescending(p => p.CreationDate)
                 .ToListAsync();
             return _mapper.Map<List<SalesViewModel>>(sales);
+        }
+
+        public async Task<GridResponse<SalesViewModel>> GetFilteredSalesList(GridRequest request)
+        {
+            var query = _dbContext.Sale
+                .Include(p => p.DismissedSale)
+                .Include(p => p.Customer)
+                .Include(p => p.SaleProducts)!
+                .ThenInclude(p => p.Product)
+                .AsQueryable();
+
+            foreach (var filter in request.Filters)
+            {
+                var field = filter.Field;
+                var value = filter.Value;
+
+                if (filter.Operator == FilterOperator.None || filter.Operator == FilterOperator.Clear || field == "Total")
+                    continue;
+
+
+                if (field == "CustomerName")
+                {
+                    field = "(Customer.Name + Customer.LastName)";
+                }
+                else if(field == "CreationDate")
+                {
+                    value = !string.IsNullOrWhiteSpace(value) && value.Length > 10 ? value[..10] : value;
+                    field = "CreationDate.Date";
+                }
+
+                switch (filter.Operator)
+                {
+                    case FilterOperator.Equals:
+                        query = query.Where($"{field} == @0", value);
+                        break;
+                    case FilterOperator.NotEquals:
+                        query = query.Where($"{field} != @0", value);
+                        break;
+                    case FilterOperator.LessThan:
+                        query = query.Where($"{field} < @0", value);
+                        break;
+                    case FilterOperator.LessThanOrEquals:
+                        query = query.Where($"{field} <= @0", value);
+                        break;
+                    case FilterOperator.GreaterThan:
+                        query = query.Where($"{field} > @0", value);
+                        break;
+                    case FilterOperator.GreaterThanOrEquals:
+                        query = query.Where($"{field} >= @0", value);
+                        break;
+                    case FilterOperator.Contains:
+                        query = query.Where($"{field}.Contains(@0)", value);
+                        break;
+                    case FilterOperator.StartsWith:
+                        query = query.Where($"{field}.StartsWith(@0)", value);
+                        break;
+                    case FilterOperator.EndsWith:
+                        query = query.Where($"{field}.EndsWith(@0)", value);
+                        break;
+                    case FilterOperator.DoesNotContain:
+                        query = query.Where($"!{field}.Contains(@0)", value);
+                        break;
+                    case FilterOperator.IsNull:
+                        query = query.Where($"{field} == null");
+                        break;
+                    case FilterOperator.IsNotNull:
+                        query = query.Where($"{field} != null");
+                        break;
+                    case FilterOperator.IsEmpty:
+                        query = query.Where($"{field} == \"\"");
+                        break;
+                    case FilterOperator.IsNotEmpty:
+                        query = query.Where($"{field} != \"\"");
+                        break;
+                }
+            }
+            var totalCount = await query.CountAsync();
+
+            if (!string.IsNullOrEmpty(request.SortColumn))
+            {
+                if (request.SortColumn == "CustomerName")
+                {
+                    request.SortColumn = "(Customer.Name + Customer.LastName)";
+                }
+
+                var sort = $"{request.SortColumn} {request.SortDirection ?? "asc"}";
+                query = query.OrderBy(sort);
+            }
+            else
+            {
+                query = query.OrderByDescending(p => p.CreationDate);
+            }
+
+            var items = await query
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            return new GridResponse<SalesViewModel>
+            {
+                Items = _mapper.Map<List<SalesViewModel>>(items),
+                TotalCount = totalCount
+            };
         }
 
         public async Task<AddEditSale> GetSaleById(int id)
@@ -45,7 +146,7 @@ namespace DecenaSoluciones.POS.API.Services
             var result = _mapper.Map<AddEditSale>(sale);
             if (result != null)
             {
-                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale!.Id))?.Code;
             }
 
             return result;
@@ -63,7 +164,7 @@ namespace DecenaSoluciones.POS.API.Services
             var result = _mapper.Map<AddEditSale>(sale);
             if (result != null)
             {
-                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale.Id))?.Code;
+                result.originalSaleCode = (await _dbContext.Sale.FirstOrDefaultAsync(p => p.DismissedBySaleId == sale!.Id))?.Code;
             }
 
             return result;

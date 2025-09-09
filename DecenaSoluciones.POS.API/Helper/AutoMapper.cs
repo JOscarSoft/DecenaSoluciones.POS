@@ -35,9 +35,9 @@ namespace DecenaSoluciones.POS.API.Helper
                 .ForMember(dest => dest.DismissedBySaleCode, opt => opt.MapFrom(source => source.DismissedSale != null ? source.DismissedSale.Code : null))
                 .ForMember(dest => dest.Dismissed, opt => opt.MapFrom(source => source.Dismissed == true))
                 .ReverseMap();
-             CreateMap<Quotation, AddEditSale>()
-                  .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
-                  .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.QuotationProducts != null ? source.QuotationProducts : new List<QuotationProduct>()));
+            CreateMap<Quotation, AddEditSale>()
+                .ForMember(dest => dest.IsAQuotation, opt => opt.MapFrom(source => true))
+                .ForMember(dest => dest.SaleProducts, opt => opt.MapFrom(source => source.QuotationProducts != null ? source.QuotationProducts : new List<QuotationProduct>()));
             CreateMap<AddEditSale, Quotation>()
                 .ForMember(dest => dest.QuotationProducts, opt => opt.MapFrom(source => source.SaleProducts != null ? source.SaleProducts : new List<AddEditSaleProduct>()));
             CreateMap<Sale, SalesViewModel>()
@@ -109,7 +109,7 @@ namespace DecenaSoluciones.POS.API.Helper
 
         private decimal GetPayedAmount(Sale sale)
         {
-            decimal registeredAmounts = 
+            decimal registeredAmounts =
                 (sale.TCAmount ?? 0m) +
                 (sale.DepositsAmount ?? 0m) +
                 (sale.CashAmount ?? 0m);

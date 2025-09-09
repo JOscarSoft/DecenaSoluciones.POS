@@ -20,11 +20,11 @@
     </div>
 </div>
 
-<SaleListComponent salesList="salesList" quotations="1"></SaleListComponent>
+<SaleListComponent salesDataProvider="SalesDataProvider" quotations="1"></SaleListComponent>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
-    List<SalesViewModel> salesList = new List<SalesViewModel>();
+    GridResponse<SalesViewModel>? salesList = default!;
     string quotationsUrl = "/newsale";
 
     private void GoToNewQuotation()
@@ -32,17 +32,40 @@
         navegation.NavigateTo($"{quotationsUrl}/0/1");
     }
 
-    protected override async Task OnInitializedAsync()
+    public async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel> request)
     {
         try
         {
-            PreloadService!.Show();
-            var response = await saleService.GetQuotationsList();
+            if (salesList == null)
+                PreloadService!.Show();
 
-            PreloadService!.Hide();
+            string sortString = "CreationDate";
+            string sortDirection = "desc";
+
+            if (request.Sorting is not null && request.Sorting.Any())
+            {
+                // Note: Multi column sorting is not supported at this moment
+                sortString = request.Sorting.FirstOrDefault()!.SortString;
+                sortDirection = request.Sorting.FirstOrDefault()!.SortDirection == SortDirection.Descending ? "desc" : "asc";
+            }
+
+            var response = await saleService.GetFilteredQuotationsList(new GridRequest()
+                {
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize,
+                    SortColumn = sortString,
+                    SortDirection = sortDirection,
+                    Filters = request.Filters.Select(p => new ColumnFilter
+                    {
+                        Field = p.PropertyName,
+                        Operator = (DecenaSoluciones.POS.Shared.Enums.FilterOperator)(int)p.Operator,
+                        Value = p.Value
+                    }).ToList()
+                });
+
             if (response.Success)
             {
-                salesList = response.Result ?? new List<SalesViewModel>();
+                salesList = response.Result;
             }
             else
             {
@@ -56,7 +79,6 @@
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
@@ -64,5 +86,15 @@
                     Icon = SweetAlertIcon.Error
                 });
         }
+        finally
+        {
+            PreloadService!.Hide();
+        }
+
+        return await Task.FromResult(new GridDataProviderResult<SalesViewModel>
+            {
+                Data = salesList?.Items ?? new List<SalesViewModel>(),
+                TotalCount = salesList?.TotalCount ?? 0
+            });
     }
 }

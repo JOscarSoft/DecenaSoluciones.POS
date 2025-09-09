@@ -36,6 +36,20 @@ namespace DecenaSoluciones.POS.Shared.Services
             return result;
         }
 
+        public async Task<ApiResponse<GridResponse<SalesViewModel>>> GetFilteredSalesList(GridRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Sale/GetFilterdSales", request);
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<GridResponse<SalesViewModel>>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            return result;
+        }
+
         public async Task<ApiResponse<AddEditSale>> GetSaleById(int id)
         {
             var response = await _httpClient.GetAsync($"api/Sale/{id}");
@@ -71,6 +85,20 @@ namespace DecenaSoluciones.POS.Shared.Services
             response.EnsureResponseStatus();
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<SalesViewModel>>>();
+
+            if (result == null)
+                throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
+
+            return result;
+        }
+
+        public async Task<ApiResponse<GridResponse<SalesViewModel>>> GetFilteredQuotationsList(GridRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Sale/GetFilterdQuotations", request);
+
+            response.EnsureResponseStatus();
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<GridResponse<SalesViewModel>>>();
 
             if (result == null)
                 throw new Exception("No se obtuvo respuesta del servicio de Ventas.");
@@ -251,7 +279,7 @@ namespace DecenaSoluciones.POS.Shared.Services
 
                 return Utility.GenerateReceiptHtml(sale, htmlTemplate, company, duplicate);
             }
-            catch(Exception ex) 
+            catch
             {
                 return string.Empty;
             }
