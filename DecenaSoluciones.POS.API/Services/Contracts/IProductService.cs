@@ -10,7 +10,6 @@ namespace DecenaSoluciones.POS.API.Services
         Task<ProductViewModel> GetProductByCode(string code);
         Task<ProductViewModel> AddNewProduct(AddEditProduct product);
         Task<ProductViewModel> UpdateProduct(int id, AddEditProduct product);
-        Task<bool> UpdateInventary(List<UpdateInventory> inventoryItems);
         Task<int> RemoveProduct(int id);
         Task<ProductViewModel> UpdateProductStock(int id, decimal quantity);
         Task<LastSaleXProductViewModel> GetLastSaleXProduct(int id);

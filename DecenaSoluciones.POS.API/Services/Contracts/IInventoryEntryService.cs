@@ -10,6 +10,7 @@ namespace DecenaSoluciones.POS.API.Services
         Task<InventoryEntryViewModel> AddNewInventoryEntry(InventoryEntry inventoryEntry);
         Task<InventoryEntryViewModel> UpdateInventoryEntry(int id, InventoryEntry inventoryEntry);
         Task<bool> RemoveInventoryEntry(int id);
+        Task AddNewInventoryEntryFromProductChange(Product productModification, decimal difference);
 
     }
 }

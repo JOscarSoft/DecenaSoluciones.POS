@@ -7,85 +7,119 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 {
     internal class SalesExcelReports
     {
+        private static readonly CultureInfo UsCulture = CultureInfo.CreateSpecificCulture("en-US");
+        private const string CurrencyFormat = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
+
         public static void GetSalesAndInventoryResumeWorkSheet(
             InventoryReportViewModel inventoryReport,
             List<SalesReportViewModel> salesReport,
             List<ExpensesReportViewModel> miscellaneousExpenses,
-            XLWorkbook wb)
+            List<ProductsReportViewModel> productsReport,
+            XLWorkbook workbook)
         {
-            var sheet1 = wb.AddWorksheet("Resumen");
+            var sheet = workbook.AddWorksheet("Resumen");
 
+            decimal totalIngresoInventario = inventoryReport.inventoryInEntriesDetails.Sum(p => p.TotalCost);
+            decimal totalSalidaInventario = inventoryReport.inventoryOutEntriesDetails.Sum(p => p.TotalCost);
+            decimal totalVentas = salesReport.Sum(p => p.Total!.Value);
+            decimal totalGastosMiscelaneos = miscellaneousExpenses.Sum(p => p.TotalCost);
+            decimal gananciaNeta = totalVentas - (totalIngresoInventario + totalSalidaInventario + totalGastosMiscelaneos);
 
-            decimal inCost = inventoryReport.inventoryInEntriesDetails.Sum(p => p.TotalCost);
-            decimal outCost = inventoryReport.inventoryOutEntriesDetails.Sum(p => p.TotalCost);
-            decimal salesTotal = salesReport.Sum(p => p.Total!.Value);
-            decimal miscTotal = miscellaneousExpenses.Sum(p => p.TotalCost);
-            decimal netProfit = salesTotal - (inCost + outCost + miscTotal);
-            sheet1.Cell(2, 2).Value = $"Resumen de ingresos/Egresos desde {inventoryReport.From!.Value:dd/MM/yyyy} hasta {inventoryReport.To!.Value:dd/MM/yyyy}";
+            BuildResumenIngresosEgresosSection(sheet, inventoryReport, totalIngresoInventario, totalSalidaInventario, totalVentas, totalGastosMiscelaneos, gananciaNeta, salesReport, miscellaneousExpenses);
+            BuildResumenProductosSection(sheet, productsReport);
 
-            sheet1.Cell(3, 2).Value = "Productos ingresados";
-            sheet1.Cell(3, 3).Value = inventoryReport.inventoryInEntriesDetails.Sum(p => p.Quantity).ToString().Replace(".00", "");
+            ApplyGeneralFormatting(sheet);
+        }
 
-            sheet1.Cell(4, 2).Value = "Costo total de productos ingresados";
-            sheet1.Cell(4, 3).Value = inCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(4, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(4, 3).Style.Font.Bold = true;
-            sheet1.Cell(4, 3).Style.Font.FontColor = XLColor.Red;
+        private static void BuildResumenIngresosEgresosSection(IXLWorksheet sheet, InventoryReportViewModel inventoryReport,
+            decimal inCost, decimal outCost, decimal salesTotal, decimal miscTotal, decimal netProfit,
+            List<SalesReportViewModel> salesReport, List<ExpensesReportViewModel> miscellaneousExpenses)
+        {
+            sheet.Cell(2, 2).Value =
+                $"Resumen de ingresos/Egresos desde {inventoryReport.From!.Value:dd/MM/yyyy} hasta {inventoryReport.To!.Value:dd/MM/yyyy}";
+            sheet.Range(2, 2, 2, 3).Merge();
 
-            sheet1.Cell(5, 2).Value = "Productos retirados";
-            sheet1.Cell(5, 3).Value = inventoryReport.inventoryOutEntriesDetails.Sum(p => p.Quantity).ToString().Replace(".00", "");
+            WriteRow(sheet, 3, "Productos ingresados", inventoryReport.inventoryInEntriesDetails.Sum(p => p.Quantity).ToString("0.##"));
+            WriteCurrencyRow(sheet, 4, "Costo total de productos ingresados", inCost, XLColor.Red);
 
-            sheet1.Cell(6, 2).Value = "Costo total de productos retirados";
-            sheet1.Cell(6, 3).Value = outCost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(6, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(6, 3).Style.Font.Bold = true;
-            sheet1.Cell(6, 3).Style.Font.FontColor = XLColor.Red;
+            WriteRow(sheet, 5, "Productos retirados", inventoryReport.inventoryOutEntriesDetails.Sum(p => p.Quantity).ToString("0.##"));
+            WriteCurrencyRow(sheet, 6, "Costo total de productos retirados", outCost, XLColor.Red);
 
-            sheet1.Cell(7, 2).Value = "Gastos miscelaneos";
-            sheet1.Cell(7, 3).Value = miscellaneousExpenses.Count.ToString();
+            WriteRow(sheet, 7, "Gastos miscelaneos", miscellaneousExpenses.Count.ToString("0.##"));
+            WriteCurrencyRow(sheet, 8, "Costo total de miscelaneos", miscTotal, XLColor.Red);
 
-            sheet1.Cell(8, 2).Value = "Costo total de miscelaneos";
-            sheet1.Cell(8, 3).Value = miscTotal.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(8, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(8, 3).Style.Font.Bold = true;
-            sheet1.Cell(8, 3).Style.Font.FontColor = XLColor.Red;
+            WriteRow(sheet, 9, "Productos vendidos", salesReport.Sum(p => p.ProductsQuantity).ToString("0.##"));
+            WriteCurrencyRow(sheet, 10, "Total de ingresos por ventas", salesTotal, XLColor.Green);
 
-            sheet1.Cell(9, 2).Value = "Productos vendidos";
-            sheet1.Cell(9, 3).Value = salesReport.Sum(p => p.ProductsQuantity).ToString().Replace(".00", "");
+            // Ganancia neta
+            var netCell = WriteCurrencyRow(sheet, 11, "Ganancia neta (ventas - (gastos + costo de productos))", netProfit, netProfit <= 0 ? XLColor.Red : XLColor.Green);
+            netCell.Style.Font.FontSize = 14;
+        }
 
-            sheet1.Cell(10, 2).Value = "Total de ingresos por ventas";
-            sheet1.Cell(10, 3).Value = salesTotal.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(10, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(10, 3).Style.Font.Bold = true;
-            sheet1.Cell(10, 3).Style.Font.FontColor = XLColor.Green;
+        private static void BuildResumenProductosSection(IXLWorksheet sheet, List<ProductsReportViewModel> productsReport)
+        {
+            sheet.Cell(2, 6).Value = "Productos";
+            sheet.Range(2, 6, 2, 7).Merge();
 
-            sheet1.Cell(11, 2).Value = "Ganancia neta (ventas - (gastos + costo de productos))";
-            sheet1.Cell(11, 3).Value = netProfit.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"));
-            sheet1.Cell(11, 3).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            sheet1.Cell(11, 3).Style.Font.FontColor = netProfit <= 0 ? XLColor.Red : XLColor.Green;
-            sheet1.Cell(11, 3).Style.Font.Bold = true;
+            WriteRow(sheet, 3, "Cantidad de productos registrados", productsReport.Count.ToString("0.##"), 6, 7);
+            WriteCurrencyRow(sheet, 4, "Inversión total", productsReport.Sum(p => p.TotalCost), XLColor.Green, 6, 7);
+        }
 
+        private static void ApplyGeneralFormatting(IXLWorksheet sheet)
+        {
+            sheet.Columns(1, 1).Width = 5;
+            sheet.Columns(4, 5).Width = 5;
+            sheet.Column(2).Width = 60;
+            sheet.Column(3).Width = 30;
+            sheet.Column(6).Width = 60;
+            sheet.Column(7).Width = 30;
 
-            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(2, 3)).Merge();
-            sheet1.Range(sheet1.Cell(3, 2), sheet1.Cell(11, 3)).Style.Font.FontSize = 13;
-            sheet1.Cell(11, 3).Style.Font.FontSize = 14;
-            sheet1.Row(2).CellsUsed().Style.Fill.BackgroundColor = XLColor.AliceBlue;
-            sheet1.Row(2).Style.Font.Bold = true;
-            sheet1.Row(2).Style.Font.Shadow = true;
-            sheet1.Row(2).Style.Font.FontSize = 16;
+            sheet.Row(2).CellsUsed().Style.Fill.BackgroundColor = XLColor.AliceBlue;
+            sheet.Row(2).Style.Font.Bold = true;
+            sheet.Row(2).Style.Font.Shadow = true;
+            sheet.Row(2).Style.Font.FontSize = 16;
+
+            sheet.Range(2, 2, 11, 3).Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            sheet.Range(2, 2, 11, 3).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+
+            sheet.Range(2, 6, 4, 7).Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            sheet.Range(2, 6, 4, 7).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
 
             for (int i = 3; i <= 11; i++)
             {
-                sheet1.Cell(i, 2).Style.Font.Bold = true;
-                sheet1.Cell(i, 2).Style.Font.Shadow = true;
-                sheet1.Cell(i, 2).Style.Fill.BackgroundColor = XLColor.AliceBlue;
+                ApplyRowHeaderStyle(sheet, i, 2);
+                if (i < 5) ApplyRowHeaderStyle(sheet, i, 6);
             }
 
-            sheet1.Columns(1, 1).Width = 5;
-            sheet1.Columns(2, 2).Width = 60;
-            sheet1.Columns(3, 3).Width = 30;
-            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(11, 3)).Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
-            sheet1.Range(sheet1.Cell(2, 2), sheet1.Cell(11, 3)).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            sheet.Range(3, 2, 11, 3).Style.Font.FontSize = 13;
+            sheet.Range(3, 6, 4, 7).Style.Font.FontSize = 13;
+        }
+
+
+        private static void WriteRow(IXLWorksheet sheet, int row, string label, string value, int colLabel = 2, int colValue = 3)
+        {
+            sheet.Cell(row, colLabel).Value = label;
+            sheet.Cell(row, colValue).Value = value;
+        }
+
+        private static IXLCell WriteCurrencyRow(IXLWorksheet sheet, int row, string label, decimal amount, XLColor fontColor, int colLabel = 2, int colValue = 3)
+        {
+            WriteRow(sheet, row, label, amount.ToString("C2", UsCulture), colLabel, colValue);
+
+            var cell = sheet.Cell(row, colValue);
+            cell.Style.NumberFormat.Format = CurrencyFormat;
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = fontColor;
+
+            return cell;
+        }
+
+        private static void ApplyRowHeaderStyle(IXLWorksheet sheet, int row, int col)
+        {
+            var cell = sheet.Cell(row, col);
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.Shadow = true;
+            cell.Style.Fill.BackgroundColor = XLColor.AliceBlue;
         }
 
         public static void GetSoldProductExcelReport(List<SoldProductsReportViewModel> report, XLWorkbook wb)

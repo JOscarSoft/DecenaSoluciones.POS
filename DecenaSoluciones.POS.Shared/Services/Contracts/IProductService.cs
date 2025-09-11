@@ -11,7 +11,6 @@ namespace DecenaSoluciones.POS.Shared.Services
         Task<ApiResponse<ProductViewModel>> AddNewProduct(AddEditProduct product);
         Task<ApiResponse<ProductViewModel>> UpdateProduct(int id, AddEditProduct product);
         Task<ApiResponse<int>> RemoveProduct(int id);
-        Task<ApiResponse<bool>> UpdateInventary(List<UpdateInventory> inventoryItems);
         Task<ApiResponse<LastSaleXProductViewModel>> GetLastSaleXProduct(int productId);
     }
 }

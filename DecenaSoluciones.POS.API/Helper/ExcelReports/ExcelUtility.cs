@@ -35,10 +35,11 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
         public static XLWorkbook GenerateExpenseAndIncomeExcelReport(
             List<SalesReportViewModel> salesReport, 
             InventoryReportViewModel inventoryReport,
-            List<ExpensesReportViewModel> miscellaneousExpenses)
+            List<ExpensesReportViewModel> miscellaneousExpenses,
+            List<ProductsReportViewModel> productsReport)
         {
             var wb = new XLWorkbook();
-            SalesExcelReports.GetSalesAndInventoryResumeWorkSheet(inventoryReport, salesReport, miscellaneousExpenses, wb);
+            SalesExcelReports.GetSalesAndInventoryResumeWorkSheet(inventoryReport, salesReport, miscellaneousExpenses, productsReport, wb);
             SalesExcelReports.GetSalesReportWorkSheet(salesReport, wb);
             InventoryExcelReports.GetInventoryInWorkSheet(inventoryReport.inventoryInEntries, wb);
             InventoryExcelReports.GetInventoryOutWorkSheet(inventoryReport.inventoryOutEntries, wb);
