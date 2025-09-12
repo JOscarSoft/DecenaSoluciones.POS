@@ -126,7 +126,7 @@
         {
             var response = await reportService.GenerateProductsReport();
 
-            var fileName = "Reporte de inventario.xlsx";
+            var fileName = "Reporte de productos.xlsx";
 
             using var streamRef = new DotNetStreamReference(stream: response);
             await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);

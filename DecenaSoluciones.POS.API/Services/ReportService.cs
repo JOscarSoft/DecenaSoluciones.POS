@@ -13,21 +13,25 @@ namespace DecenaSoluciones.POS.API.Services
         public async Task<DashboardViewModel> GetDashboardReport()
         {
             var result = new DashboardViewModel();
-            var sales = await dbContext.Sale
+            var sales = dbContext.Sale
                 .Where(p => p.Dismissed == null || p.Dismissed == false)
                 .Include(p => p.SaleProducts)!
                 .ThenInclude(p => p.Product)
-                .ToListAsync();
+                .AsQueryable();
 
-            result.SoldProductsPerWeek = sales.Where(p => p.CreationDate >= DateTime.Now.StartOfWeek(DayOfWeek.Monday) && p.CreationDate <= DateTime.Now.StartOfWeek(DayOfWeek.Monday).AddDays(7))
+            var weekFrom = DateTime.Now.StartOfWeek(DayOfWeek.Monday).Date;
+            var weekTo = DateTime.Now.StartOfWeek(DayOfWeek.Monday).AddDays(7).Date;
+            weekTo = new DateTime(weekTo.Year, weekTo.Month, weekTo.Day, 23, 59, 59);
+
+            result.SoldProductsPerWeek = (int)Math.Round(sales.Where(p => p.CreationDate >= weekFrom && p.CreationDate <= weekTo)
                 .Select(p => p.SaleProducts)
                 .SelectMany(p => p!)
-                .Sum(p => (int)Math.Round(p.Quantity, MidpointRounding.AwayFromZero));
+                .Sum(p => p.Quantity), MidpointRounding.AwayFromZero);
 
             result.SoldProducts = sales.Select(p => p.SaleProducts).SelectMany(p => p!).GroupBy(p => p.Product).Select(p => new SoldProductQuantityViewModel
             {
                 ProductName = p.Key.Description,
-                Quantity = p.Sum(p => p.Quantity)
+                Quantity = p.Select(j => j.SaleId).Distinct().Count(),
             }).OrderByDescending(p => p.Quantity).Take(5).ToList();
 
             result.ExpiredMaintenances = (await dbContext.CustomerProducts.Where(p => p.NextMaintenance.HasValue).ToListAsync())

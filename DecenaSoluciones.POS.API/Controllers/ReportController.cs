@@ -79,10 +79,11 @@ namespace DecenaSoluciones.POS.API.Controllers
             var inventoryResult = await _reportService.GetInventoryReport(fromDateFormated, toDateFormated);
             var salesResult = await _reportService.GetSalesReport(fromDateFormated, toDateFormated);
             var expensesResult = await _reportService.GetMiscellaneousExpensesReport(fromDateFormated, toDateFormated);
+            var productsResult = await _reportService.GetProductsReport();
             inventoryResult.From = fromDateFormated;
             inventoryResult.To = toDateFormated;
 
-            var excelReport = ExcelUtility.GenerateExpenseAndIncomeExcelReport(salesResult, inventoryResult, expensesResult);
+            var excelReport = ExcelUtility.GenerateExpenseAndIncomeExcelReport(salesResult, inventoryResult, expensesResult, productsResult);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);

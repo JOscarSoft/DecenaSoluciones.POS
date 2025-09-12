@@ -6,139 +6,119 @@ using System.Text.RegularExpressions;
 
 namespace DecenaSoluciones.POS.API.Services
 {
-    public class ProductService : IProductService
+    public class ProductService(DecenaSolucionesDBContext dbContext, IMapper mapper, IInventoryEntryService inventoryEntryService) : IProductService
     {
-        private readonly DecenaSolucionesDBContext _dbContext;
-        private readonly IMapper _mapper;
-
-        public ProductService(DecenaSolucionesDBContext dbContext, IMapper mapper)
-        {
-            _dbContext = dbContext;
-            _mapper = mapper;
-        }
-
         public async Task<ProductViewModel> AddNewProduct(AddEditProduct productDto)
         {
-            var existCode = await _dbContext.Products.AnyAsync(p => p.Code == productDto.Code);
+            var existCode = await dbContext.Products.AnyAsync(p => p.Code == productDto.Code);
             if (existCode)
                 throw new Exception("Ya existe un producto con el código ingresado");
 
             if(string.IsNullOrEmpty(productDto.Code))
                 productDto.Code = await GenerateCodeFromDescription(productDto.Description);
 
-            var product = _mapper.Map<Product>(productDto);
-            await _dbContext.Products.AddAsync(product);
-            await _dbContext.SaveChangesAsync();
+            var product = mapper.Map<Product>(productDto);
+            await dbContext.Products.AddAsync(product);
+            await dbContext.SaveChangesAsync();
+            
+            await inventoryEntryService.AddNewInventoryEntryFromProductChange(product, product.stock);
 
-            return _mapper.Map<ProductViewModel>(product);
+            return mapper.Map<ProductViewModel>(product);
         }
 
         public async Task<ProductViewModel> GetProductByCode(string code)
         {
-            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Code == code);
-            return _mapper.Map<ProductViewModel>(product);
+            var product = await dbContext.Products.FirstOrDefaultAsync(p => p.Code == code);
+            return mapper.Map<ProductViewModel>(product);
         }
 
         public async Task<ProductViewModel> GetProductById(int id)
         {
-            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
-            return _mapper.Map<ProductViewModel>(product);
+            var product = await dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
+            return mapper.Map<ProductViewModel>(product);
         }
 
         public async Task<List<ProductViewModel>> GetProductList()
         {
-            var product = await _dbContext.Products.ToListAsync();
-            return _mapper.Map<List<ProductViewModel>>(product);
+            var product = await dbContext.Products.ToListAsync();
+            return mapper.Map<List<ProductViewModel>>(product);
         }
 
         public async Task<LastSaleXProductViewModel> GetLastSaleXProduct(int id)
         {
-            var saleProduct = await _dbContext
+            var saleProduct = await dbContext
                 .SaleProducts
                 .Include(p => p.Sale)
                 .OrderByDescending(p => p.Sale.CreationDate)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            return _mapper.Map<LastSaleXProductViewModel>(saleProduct);
+            return mapper.Map<LastSaleXProductViewModel>(saleProduct);
         }
 
         public async Task<List<ProductViewModel>> GetAssignables()
         {
-            var product = await _dbContext.Products.Where(p => p.Assignable).ToListAsync();
-            return _mapper.Map<List<ProductViewModel>>(product);
+            var product = await dbContext.Products.Where(p => p.Assignable).ToListAsync();
+            return mapper.Map<List<ProductViewModel>>(product);
         }
 
         public async Task<int> RemoveProduct(int id)
         {
-            var existCustomer = await _dbContext.CustomerProducts.AnyAsync(p => p.ProductId == id);
-            var existQuotation = await _dbContext.QuotationProducts.AnyAsync(p => p.ProductId == id);
-            var existSale = await _dbContext.SaleProducts.AnyAsync(p => p.ProductId == id);
-            var existInventory = await _dbContext.InventoryEntryDetails.AnyAsync(p => p.ProductId == id);
+            var existCustomer = await dbContext.CustomerProducts.AnyAsync(p => p.ProductId == id);
+            var existQuotation = await dbContext.QuotationProducts.AnyAsync(p => p.ProductId == id);
+            var existSale = await dbContext.SaleProducts.AnyAsync(p => p.ProductId == id);
+            var existInventory = await dbContext.InventoryEntryDetails.AnyAsync(p => p.ProductId == id);
             if (existCustomer || existQuotation || existSale || existInventory)
                 throw new Exception("El producto no puede ser eliminado porque existen registros asociados a el.");
 
-            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a eliminar.");
+            var product = await dbContext.Products.FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a eliminar.");
 
-            _dbContext.Products.Remove(product);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Products.Remove(product);
+            await dbContext.SaveChangesAsync();
 
             return 1;
         }
 
         public async Task<ProductViewModel> UpdateProduct(int id, AddEditProduct productDto)
         {
-            var existCode = await _dbContext.Products.AnyAsync(p => p.Code == productDto.Code && p.Id != id);
+            var existCode = await dbContext.Products.AnyAsync(p => p.Code == productDto.Code && p.Id != id);
             if (existCode)
                 throw new Exception("Ya existe un producto con el código ingresado");
 
-            var oldProduct = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
+            var oldProduct = await dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
 
             if (string.IsNullOrEmpty(productDto.Code))
                 productDto.Code = await GenerateCodeFromDescription(productDto.Description);
 
-            var newProduct = _mapper.Map<Product>(productDto);
+            var newProduct = mapper.Map<Product>(productDto);
             newProduct.Id = id;
-            _dbContext.Products.Update(newProduct);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Products.Update(newProduct);
+            await dbContext.SaveChangesAsync();
 
-            return _mapper.Map<ProductViewModel>(newProduct);
+            decimal stockDiff = productDto.stock - oldProduct.stock;
+            if(stockDiff != 0)
+            {
+                await inventoryEntryService.AddNewInventoryEntryFromProductChange(newProduct, stockDiff);
+            }
+
+            return mapper.Map<ProductViewModel>(newProduct);
         }
 
         public async Task<ProductViewModel> UpdateProductStock(int id, decimal quantity)
         {
-            var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
+            var product = await dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id) ?? throw new Exception("No se encontró el producto a editar.");
 
             product.stock += quantity;
-            _dbContext.Products.Update(product);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Products.Update(product);
+            await dbContext.SaveChangesAsync();
 
-            return _mapper.Map<ProductViewModel>(product);
-        }
-
-        public async Task<bool> UpdateInventary(List<UpdateInventory> inventoryItems)
-        {
-            foreach(var inventoryItem in inventoryItems) 
-            {
-                var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == inventoryItem.productId || p.Code == inventoryItem.ProductCode ); 
-
-                if(product != null) 
-                { 
-                    product.Cost = inventoryItem.Cost;
-                    product.Price = inventoryItem.Price;
-                    product.stock += inventoryItem.Quantity;
-
-                    _dbContext.Products.Update(product);
-                }
-            }
-            await _dbContext.SaveChangesAsync();
-            return true;
+            return mapper.Map<ProductViewModel>(product);
         }
 
         private async Task<string> GenerateCodeFromDescription(string description)
         {
             string plainText = Regex.Replace(description, "[^a-zA-Z]+", "", RegexOptions.Compiled);
             string init = plainText.Length > 3 ? plainText.Substring(0, 3) : plainText;
-            var existingCodes = await _dbContext.Products.Where(p => p.Code.Contains(init)).ToListAsync();
+            var existingCodes = await dbContext.Products.Where(p => p.Code.Contains(init)).ToListAsync();
             var codeDigits = existingCodes.Select(p => new string(p.Code.Where(Char.IsDigit).ToArray()))
                                           .Where(p => !string.IsNullOrEmpty(p))
                                           .Select(p => int.Parse(p)).ToList();

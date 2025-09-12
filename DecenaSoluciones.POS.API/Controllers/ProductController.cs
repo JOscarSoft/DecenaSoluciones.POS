@@ -186,25 +186,5 @@ namespace DecenaSoluciones.POS.API.Controllers
 
             return Ok(apiResponse);
         }
-
-
-        [HttpPost]
-        [Route("UpdateInventary")]
-        [Authorize(Roles = $"{UserRoles.Manager},{UserRoles.Admin}")]
-        public async Task<IActionResult> UpdateInventary(List<UpdateInventory> inventoryItems)
-        {
-            var apiResponse = new ApiResponse<bool>();
-            try
-            {
-                apiResponse.Result = apiResponse.Success = await _productService.UpdateInventary(inventoryItems);
-            }
-            catch (Exception ex)
-            {
-                apiResponse.Success = false;
-                apiResponse.Message = ex.Message;
-            }
-
-            return Ok(apiResponse);
-        }
     }
 }

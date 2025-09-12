@@ -123,19 +123,5 @@ namespace DecenaSoluciones.POS.Shared.Services
 
             return result;
         }
-
-        public async Task<ApiResponse<bool>> UpdateInventary(List<UpdateInventory> inventoryItems)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"api/Product/UpdateInventary", inventoryItems);
-
-            response.EnsureResponseStatus();
-
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-
-            if (result == null)
-                throw new Exception("No se obtuvo respuesta del servicio de productos.");
-
-            return result;
-        }
     }
 }
