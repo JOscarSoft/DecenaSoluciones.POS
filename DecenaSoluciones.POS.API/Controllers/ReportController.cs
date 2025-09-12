@@ -44,7 +44,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
             var result = await _reportService.GetSalesReport(fromDateFormated, toDateFormated);
 
-            var excelReport = ExcelUtility.GenerateSalesExcelReport(result);
+            var excelReport = ExcelReportUtility.GenerateSalesExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
@@ -62,7 +62,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             result.From = fromDateFormated;
             result.To = toDateFormated;
 
-            var excelReport = ExcelUtility.GenerateInventoryExcelReport(result);
+            var excelReport = ExcelReportUtility.GenerateInventoryExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
@@ -83,7 +83,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             inventoryResult.From = fromDateFormated;
             inventoryResult.To = toDateFormated;
 
-            var excelReport = ExcelUtility.GenerateExpenseAndIncomeExcelReport(salesResult, inventoryResult, expensesResult, productsResult);
+            var excelReport = ExcelReportUtility.GenerateExpenseAndIncomeExcelReport(salesResult, inventoryResult, expensesResult, productsResult);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
@@ -99,7 +99,7 @@ namespace DecenaSoluciones.POS.API.Controllers
             var toDateFormated = DateOnly.ParseExact(toDate, "dd-MM-yyyy");
             var result = await _reportService.GetSoldProductsReport(fromDateFormated, toDateFormated);
             
-            var excelReport = ExcelUtility.GenerateSoldProductExcelReport(result);
+            var excelReport = ExcelReportUtility.GenerateSoldProductExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
@@ -113,7 +113,7 @@ namespace DecenaSoluciones.POS.API.Controllers
         {
             var result = await _reportService.GetProductsReport();
 
-            var excelReport = ExcelUtility.GenerateProductsExcelReport(result);
+            var excelReport = ExcelReportUtility.GenerateProductsExcelReport(result);
 
             using var ms = new MemoryStream();
             excelReport.SaveAs(ms);
