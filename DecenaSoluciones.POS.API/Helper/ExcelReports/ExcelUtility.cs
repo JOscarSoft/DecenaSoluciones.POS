@@ -1,7 +1,5 @@
 ﻿using ClosedXML.Excel;
 using DecenaSoluciones.POS.Shared.Dtos;
-using DocumentFormat.OpenXml.Bibliography;
-using System.Data;
 
 namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 {
@@ -10,40 +8,40 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
         public static XLWorkbook GenerateSoldProductExcelReport(List<SoldProductsReportViewModel> report)
         {
             var wb = new XLWorkbook();
-            SalesExcelReports.GetSoldProductExcelReport(report, wb);
+            SalesExcelReports.GenerateSoldProductExcelWorksheet(report, wb);
             return wb;
         }
 
         public static XLWorkbook GenerateSalesExcelReport(List<SalesReportViewModel> report)
         {
             var wb = new XLWorkbook();
-            SalesExcelReports.GetSalesReportWorkSheet(report, wb);
+            SalesExcelReports.GenerateSalesReportWorksheet(report, wb);
             return wb;
         }
 
         public static XLWorkbook GenerateInventoryExcelReport(InventoryReportViewModel report)
         {
             var wb = new XLWorkbook();
-            InventoryExcelReports.GetInventoryResumeWorkSheet(report, wb);
-            InventoryExcelReports.GetInventoryInWorkSheet(report.inventoryInEntries, wb);
-            InventoryExcelReports.GetInventoryInDetailedWorkSheet(report.inventoryInEntriesDetails, wb);
-            InventoryExcelReports.GetInventoryOutWorkSheet(report.inventoryOutEntries, wb);
-            InventoryExcelReports.GetInventoryOutDetailedWorkSheet(report.inventoryOutEntriesDetails, wb);
+            InventoryExcelReports.GenerateInventorySummaryWorksheet(report, wb);
+            InventoryExcelReports.GenerateInventoryInWorksheet(report.inventoryInEntries, wb);
+            InventoryExcelReports.GenerateInventoryInDetailWorksheet(report.inventoryInEntriesDetails, wb);
+            InventoryExcelReports.GenerateInventoryOutWorksheet(report.inventoryOutEntries, wb);
+            InventoryExcelReports.GenerateInventoryOutDetailWorksheet(report.inventoryOutEntriesDetails, wb);
             return wb;
         }
 
         public static XLWorkbook GenerateExpenseAndIncomeExcelReport(
-            List<SalesReportViewModel> salesReport, 
+            List<SalesReportViewModel> salesReport,
             InventoryReportViewModel inventoryReport,
             List<ExpensesReportViewModel> miscellaneousExpenses,
             List<ProductsReportViewModel> productsReport)
         {
             var wb = new XLWorkbook();
-            SalesExcelReports.GetSalesAndInventoryResumeWorkSheet(inventoryReport, salesReport, miscellaneousExpenses, productsReport, wb);
-            SalesExcelReports.GetSalesReportWorkSheet(salesReport, wb);
-            InventoryExcelReports.GetInventoryInWorkSheet(inventoryReport.inventoryInEntries, wb);
-            InventoryExcelReports.GetInventoryOutWorkSheet(inventoryReport.inventoryOutEntries, wb);
-            ExpensesExcelReports.GetExpensesWorkSheet(miscellaneousExpenses, wb);
+            SalesExcelReports.GenerateSummaryWorksheet(inventoryReport, salesReport, miscellaneousExpenses, productsReport, wb);
+            SalesExcelReports.GenerateSalesReportWorksheet(salesReport, wb);
+            InventoryExcelReports.GenerateInventoryInWorksheet(inventoryReport.inventoryInEntries, wb);
+            InventoryExcelReports.GenerateInventoryOutWorksheet(inventoryReport.inventoryOutEntries, wb);
+            ExpensesExcelReports.GenerateExpensesWorksheet(miscellaneousExpenses, wb);
             return wb;
         }
 

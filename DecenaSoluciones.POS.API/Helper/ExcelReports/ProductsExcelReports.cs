@@ -1,6 +1,5 @@
 ﻿using ClosedXML.Excel;
 using DecenaSoluciones.POS.Shared.Dtos;
-using System.Data;
 
 namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 {
@@ -8,52 +7,26 @@ namespace DecenaSoluciones.POS.API.Helper.ExcelReports
     {
         public static void GenerateProductsExcelWorksheet(List<ProductsReportViewModel> result, XLWorkbook wb)
         {
-            var sheet1 = wb.AddWorksheet(GetProductsReportDataTable(result), "Reporte de productos");
+            var dataTable = DataTableFactory.CreateProductsReportDataTable(result);
+            var sheet = wb.Worksheets.Add(dataTable, "Reporte de productos");
 
-            sheet1.Row(1).CellsUsed().Style.Fill.BackgroundColor = XLColor.DarkBlue;
-            sheet1.Row(1).Style.Font.Bold = true;
-            sheet1.Row(1).Style.Font.Shadow = true;
+            ReportHelper.ApplyHeaderStyle(sheet);
 
-            sheet1.Row(result.Count() + 2).Cell(4).Value = "Totales";
-            sheet1.Row(result.Count() + 2).Cell(5).Value = result.Sum(p => p.stock);
-            sheet1.Row(result.Count() + 2).Cell(6).Value = result.Sum(p => p.TotalCost);
-            sheet1.Row(result.Count() + 2).Cell(7).Value = result.Sum(p => p.TotalPrice);
-            sheet1.Row(result.Count() + 2).Cell(8).Value = result.Sum(p => p.Revenue);
-            sheet1.Row(result.Count() + 2).CellsUsed().Style.Font.Bold = true;
-            sheet1.Row(result.Count() + 2).CellsUsed().Style.Font.Shadow = true;
+            var totalsRow = result.Count + 2;
+            ReportHelper.WriteCell(sheet, totalsRow, 4, "Totales");
+            ReportHelper.WriteCell(sheet, totalsRow, 5, result.Sum(p => p.stock));
+            ReportHelper.WriteCell(sheet, totalsRow, 6, result.Sum(p => p.TotalCost));
+            ReportHelper.WriteCell(sheet, totalsRow, 7, result.Sum(p => p.TotalPrice));
+            ReportHelper.WriteCell(sheet, totalsRow, 8, result.Sum(p => p.Revenue));
 
-            for (int i = 2; i <= sheet1.RowsUsed().Count(); i++)
-            {
-                sheet1.Cell(i, 6).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-                sheet1.Cell(i, 7).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-                sheet1.Cell(i, 8).Style.NumberFormat.Format = @"[$$-en-US]#,##0.00_);[Red]([$$-en-US]#,##0.00)";
-            }
+            ReportHelper.FormatColumnAsCurrency(sheet, 3);
+            ReportHelper.FormatColumnAsCurrency(sheet, 4);
+            ReportHelper.FormatColumnAsCurrency(sheet, 6);
+            ReportHelper.FormatColumnAsCurrency(sheet, 7);
+            ReportHelper.FormatColumnAsCurrency(sheet, 8);
+            ReportHelper.ApplyTotalsRowStyle(sheet.Row(totalsRow));
 
-            sheet1.Columns().AdjustToContents();
-        }
-
-        private static DataTable GetProductsReportDataTable(List<ProductsReportViewModel> products)
-        {
-            var dt = new DataTable();
-            dt.TableName = "InventoryReport";
-            dt.Columns.Add("Código", typeof(string));
-            dt.Columns.Add("Descripción", typeof(string));
-            dt.Columns.Add("Precio Compra", typeof(decimal));
-            dt.Columns.Add("Precio Venta", typeof(decimal));
-            dt.Columns.Add("Stock", typeof(int));
-            dt.Columns.Add("Total Compra", typeof(decimal));
-            dt.Columns.Add("Total Venta", typeof(decimal));
-            dt.Columns.Add("Ganancias", typeof(decimal));
-
-            if (products.Count > 0)
-            {
-                products.OrderBy(p => p.Description).ToList().ForEach(item =>
-                {
-                    dt.Rows.Add(item.Code, item.Description, item.Cost, item.Price, item.stock, item.TotalCost, item.TotalPrice, item.Revenue);
-                });
-            }
-
-            return dt;
+            sheet.Columns().AdjustToContents();
         }
     }
 }
