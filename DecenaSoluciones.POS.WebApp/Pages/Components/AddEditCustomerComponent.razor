@@ -52,12 +52,10 @@
             {
                 <tr style="align-content:center">
                     <td style="width:25%">
-                        <AutoComplete @bind-Value="customerProduct.ProductDescription"
-                                      TItem="ProductViewModel"
-                                      DataProvider="ProductsDataProvider"
-                                      PropertyName="Description"
-                                      Placeholder="Ingresa un producto..."
-                                      OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct))" />
+                        <AutoComplete @bind-Value="customerProduct.ProductDescription" TItem="ProductViewModel"
+                            DataProvider="ProductsDataProvider" PropertyName="Description"
+                            Placeholder="Ingresa un producto..."
+                            OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct))" />
                         <InputText hidden="hidden" @bind-Value="customerProduct.ProductCode" />
                         <ValidationMessage For="@(() => customerProduct.ProductCode)"></ValidationMessage>
                     </td>
@@ -70,11 +68,14 @@
                         <ValidationMessage For="@(() => customerProduct.NeedMaintenance)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
-                        <DateInput TValue="DateTime?"Disabled="!customerProduct.NeedMaintenance" Value="customerProduct.LastMaintenance" ValueExpression="() => customerProduct.LastMaintenance" ValueChanged="(e) => {OnUpdateMaintenance(e, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct));}" />
+                        <DateInput TValue="DateTime?" Disabled="!customerProduct.NeedMaintenance"
+                            Value="customerProduct.LastMaintenance" ValueExpression="() => customerProduct.LastMaintenance"
+                            ValueChanged="(e) => {OnUpdateMaintenance(e, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct));}" />
                         <ValidationMessage For="@(() => customerProduct.LastMaintenance)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
-                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.NextMaintenance" Disabled="!customerProduct.NeedMaintenance" />
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.NextMaintenance"
+                            Disabled="!customerProduct.NeedMaintenance" />
                         <ValidationMessage For="@(() => customerProduct.NextMaintenance)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
@@ -82,7 +83,8 @@
                         <ValidationMessage For="@(() => customerProduct.SoldByUs)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
-                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.SaleDate" Disabled="!customerProduct.SoldByUs" />
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.SaleDate"
+                            Disabled="!customerProduct.SoldByUs" />
                         <ValidationMessage For="@(() => customerProduct.SaleDate)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
@@ -90,11 +92,13 @@
                         <ValidationMessage For="@(() => customerProduct.HasWarranty)"></ValidationMessage>
                     </td>
                     <td style="width:5%">
-                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.WarrantyEndDate" Disabled="!customerProduct.HasWarranty" />
+                        <DateInput TValue="DateTime?" @bind-Value="customerProduct.WarrantyEndDate"
+                            Disabled="!customerProduct.HasWarranty" />
                         <ValidationMessage For="@(() => customerProduct.WarrantyEndDate)"></ValidationMessage>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" aria-label="Eliminar producto"
+                        @onclick="(() => removeProduct(newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))">
                             <Icon Name="IconName.Trash" />
                         </button>
                     </td>
@@ -137,7 +141,8 @@
         PreloadService.Hide();
     }
 
-    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>>
+    ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
     {
         return await Task.FromResult(request.ApplyTo(assignableProducts.OrderBy(prod => prod.Description)));
     }
@@ -152,8 +157,10 @@
             newCustomer.CustomerProducts.ElementAt(productIndex).ProductId = selected!.Id;
             newCustomer.CustomerProducts.ElementAt(productIndex).ProductCode = selected!.Code;
             newCustomer.CustomerProducts.ElementAt(productIndex).ProductDescription = selected!.Description;
-            newCustomer.CustomerProducts.ElementAt(productIndex).NextMaintenance = DateTime.Now.AddMonths(selected!.MaintenancePeriods ?? 6);
-            newCustomer.CustomerProducts.ElementAt(productIndex).WarrantyEndDate = DateTime.Now.AddMonths(selected!.WarrantyTime ?? 12);
+            newCustomer.CustomerProducts.ElementAt(productIndex).NextMaintenance =
+            DateTime.Now.AddMonths(selected!.MaintenancePeriods ?? 6);
+            newCustomer.CustomerProducts.ElementAt(productIndex).WarrantyEndDate = DateTime.Now.AddMonths(selected!.WarrantyTime ??
+            12);
             return;
         }
     }
@@ -162,7 +169,8 @@
     {
         if (newDate != null)
         {
-            var periods = assignableProducts.FirstOrDefault(p => p.Code == newCustomer.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
+            var periods = assignableProducts.FirstOrDefault(p => p.Code ==
+            newCustomer.CustomerProducts!.ElementAt(productIndex).ProductCode)?.MaintenancePeriods ?? 6;
             newCustomer.CustomerProducts!.ElementAt(productIndex).LastMaintenance = newDate;
             newCustomer.CustomerProducts!.ElementAt(productIndex).NextMaintenance = newDate.Value.AddMonths(periods);
             return;
@@ -188,18 +196,19 @@
                 if (response.Success)
                 {
                     var customerResult = response.Result ?? new AddEditCustomer();
-                    foreach(var custProduct in customerResult.CustomerProducts!)
+                    foreach (var custProduct in customerResult.CustomerProducts!)
                     {
                         var product = assignableProducts.FirstOrDefault(p => p.Id == custProduct.ProductId);
-                        if(product != null){
+                        if (product != null)
+                        {
                             custProduct.ProductCode = product.Code;
                             custProduct.ProductDescription = product.Description;
                         }
                     }
                     customerResult.CustomerProducts = customerResult.CustomerProducts
-                        .Where(p => !string.IsNullOrEmpty(p.ProductCode))
-                        .OrderBy(p => p.NextMaintenance)
-                        .ToList();
+                    .Where(p => !string.IsNullOrEmpty(p.ProductCode))
+                    .OrderBy(p => p.NextMaintenance)
+                    .ToList();
                     newCustomer = customerResult;
                 }
                 else
@@ -262,7 +271,7 @@
 
     private async Task OnValidSubmit()
     {
-        if(string.IsNullOrEmpty(newCustomer.Name))
+        if (string.IsNullOrEmpty(newCustomer.Name))
         {
             await Swal.FireAsync(new SweetAlertOptions
                 {
@@ -330,7 +339,7 @@
             }
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -343,7 +352,7 @@
         }
 
     }
-    
+
     private async Task RemoveCustomer()
     {
         try
@@ -383,7 +392,7 @@
                 }
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -392,7 +401,7 @@
                     Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
-            
+
         }
     }
 }

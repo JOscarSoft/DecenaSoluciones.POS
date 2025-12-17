@@ -124,3 +124,29 @@ h6 {
     --bb-sidebar-nav-item-background-hover-color: var(--color-light);
     --bb-sidebar-nav-item-group-background-color: rgba(0, 0, 0, 0.03);
 }
+
+/* Global Focus Indicators for Accessibility */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Indent Sub-menu Items */
+.bb-sidebar .nav-item .nav-item .nav-link {
+    padding-left: 2.5rem !important;
+}
+
+/* Animation for Skeleton Transition */
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

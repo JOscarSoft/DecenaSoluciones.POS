@@ -15,32 +15,26 @@
     @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
     {
         <div class="col-md-4">
-            <RadzenDropDown 
-                Placeholder="Seleccione un proveedor..." 
-                AllowClear="true" 
-                LoadData="FilterProviders"
-                AllowFiltering="true" @bind-Value=model.ProviderId 
-                Data=@FilteredProviderList 
-                TextProperty="Name"
-                ValueProperty="Id" 
-                Name="DropDownProviders"
-                Style="width:100%"/>
+            <RadzenDropDown Placeholder="Seleccione un proveedor..." AllowClear="true" LoadData="FilterProviders"
+                AllowFiltering="true" @bind-Value=model.ProviderId Data=@FilteredProviderList TextProperty="Name"
+                ValueProperty="Id" Name="DropDownProviders" Style="width:100%" />
         </div>
     }
     <div class="col-md-4">
-        <RadzenDatePicker TValue="DateTime" @bind-Value="model.CreationDate" ShowTime="true" ShowTimeOkButton="false"/>
+        <RadzenDatePicker TValue="DateTime" @bind-Value="model.CreationDate" ShowTime="true" ShowTimeOkButton="false" />
         <ValidationMessage For="@(() => model.CreationDate)"></ValidationMessage>
     </div>
     <hr />
     <div class="col-md-4">
-        <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode" placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
+        <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode"
+            placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
     </div>
     <table class="table">
         <thead>
             <tr class="bg-dark text-white border-bottom-0 headerRow">
                 <th>Producto</th>
                 <th>Cantidad</th>
-                @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)                
+                @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
                 {
                     <th>Precio compra</th>
                     <th>Precio venta</th>
@@ -57,27 +51,30 @@
             {
                 <tr>
                     <td>
-                        <AutoComplete @bind-Value="productStock.ProductDescription"
-                        TItem="ProductViewModel"
-                        DataProvider="ProductsDataProvider"
-                        PropertyName="Description"
-                        Placeholder="Ingresa un producto..."
-                        OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.Details.IndexOf(productStock))" />
+                        <AutoComplete @bind-Value="productStock.ProductDescription" TItem="ProductViewModel"
+                            DataProvider="ProductsDataProvider" PropertyName="Description"
+                            Placeholder="Ingresa un producto..."
+                            OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.Details.IndexOf(productStock))" />
                         <InputText hidden="hidden" @bind-Value="productStock.ProductCode" />
                         <ValidationMessage For="@(() => productStock.ProductCode)"></ValidationMessage>
                     </td>
                     <td>
-                        <RadzenNumeric TValue="decimal" @bind-Value="productStock.Quantity" ShowUpDown="false" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
+                        <RadzenNumeric TValue="decimal" @bind-Value="productStock.Quantity" ShowUpDown="false"
+                            Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
                         <ValidationMessage For="@(() => productStock.Quantity)"></ValidationMessage>
                     </td>
                     @if (model.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
                     {
                         <td>
-                            <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.UnitCost />
+                            <RadzenNumeric TValue="decimal" class="form-control"
+                                Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false"
+                            @bind-Value=@productStock.UnitCost />
                             <ValidationMessage For="@(() => productStock.UnitCost)"></ValidationMessage>
                         </td>
                         <td>
-                            <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productStock.UnitPrice />
+                            <RadzenNumeric TValue="decimal" class="form-control"
+                                Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false"
+                            @bind-Value=@productStock.UnitPrice />
                             <ValidationMessage For="@(() => productStock.UnitPrice)"></ValidationMessage>
                         </td>
 
@@ -90,7 +87,8 @@
                         </td>
                     }
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(model.Details.IndexOf(productStock)))">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" aria-label="Eliminar producto"
+                        @onclick="(() => removeProduct(model.Details.IndexOf(productStock)))">
                             <Icon Name="IconName.Trash" />
                         </button>
                     </td>
@@ -111,7 +109,7 @@
                     Eliminar
                 </Button>
             </AuthorizeView>
-        } 
+        }
     </div>
 </EditForm>
 
@@ -136,7 +134,8 @@
         FilteredProviderList = ProviderList;
 
         if (!string.IsNullOrEmpty(args.Filter))
-            FilteredProviderList = ProviderList.Where(c => c.Name != null && c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+            FilteredProviderList = ProviderList.Where(c => c.Name != null &&
+            c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
 
         InvokeAsync(StateHasChanged);
     }
@@ -161,7 +160,8 @@
         }
     }
 
-    private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
+    private async Task<AutoCompleteDataProviderResult<ProductViewModel>>
+    ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
     {
         return await Task.FromResult(request.ApplyTo(ProductList.OrderBy(prod => prod.Description)));
     }
@@ -222,7 +222,7 @@
                 var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
                 if (userSession != null)
                     model.UserName = userSession.Username;
-                if(model.Id > 0)
+                if (model.Id > 0)
                 {
                     response = await inventoryService.UpdateInventoryEntry(model.Id, model);
                 }

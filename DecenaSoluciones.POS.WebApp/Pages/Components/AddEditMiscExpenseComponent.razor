@@ -12,7 +12,7 @@
 
 <style>
     .tdActions {
-    width: 10%;
+        width: 10%;
     }
 </style>
 
@@ -25,7 +25,8 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Monto:</label>
-        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newExpense.TotalCost />
+        <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")"
+            Format="C2" ShowUpDown="false" @bind-Value=@newExpense.TotalCost />
         <ValidationMessage For="@(() => newExpense.TotalCost)"></ValidationMessage>
     </div>
     <div class="col-md-4">
@@ -34,12 +35,13 @@
         <ValidationMessage For="@(() => newExpense.CreationDate)"></ValidationMessage>
     </div>
     <div class="col-md-4">
-        @if(newExpense.Id > 0)
+        @if (newExpense.Id > 0)
         {
             <button type="submit" Class="btn btn-primary">
                 Actualizar
             </button>
-            <Button Color="ButtonColor.Danger" @onclick="(() => {newExpense = new AddEditMiscellaneousExpense();})" style="margin-right:15px">
+            <Button Color="ButtonColor.Danger" @onclick="(() => {newExpense = new AddEditMiscellaneousExpense();})"
+                style="margin-right:15px">
                 Cancelar
             </Button>
         }
@@ -55,46 +57,41 @@
 
 
 <div style="margin-top:25px">
-    <Grid @ref="ExpensesGrid" TItem="AddEditMiscellaneousExpense"
-    Class="table table-hover"
-    HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-    Data="ExpensesList"
-    AllowFiltering="true"
-    AllowPaging="true"
-    PageSize="50"
-    AllowSorting="true"
-    AllowSelection="false"
-    Responsive="true"
-    PageSizeSelectorVisible="true"
-    ItemsPerPageText="Gastos por página"
-    PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
-    PaginationItemsTextFormat="{0} - {1} de {2} gastos"
-    EmptyText="No se encontraron registros para mostrar"
-    AllowRowClick="true">
-        <GridColumn TItem="AddEditMiscellaneousExpense"
-        HeaderTextAlignment="Alignment.Center"
-        TextAlignment="Alignment.Center"
-        HeaderText="Fecha"
-        PropertyName="CreationDate"
-        Sortable="true"
-        SortKeySelector="item => item.CreationDate"
-        SortDirection="SortDirection.Descending"
-        IsDefaultSortColumn="true">
+    <Grid @ref="ExpensesGrid" TItem="AddEditMiscellaneousExpense" Class="table table-hover"
+        HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow" Data="ExpensesList" AllowFiltering="true"
+        AllowPaging="true" PageSize="50" AllowSorting="true" AllowSelection="false" Responsive="true"
+        PageSizeSelectorVisible="true" ItemsPerPageText="Gastos por página"
+        PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }" PaginationItemsTextFormat="{0} - {1} de {2} gastos"
+        EmptyText="No se encontraron registros para mostrar" AllowRowClick="true">
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderTextAlignment="Alignment.Center"
+            TextAlignment="Alignment.Center" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true"
+            SortKeySelector="item => item.CreationDate" SortDirection="SortDirection.Descending"
+            IsDefaultSortColumn="true">
             @context.CreationDate.ToString("dd/MM/yyyy hh:mm")
         </GridColumn>
-        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Descripción" PropertyName="Comments" SortKeySelector="item => item.Comments" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Descripción" PropertyName="Comments"
+            SortKeySelector="item => item.Comments" HeaderTextAlignment="Alignment.Center">
             @context.Comments
         </GridColumn>
-        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Monto" PropertyName="TotalCost" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Monto" PropertyName="TotalCost"
+            HeaderTextAlignment="Alignment.Center">
             @context.TotalCost!.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
         </GridColumn>
-        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Usuario" PropertyName="Username" SortKeySelector="item => item.UserName" HeaderTextAlignment="Alignment.Center">
+        <GridColumn TItem="AddEditMiscellaneousExpense" HeaderText="Usuario" PropertyName="Username"
+            SortKeySelector="item => item.UserName" HeaderTextAlignment="Alignment.Center">
             @context.UserName
         </GridColumn>
-        <GridColumn TItem="AddEditMiscellaneousExpense" Filterable="false" Sortable="false" ColumnClass="@(x => "tdActions")">
+        <GridColumn TItem="AddEditMiscellaneousExpense" Filterable="false" Sortable="false"
+            ColumnClass="@(x => "tdActions")">
             <ChildContent>
-                <Button Color="ButtonColor.Primary" @onclick="(() => {newExpense = context;})"><Icon Name="IconName.Pencil" /></Button>
-                <Button Color="ButtonColor.Danger" @onclick="(() => RemoveExpense(context.Id))"><Icon Name="IconName.Trash" /></Button>
+                <Button Color="ButtonColor.Primary" aria-label="Editar gasto"
+                @onclick="(() => {newExpense = context;})">
+                    <Icon Name="IconName.Pencil" />
+                </Button>
+                <Button Color="ButtonColor.Danger" aria-label="Eliminar gasto"
+                @onclick="(() => RemoveExpense(context.Id))">
+                    <Icon Name="IconName.Trash" />
+                </Button>
             </ChildContent>
         </GridColumn>
     </Grid>
@@ -153,7 +150,7 @@
 
     private async Task OnValidSubmit()
     {
-        if(string.IsNullOrEmpty(newExpense.Comments))
+        if (string.IsNullOrEmpty(newExpense.Comments))
         {
             await Swal.FireAsync(new SweetAlertOptions
                 {
@@ -231,7 +228,7 @@
             }
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -245,7 +242,7 @@
         await LoadExpenses();
 
     }
-    
+
     private async Task RemoveExpense(int id)
     {
         try
@@ -284,7 +281,7 @@
                 }
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -293,7 +290,7 @@
                     Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
-            
+
         }
         await LoadExpenses();
     }

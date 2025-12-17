@@ -4,50 +4,54 @@
 @inject NavigationManager navegation;
 
 <div style="margin-top:25px">
-	<Grid @ref="salesGrid"
-		  TItem="SalesViewModel"
-		  Class="table table-hover"
-		  HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-		  DataProvider="salesDataProvider"
-		  AllowFiltering="true"
-		  AllowPaging="true"
-		  PageSize="25"
-		  AllowSorting="true"
-		  AllowSelection="false"
-		  Responsive="true"
-		  PageSizeSelectorVisible="true"
-		  ItemsPerPageText="Registros por página"
-		  PageSizeSelectorItems="new int[] { 25, 50, 100 }"
-		  PaginationItemsTextFormat="{0} - {1} de {2} registros"
-		  EmptyText="No se encontraron registros para mostrar"
-		  AllowRowClick="true"
-		  OnRowClick="OnRowClick"
-		  RowClass="GetRowClass">
-		<GridColumn TItem="SalesViewModel" HeaderText="Código" PropertyName="Code" SortString="Code" SortKeySelector="item => item.Code">
-			@context.Code
-		</GridColumn>
-		<GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" Filterable="false">
-			@(context.Total != null ? context.Total?.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")
-		</GridColumn>
-		<GridColumn TItem="SalesViewModel" HeaderText="Usuario" PropertyName="UserName" Sortable="true" SortString="UserName" SortKeySelector="item => item.UserName">
-			@context.UserName
-		</GridColumn>
-		<GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true" SortString="CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true" SortKeySelector="item => item.CreationDate">
-			@context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
-		</GridColumn>
-		<GridColumn TItem="SalesViewModel" HeaderText="Cliente" PropertyName="CustomerName" SortString="CustomerName" SortKeySelector="item => item.CustomerName">
-			@context.CustomerName
-		</GridColumn>
-	</Grid>
+	@if (IsLoading)
+	{
+		<SkeletonTable Headers='new List<string> { "Código", "Total", "Usuario", "Fecha", "Cliente" }' />
+	}
+
+	<div class="fade-in" style="@(IsLoading ? "display:none" : "")">
+		<Grid @ref="salesGrid" TItem="SalesViewModel" Class="table table-hover"
+			HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow" DataProvider="salesDataProvider"
+			AllowFiltering="true" AllowPaging="true" PageSize="25" AllowSorting="true" AllowSelection="false"
+			Responsive="true" PageSizeSelectorVisible="true" ItemsPerPageText="Registros por página"
+			PageSizeSelectorItems="new int[] { 25, 50, 100 }" PaginationItemsTextFormat="{0} - {1} de {2} registros"
+			EmptyText="No se encontraron registros para mostrar" AllowRowClick="true" OnRowClick="OnRowClick"
+			RowClass="GetRowClass">
+			<GridColumn TItem="SalesViewModel" HeaderText="Código" PropertyName="Code" SortString="Code"
+				SortKeySelector="item => item.Code">
+				@context.Code
+			</GridColumn>
+			<GridColumn TItem="SalesViewModel" HeaderText="Total" PropertyName="Total" Filterable="false">
+				@(context.Total != null ? context.Total?.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) :
+					"0.00")
+			</GridColumn>
+			<GridColumn TItem="SalesViewModel" HeaderText="Usuario" PropertyName="UserName" Sortable="true"
+				SortString="UserName" SortKeySelector="item => item.UserName">
+				@context.UserName
+			</GridColumn>
+			<GridColumn TItem="SalesViewModel" HeaderText="Fecha" PropertyName="CreationDate" Sortable="true"
+				SortString="CreationDate" SortDirection="SortDirection.Descending" IsDefaultSortColumn="true"
+				SortKeySelector="item => item.CreationDate">
+				@context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
+			</GridColumn>
+			<GridColumn TItem="SalesViewModel" HeaderText="Cliente" PropertyName="CustomerName"
+				SortString="CustomerName" SortKeySelector="item => item.CustomerName">
+				@context.CustomerName
+			</GridColumn>
+		</Grid>
+	</div>
 </div>
 
 @code {
 	[Parameter]
 	public GridDataProviderDelegate<SalesViewModel> salesDataProvider { get; set; } = default!;
-	
-	[Parameter] 
+
+	[Parameter]
 	public int quotations { get; set; } = 0;
-	
+
+	[Parameter]
+	public bool IsLoading { get; set; } = false;
+
 	Grid<SalesViewModel> salesGrid = default!;
 	string salesUrl = "/newsale";
 

@@ -116,7 +116,7 @@
                                 @productSale.Total.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
                             </td>
                             <td>
-                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
+                                <button type="button" class="btn btn-outline-danger btn-sm" aria-label="Eliminar producto" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
                                     <Icon Name="IconName.Trash" />
                                 </button>
                             </td>
@@ -190,11 +190,11 @@
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
                             @if (disabledClientFields)
                             {
-                                <Button Color="ButtonColor.Primary" Class="float-end" @onclick="() => OnChangeCustomer(null, true)"><Icon Name="IconName.PlusCircle" /></Button>
+                                <Button Color="ButtonColor.Primary" Class="float-end" aria-label="Seleccionar cliente" @onclick="() => OnChangeCustomer(null, true)"><Icon Name="IconName.PlusCircle" /></Button>
                             }
                             else
                             {
-                                <Button Color="ButtonColor.Danger" Class="float-end" @onclick="() => OnChangeCustomer(null, false)"><Icon Name="IconName.XCircle" /></Button>
+                                <Button Color="ButtonColor.Danger" Class="float-end" aria-label="Remover cliente" @onclick="() => OnChangeCustomer(null, false)"><Icon Name="IconName.XCircle" /></Button>
                             }
                         </div>
                     </div>

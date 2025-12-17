@@ -59,70 +59,78 @@
 </AuthorizeView>
 
 <div style="margin-top:25px">
-    <Grid @ref="entrieGrid" TItem="InventoryEntryViewModel"
-          Class="table table-hover"
-          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-          Data="entriesList"
-          AllowFiltering="true"
-          AllowPaging="true"
-          PageSize="50"
-          AllowSorting="true"
-          AllowSelection="false"
-          Responsive="true"
-          PageSizeSelectorVisible="true"
-          ItemsPerPageText="Entradas por página"
-          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
-          PaginationItemsTextFormat="{0} - {1} de {2} Entradas"
-          EmptyText="No se encontraron registros para mostrar"
-          AllowRowClick="true"
-          OnRowClick="OnRowClick">
-        <GridColumn 
-            TItem="InventoryEntryViewModel" 
-            SortKeySelector="item => item.InventoryEntryType" 
-            Filterable="false" 
+    @if (isLoading)
+    {
+        <SkeletonTable Headers='new List<string> { "Tipo", "Fecha", "QTY Productos", "Costo total", "Proveedor", "Usuario" }' />
+    }
+    
+    <div class="fade-in" style="@(isLoading ? "display:none" : "")">
+        <Grid @ref="entrieGrid" TItem="InventoryEntryViewModel"
+              Class="table table-hover"
+              HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+              Data="entriesList"
+              AllowFiltering="true"
+              AllowPaging="true"
+              PageSize="50"
+              AllowSorting="true"
+              AllowSelection="false"
+              Responsive="true"
+              PageSizeSelectorVisible="true"
+              ItemsPerPageText="Entradas por página"
+              PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+              PaginationItemsTextFormat="{0} - {1} de {2} Entradas"
+              EmptyText="No se encontraron registros para mostrar"
+              AllowRowClick="true"
+              OnRowClick="OnRowClick">
+            <GridColumn 
+                TItem="InventoryEntryViewModel" 
+                SortKeySelector="item => item.InventoryEntryType" 
+                Filterable="false" 
+                Sortable="true" 
+                HeaderText="Tipo"
+                PropertyName="InventoryEntryType">
+                <ChildContent>
+                    @if (context.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
+                    {
+                        <Button Color="ButtonColor.Success">Entrada</Button>
+                    }
+                    else
+                    {
+                        <Button Color="ButtonColor.Danger">Salida</Button>
+                    }
+                </ChildContent>
+            </GridColumn>
+            <GridColumn 
+            TItem="InventoryEntryViewModel"
+            HeaderTextAlignment="Alignment.Center" 
+            TextAlignment="Alignment.Center"
+            HeaderText="Fecha" 
+            PropertyName="CreationDate" 
             Sortable="true" 
-            HeaderText="Tipo"
-            PropertyName="InventoryEntryType">
-            <ChildContent>
-                @if (context.InventoryEntryType == POS.Shared.Enums.InventoryEntryType.In)
-                {
-                    <Button Color="ButtonColor.Success">Entrada</Button>
-                }
-                else
-                {
-                    <Button Color="ButtonColor.Danger">Salida</Button>
-                }
-            </ChildContent>
-        </GridColumn>
-        <GridColumn 
-        TItem="InventoryEntryViewModel"
-        HeaderTextAlignment="Alignment.Center" 
-        TextAlignment="Alignment.Center"
-        HeaderText="Fecha" 
-        PropertyName="CreationDate" 
-        Sortable="true" 
-        SortKeySelector="item => item.CreationDate" 
-        SortDirection="SortDirection.Descending" 
-        IsDefaultSortColumn="true">
-            @context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
-        </GridColumn>
-        <GridColumn TItem="InventoryEntryViewModel" HeaderText="QTY Productos" Sortable="false">
-            @context.Details.Count
-        </GridColumn>
-        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Costo total" PropertyName="TotalCost">
-            @context.TotalCost!.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-        </GridColumn>
-        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Proveedor" PropertyName="context.ProviderName" SortKeySelector="item => item.ProviderName">
-            @context.ProviderName
-        </GridColumn>
-        <GridColumn TItem="InventoryEntryViewModel" HeaderText="Usuario" PropertyName="UserName" SortKeySelector="item => item.UserName">
-            @context.UserName
-        </GridColumn>
-    </Grid>
+            SortKeySelector="item => item.CreationDate" 
+            SortDirection="SortDirection.Descending" 
+            IsDefaultSortColumn="true">
+                @context.CreationDate.ToString("dd/MM/yyyy hh:mm tt")
+            </GridColumn>
+            <GridColumn TItem="InventoryEntryViewModel" HeaderText="QTY Productos" Sortable="false">
+                @context.Details.Count
+            </GridColumn>
+            <GridColumn TItem="InventoryEntryViewModel" HeaderText="Costo total" PropertyName="TotalCost">
+                @context.TotalCost!.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+            </GridColumn>
+            <GridColumn TItem="InventoryEntryViewModel" HeaderText="Proveedor" PropertyName="context.ProviderName" SortKeySelector="item => item.ProviderName">
+                @context.ProviderName
+            </GridColumn>
+            <GridColumn TItem="InventoryEntryViewModel" HeaderText="Usuario" PropertyName="UserName" SortKeySelector="item => item.UserName">
+                @context.UserName
+            </GridColumn>
+        </Grid>
+    </div>
 </div>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
+    private bool isLoading = true;
     List<AddEditProvider> providerList = new List<AddEditProvider>();
     List<ProductViewModel> productList = new List<ProductViewModel>();
     List<InventoryEntryViewModel> entriesList = new List<InventoryEntryViewModel>();
@@ -146,9 +154,9 @@
     {
         try
         {
-            PreloadService!.Show();
+            isLoading = true;
             var response = await inventoryService.GetInventoryEntryList();
-            PreloadService.Hide();
+            isLoading = false;
             if (response.Success)
             {
                 entriesList = response.Result ?? new List<InventoryEntryViewModel>();
@@ -166,7 +174,7 @@
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
+            isLoading = false;
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

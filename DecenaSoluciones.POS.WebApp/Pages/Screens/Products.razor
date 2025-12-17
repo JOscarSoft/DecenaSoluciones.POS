@@ -20,53 +20,58 @@
 <Modal @ref="addEditProductModal" UseStaticBackdrop="true" Size="ModalSize.ExtraLarge" OnHidden="OnModalHiding" />
 
 <div class="row" style="margin-top:50px">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">     
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
         <AuthorizeView Roles="admin, manager">
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="GenerateProductsReport">Reporte de productos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end"
+                @onclick="() => ShowAddEditProductModal(null)">Agregar productos</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end"
+                @onclick="GenerateProductsReport">Reporte de productos</Button>
         </AuthorizeView>
     </div>
 </div>
 
 <div style="margin-top:25px">
-    <Grid @ref="productsGrid" TItem="ProductViewModel"
-          Class="table table-hover"
-          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-          Data="productList"
-          AllowFiltering="true"
-          AllowPaging="true"
-          PageSize="50"
-          AllowSorting="true"
-          AllowSelection="false"
-          Responsive="true"
-          PageSizeSelectorVisible="true"
-          ItemsPerPageText="Productos por página"
-          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
-          PaginationItemsTextFormat="{0} - {1} de {2} productos"
-          EmptyText="No se encontraron registros para mostrar"
-          AllowRowClick="true"
-          OnRowClick="OnRowClick">
+    @if (isLoading)
+    {
+        <SkeletonTable Headers='new List<string> { "Código", "Descripción", "Precio compra", "Precio venta", "Stock" }' />
+    }
 
-        <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code" SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
-            @context.Code
-        </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description" SortKeySelector="item => item.Description" IsDefaultSortColumn="true" HeaderTextAlignment="Alignment.Center">
-            @context.Description
-        </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost" SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
-            @context.Cost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-        </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price" SortKeySelector="item => item.Price" HeaderTextAlignment="Alignment.Center">
-            @context.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-        </GridColumn>
-        <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true" SortKeySelector="item => item.stock" Filterable="false" HeaderTextAlignment="Alignment.Center">
-            @context.stock
-        </GridColumn>
-    </Grid>
+    <div class="fade-in" style="@(isLoading ? "display:none" : "")">
+        <Grid @ref="productsGrid" TItem="ProductViewModel" Class="table table-hover"
+            HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow" Data="productList" AllowFiltering="true"
+            AllowPaging="true" PageSize="50" AllowSorting="true" AllowSelection="false" Responsive="true"
+            PageSizeSelectorVisible="true" ItemsPerPageText="Productos por página"
+            PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }" PaginationItemsTextFormat="{0} - {1} de {2} productos"
+            EmptyText="No se encontraron registros para mostrar" AllowRowClick="true" OnRowClick="OnRowClick">
+
+            <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code"
+                SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
+                @context.Code
+            </GridColumn>
+            <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description"
+                SortKeySelector="item => item.Description" IsDefaultSortColumn="true"
+                HeaderTextAlignment="Alignment.Center">
+                @context.Description
+            </GridColumn>
+            <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost"
+                SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
+                @context.Cost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+            </GridColumn>
+            <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price"
+                SortKeySelector="item => item.Price" HeaderTextAlignment="Alignment.Center">
+                @context.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+            </GridColumn>
+            <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true"
+                SortKeySelector="item => item.stock" Filterable="false" HeaderTextAlignment="Alignment.Center">
+                @context.stock
+            </GridColumn>
+        </Grid>
+    </div>
 </div>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
+    private bool isLoading = true;
     List<ProductViewModel> productList = new List<ProductViewModel>();
     Grid<ProductViewModel> productsGrid = default!;
     private Modal addEditProductModal = default!;
@@ -80,9 +85,9 @@
     {
         try
         {
-            PreloadService!.Show();
+            isLoading = true;
             var response = await productService.GetProducts();
-            PreloadService.Hide();
+            isLoading = false;
             if (response.Success)
             {
                 productList = response.Result ?? new List<ProductViewModel>();
@@ -100,7 +105,7 @@
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
+            isLoading = false;
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
@@ -116,7 +121,8 @@
         var parameters = new Dictionary<string, object>();
         parameters.Add("Product", productParam);
         parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
-        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productParam.Id > 0 ? "Actualizar producto" : "Agregar nuevo producto", parameters: parameters);
+        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productParam.Id > 0 ? "Actualizar producto" :
+        "Agregar nuevo producto", parameters: parameters);
     }
 
     private async Task GenerateProductsReport()

@@ -25,45 +25,53 @@
 </div>
 
 <div style="margin-top:25px">
-    <Grid @ref="customersGrid" TItem="CustomerViewModel"
-          Class="table table-hover"
-          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-          Data="customerList"
-          AllowFiltering="true"
-          AllowPaging="true"
-          PageSize="50"
-          AllowSorting="true"
-          AllowSelection="false"
-          Responsive="true"
-          PageSizeSelectorVisible="true"
-          ItemsPerPageText="Clientes por página"
-          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
-          PaginationItemsTextFormat="{0} - {1} de {2} clientes"
-          EmptyText="No se encontraron registros para mostrar"
-          AllowRowClick="true"
-          OnRowClick="OnRowClick"
-          RowClass="GetRowClass">
+    @if (isLoading)
+    {
+        <SkeletonTable Headers='new List<string> { "Nombre", "Teléfono", "Dirección", "Producto", "Próximo mantenimiento" }' />
+    }
+    
+    <div class="fade-in" style="@(isLoading ? "display:none" : "")">
+        <Grid @ref="customersGrid" TItem="CustomerViewModel"
+              Class="table table-hover"
+              HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+              Data="customerList"
+              AllowFiltering="true"
+              AllowPaging="true"
+              PageSize="50"
+              AllowSorting="true"
+              AllowSelection="false"
+              Responsive="true"
+              PageSizeSelectorVisible="true"
+              ItemsPerPageText="Clientes por página"
+              PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+              PaginationItemsTextFormat="{0} - {1} de {2} clientes"
+              EmptyText="No se encontraron registros para mostrar"
+              AllowRowClick="true"
+              OnRowClick="OnRowClick"
+              RowClass="GetRowClass">
 
-        <GridColumn TItem="CustomerViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
-            @context.Name
-        </GridColumn>
-        <GridColumn TItem="CustomerViewModel" HeaderText="Teléfono" PropertyName="PhoneNumber" Sortable="false" HeaderTextAlignment="Alignment.Center">
-            @(context.PhoneNumber == null ? string.Empty : Regex.Replace(context.PhoneNumber, @"(\d{3})(\d{3})(\d{4})", "($1) $2-$3"))
-        </GridColumn>
-        <GridColumn TItem="CustomerViewModel" HeaderText="Dirección" PropertyName="Direction" SortKeySelector="item => item.Direction" HeaderTextAlignment="Alignment.Center">
-            @context.Direction
-        </GridColumn>
-        <GridColumn TItem="CustomerViewModel" HeaderText="Producto" PropertyName="Product" SortKeySelector="item => item.Product" HeaderTextAlignment="Alignment.Center">
-            @context.Product
-        </GridColumn>
-        <GridColumn TItem="CustomerViewModel" HeaderText="Próximo mantenimiento" PropertyName="NextMaintenance" SortKeySelector="item => item.NextMaintenance" HeaderTextAlignment="Alignment.Center">
-            @(context.NextMaintenance.HasValue ? context.NextMaintenance.Value.ToString("dd/MM/yyyy") : string.Empty)
-        </GridColumn>
-    </Grid>
+            <GridColumn TItem="CustomerViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
+                @context.Name
+            </GridColumn>
+            <GridColumn TItem="CustomerViewModel" HeaderText="Teléfono" PropertyName="PhoneNumber" Sortable="false" HeaderTextAlignment="Alignment.Center">
+                @(context.PhoneNumber == null ? string.Empty : Regex.Replace(context.PhoneNumber, @"(\d{3})(\d{3})(\d{4})", "($1) $2-$3"))
+            </GridColumn>
+            <GridColumn TItem="CustomerViewModel" HeaderText="Dirección" PropertyName="Direction" SortKeySelector="item => item.Direction" HeaderTextAlignment="Alignment.Center">
+                @context.Direction
+            </GridColumn>
+            <GridColumn TItem="CustomerViewModel" HeaderText="Producto" PropertyName="Product" SortKeySelector="item => item.Product" HeaderTextAlignment="Alignment.Center">
+                @context.Product
+            </GridColumn>
+            <GridColumn TItem="CustomerViewModel" HeaderText="Próximo mantenimiento" PropertyName="NextMaintenance" SortKeySelector="item => item.NextMaintenance" HeaderTextAlignment="Alignment.Center">
+                @(context.NextMaintenance.HasValue ? context.NextMaintenance.Value.ToString("dd/MM/yyyy") : string.Empty)
+            </GridColumn>
+        </Grid>
+    </div>
 </div>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
+    private bool isLoading = true;
     List<CustomerViewModel> customerList = new List<CustomerViewModel>();
     Grid<CustomerViewModel> customersGrid = default!;
     private Modal addEditCustomerModal = default!;
@@ -77,9 +85,9 @@
     {
         try
         {
-            PreloadService!.Show();
+            isLoading = true;
             var response = await customerService.GetCustomerList();
-            PreloadService.Hide();
+            isLoading = false;
             if (response.Success)
             {
                 customerList = response.Result!.OrderBy(p=> p.NextMaintenance ?? DateOnly.MaxValue).ToList() ?? new List<CustomerViewModel>();
@@ -97,7 +105,7 @@
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
+            isLoading = false;
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  DecenaSoluciones.POS.Shared -> C:\Users\jordy\Documents\projects\DecenaSoluciones.POS\DecenaSoluciones.POS.Shared\bin\Debug\net8.0\DecenaSoluciones.POS.Shared.dll
+  DecenaSoluciones.POS.WebApp -> C:\Users\jordy\Documents\projects\DecenaSoluciones.POS\DecenaSoluciones.POS.WebApp\bin\Debug\net8.0\DecenaSoluciones.POS.WebApp.dll
+  DecenaSoluciones.POS.WebApp (Blazor output) -> C:\Users\jordy\Documents\projects\DecenaSoluciones.POS\DecenaSoluciones.POS.WebApp\bin\Debug\net8.0\wwwroot
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.95
+
+Workload updates are available. Run `dotnet workload list` for more information.

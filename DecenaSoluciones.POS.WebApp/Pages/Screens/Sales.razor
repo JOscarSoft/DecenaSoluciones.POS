@@ -46,30 +46,34 @@
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() =>  navegation.NavigateTo(salesUrl)">Nueva venta</Button>
+        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end"
+            @onclick="() =>  navegation.NavigateTo(salesUrl)">Nueva venta</Button>
         <AuthorizeView Roles="admin, manager">
-            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end" @onclick="() => ShowReportsModal()">Generar reporte</Button>
+            <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Dark" Class="float-end"
+                @onclick="() => ShowReportsModal()">Generar reporte</Button>
         </AuthorizeView>
     </div>
 </div>
 
-<SaleListComponent salesDataProvider="SalesDataProvider" quotations="0"></SaleListComponent>
+<SaleListComponent salesDataProvider="SalesDataProvider" quotations="0" IsLoading="isLoading"></SaleListComponent>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
     GridResponse<SalesViewModel>? salesList = default!;
+    private bool isLoading = true;
     private Modal reportsModal = default!;
     string salesUrl = "/newsale";
     private EnumReportType reportType = EnumReportType.Sales;
     private DateOnly reportDateFrom = DateOnly.FromDateTime(DateTime.Now.AddDays(-7));
     private DateOnly reportDateTo = DateOnly.FromDateTime(DateTime.Now);
 
-    public async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel> request)
+    public async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel>
+    request)
     {
         try
         {
-            if (salesList == null)
-                PreloadService!.Show();
+            isLoading = true;
+            StateHasChanged();
 
             string sortString = "CreationDate";
             string sortDirection = "desc";
@@ -81,16 +85,19 @@
                 sortDirection = request.Sorting.FirstOrDefault()!.SortDirection == SortDirection.Descending ? "desc" : "asc";
             }
 
-            var response = await saleService.GetFilteredSalesList(new GridRequest(){
+            var response = await saleService.GetFilteredSalesList(new GridRequest()
+                {
                     PageNumber = request.PageNumber,
                     PageSize = request.PageSize,
                     SortColumn = sortString,
                     SortDirection = sortDirection,
-                    Filters = request.Filters.Select(p => new ColumnFilter {
+                    Filters = request.Filters.Select(p => new ColumnFilter
+                    {
                         Field = p.PropertyName,
-                        Operator = (DecenaSoluciones.POS.Shared.Enums.FilterOperator)(int)p.Operator, 
-                        Value = p.Value }).ToList()
-            });
+                        Operator = (DecenaSoluciones.POS.Shared.Enums.FilterOperator)(int)p.Operator,
+                        Value = p.Value
+                    }).ToList()
+                });
 
             if (response.Success)
             {
@@ -117,13 +124,15 @@
         }
         finally
         {
-            PreloadService!.Hide();
+            isLoading = false;
+            StateHasChanged();
         }
 
-        return await Task.FromResult(new GridDataProviderResult<SalesViewModel> { 
-            Data = salesList?.Items ?? new List<SalesViewModel>(), 
-            TotalCount = salesList?.TotalCount ?? 0
-        });
+        return await Task.FromResult(new GridDataProviderResult<SalesViewModel>
+            {
+                Data = salesList?.Items ?? new List<SalesViewModel>(),
+                TotalCount = salesList?.TotalCount ?? 0
+            });
     }
 
     private void ChangeReportType(ChangeEventArgs e)
@@ -160,8 +169,8 @@
                 response = await reportService.GenerateReport(reportDateFrom, reportDateTo, reportType);
 
             var fileName = reportType == EnumReportType.Sales ? "Reporte de ventas" :
-                reportType == EnumReportType.ExpenseAndIncome ? "Reporte de ingresos y gastos" :
-                "Ventas por productos";
+            reportType == EnumReportType.ExpenseAndIncome ? "Reporte de ingresos y gastos" :
+            "Ventas por productos";
 
             fileName = $"{fileName} {DateTime.Now.ToString("dd/MM/yyyy")}.xlsx";
 
