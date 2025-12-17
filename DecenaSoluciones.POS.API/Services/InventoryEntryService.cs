@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace DecenaSoluciones.POS.API.Services
 {
     public class InventoryEntryService(
-        DecenaSolucionesDBContext dbContext, 
+        DecenaSolucionesDBContext dbContext,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor) : IInventoryEntryService
     {
@@ -150,67 +150,58 @@ namespace DecenaSoluciones.POS.API.Services
 
         public async Task AddNewInventoryEntryFromProductChange(Product productModification, decimal difference)
         {
-            try
+            dbContext.ChangeTracker.Clear();
+            string userName = string.Empty;
+
+            if (httpContextAccessor.HttpContext?.User != null)
+                userName = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(p => p.Type == ClaimTypes.Name)?.Value ?? string.Empty;
+
+            var inventoryEntry = new InventoryEntry()
             {
+                Id = 0,
+                InventoryEntryTypeId = (int)(difference > 0 ? Shared.Enums.InventoryEntryType.In : Shared.Enums.InventoryEntryType.Out),
+                CreationDate = DateTime.Now,
+                UserName = userName,
+                InventoryEntryDetails = new List<InventoryEntryDetail>()
+            };
 
-                dbContext.ChangeTracker.Clear();
-                string userName = string.Empty;
-
-                if (httpContextAccessor.HttpContext?.User != null)
-                    userName = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(p => p.Type == ClaimTypes.Name)?.Value ?? string.Empty;
-
-                var inventoryEntry = new InventoryEntry()
-                {
-                    Id = 0,
-                    InventoryEntryTypeId = (int)(difference > 0 ? Shared.Enums.InventoryEntryType.In : Shared.Enums.InventoryEntryType.Out),
-                    CreationDate = DateTime.Now,
-                    UserName = userName,
-                    InventoryEntryDetails = new List<InventoryEntryDetail>()
-                };
-
-                difference = difference > 0 ? difference : difference * -1;
-                var inventoryEntryDetail = new InventoryEntryDetail()
-                {
-                    ProductId = productModification.Id,
-                    Quantity = difference,
-                    UnitCost = productModification.Cost,
-                    UnitPrice = productModification.Price,
-                    Product = productModification,
-                    InventoryEntry = inventoryEntry,
-                    InventoryEntryId = productModification.Id,
-                    TotalCost = productModification.Cost * difference,
-                    Comments = "Modificación directa de stock"
-                };
-
-                inventoryEntryDetail.Product = null;
-
-                var lastModEntry = await dbContext.InventoryEntries
-                    .Include(p => p.InventoryEntryDetails)
-                    .Include(p => p.Provider)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In && p.ProviderId == null && p.CreationDate > DateTime.Today);
-
-                if (inventoryEntry.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In && lastModEntry != null)
-                {
-                    inventoryEntry = lastModEntry;
-                    inventoryEntryDetail.InventoryEntry = null;
-                    inventoryEntryDetail.InventoryEntryId = inventoryEntry.Id;
-
-                    dbContext.InventoryEntryDetails.Add(inventoryEntryDetail);
-                }
-                else
-                {
-                    inventoryEntry.InventoryEntryDetails.Add(inventoryEntryDetail);
-                    dbContext.InventoryEntries.Add(inventoryEntry);
-                }
-
-                await dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
+            difference = difference > 0 ? difference : difference * -1;
+            var inventoryEntryDetail = new InventoryEntryDetail()
             {
+                ProductId = productModification.Id,
+                Quantity = difference,
+                UnitCost = productModification.Cost,
+                UnitPrice = productModification.Price,
+                Product = productModification,
+                InventoryEntry = inventoryEntry,
+                InventoryEntryId = productModification.Id,
+                TotalCost = productModification.Cost * difference,
+                Comments = "Modificación directa de stock"
+            };
 
-                throw;
+            inventoryEntryDetail.Product = null;
+
+            var lastModEntry = await dbContext.InventoryEntries
+                .Include(p => p.InventoryEntryDetails)
+                .Include(p => p.Provider)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In && p.ProviderId == null && p.CreationDate > DateTime.Today);
+
+            if (inventoryEntry.InventoryEntryTypeId == (int)Shared.Enums.InventoryEntryType.In && lastModEntry != null)
+            {
+                inventoryEntry = lastModEntry;
+                inventoryEntryDetail.InventoryEntry = null;
+                inventoryEntryDetail.InventoryEntryId = inventoryEntry.Id;
+
+                dbContext.InventoryEntryDetails.Add(inventoryEntryDetail);
             }
+            else
+            {
+                inventoryEntry.InventoryEntryDetails.Add(inventoryEntryDetail);
+                dbContext.InventoryEntries.Add(inventoryEntry);
+            }
+
+            await dbContext.SaveChangesAsync();
         }
     }
 }
