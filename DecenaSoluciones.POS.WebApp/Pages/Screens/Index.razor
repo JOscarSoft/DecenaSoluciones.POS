@@ -9,6 +9,7 @@
 @attribute [Authorize]
 @inject IReportService reportService;
 @inject SweetAlertService Swal;
+@inject ILocalStorage localStorage;
 
 <style>
     div:has(.charDiv) {
@@ -18,56 +19,235 @@
 
 @if (string.IsNullOrWhiteSpace(viewModel.CompanyName))
 {
-    <h1 style="margin-bottom:50px">¡Bienvenido!</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">¡Bienvenido!</h3>
+        <button class="btn btn-sm btn-outline-primary" @onclick="RefreshDashboard" disabled="@isLoading">
+            <i class="bi bi-arrow-clockwise @(isLoading ? "spinner-border spinner-border-sm" : "")"></i>
+            @(isLoading ? "Actualizando..." : "Actualizar")
+        </button>
+    </div>
 }
 else
 {
-    <h1 style="margin-bottom:50px">@viewModel.CompanyName</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">@viewModel.CompanyName</h3>
+        <button class="btn btn-sm btn-outline-primary" @onclick="RefreshDashboard" disabled="@isLoading">
+            <i class="bi bi-arrow-clockwise @(isLoading ? "spinner-border spinner-border-sm" : "")"></i>
+            @(isLoading ? "Actualizando..." : "Actualizar")
+        </button>
+    </div>
 }
-<div style="display:flex; justify-content:center">
-    <DoughnutChart @ref="doughnutChart" Width="350" Class="charDiv" />
+
+<div class="row g-4 mb-4">
+    @if (isLoading)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body d-flex align-items-center">
+                        <PlaceholderContainer Animation="PlaceholderAnimation.Glow" Class="w-100 d-flex align-items-center">
+                            <Placeholder Style="width: 50px; height: 50px;" Class="rounded-circle me-3" />
+                            <div class="flex-fill">
+                                <Placeholder Width="PlaceholderWidth.Col7" />
+                                <Placeholder Width="PlaceholderWidth.Col3" Size="PlaceholderSize.Large" />
+                            </div>
+                        </PlaceholderContainer>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Metric Card: Sold Products -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-cart-check text-success fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Productos Vendidos Esta Semana</h6>
+                        <h2 class="card-text fw-bold mb-0">@viewModel.SoldProductsPerWeek</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Card: Low Stock -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-exclamation-triangle text-warning fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Productos Con Stock Insuficiente</h6>
+                        <h2 class="card-text fw-bold mb-0">@viewModel.ProductsWithEmptyStock</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Card: Maintanance -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-tools text-danger fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Clientes Pendiente de Mantenimientos</h6>
+                        <h2 class="card-text fw-bold mb-0">@viewModel.ExpiredMaintenances</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
-<div class="row g-3" style="margin-top:35px">
-    <div class="col-md-4 text-center">
-        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.SoldProductsPerWeek</label>
-        <h3>Productos Vendidos Esta Semana</h3>
+
+<div class="row g-4">
+    <!-- Chart Section -->
+    <div class="col-md-5">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0">Resumen de Ventas</h5>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                @if (isLoading)
+                {
+                    <PlaceholderContainer Animation="PlaceholderAnimation.Glow" Class="w-100">
+                        <Placeholder Width="PlaceholderWidth.Col12" Style="height: 250px;" />
+                    </PlaceholderContainer>
+                }
+                else
+                {
+                    <DoughnutChart @ref="doughnutChart" Class="w-100" />
+                }
+            </div>
+        </div>
     </div>
-    <div class="col-md-4  text-center">
-        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.ExpiredMaintenances</label>
-        <h3>Clientes Pendiente de Mantenimientos</h3>
-    </div>
-    <div class="col-md-4  text-center">
-        <label class="form-label" style="font-size:100px;color:#db0404;font-family:'Trebuchet MS', sans-serif">@viewModel.ProductsWithEmptyStock</label>
-        <h3>Productos Con Stock Insuficiente</h3>
+
+    <!-- Top Products Table -->
+    <div class="col-md-7">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0">Productos Más Vendidos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Producto</th>
+                                <th class="text-end pe-4">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (isLoading)
+                            {
+                                for (int i = 0; i < 5; i++)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <PlaceholderContainer Animation="PlaceholderAnimation.Glow">
+                                                <Placeholder Width="PlaceholderWidth.Col8" />
+                                            </PlaceholderContainer>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <PlaceholderContainer Animation="PlaceholderAnimation.Glow">
+                                                <Placeholder Width="PlaceholderWidth.Col4" />
+                                            </PlaceholderContainer>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                @foreach (var product in viewModel.SoldProducts.Take(5))
+                                {
+                                    <tr>
+                                        <td class="ps-4">@product.ProductName</td>
+                                        <td class="text-end pe-4">
+                                            <span class="badge bg-primary rounded-pill">@product.Quantity</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-@code{
-    [Inject] protected PreloadService? PreloadService { get; set; }
+@code {
     DashboardViewModel viewModel = new DashboardViewModel();
     private DoughnutChart doughnutChart = default!;
     private DoughnutChartOptions doughnutChartOptions = default!;
     private ChartData chartData = default!;
     private string[]? backgroundColors;
+    private bool isLoading = false;
+
+    private const string CACHE_KEY = "dashboard_data";
+    private const string CACHE_TIMESTAMP_KEY = "dashboard_timestamp";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(3);
 
     protected override async Task OnInitializedAsync()
     {
-        PreloadService!.Show();
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData(bool forceRefresh = false)
+    {
+        isLoading = true;
         try
         {
+            // Check cache first
+            if (!forceRefresh)
+            {
+                var cachedData = await localStorage.GetStorage<DashboardViewModel>(CACHE_KEY);
+                var cachedTimestampStr = await localStorage.GetStorage<string>(CACHE_TIMESTAMP_KEY);
+
+                if (cachedData != null && !string.IsNullOrEmpty(cachedTimestampStr))
+                {
+                    if (DateTime.TryParse(cachedTimestampStr, out DateTime cachedTimestamp))
+                    {
+                        var cacheAge = DateTime.Now - cachedTimestamp;
+                        if (cacheAge < CacheExpiration)
+                        {
+                            // Use cached data
+                            viewModel = cachedData;
+                            isLoading = false;
+                            StateHasChanged();
+                            await Task.Delay(1);
+                            await InitializeChart();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Fetch fresh data from API
             var response = await reportService.GetDashboardReport();
 
-            PreloadService!.Hide();
+            isLoading = false;
+
             if (response.Success)
             {
                 viewModel = response.Result ?? new DashboardViewModel();
-                backgroundColors = ColorBuilder.CategoricalTwelveColors;
-                chartData = new ChartData { Labels = viewModel.SoldProducts.Select(p => p.ProductName).ToList(), Datasets = new List<IChartDataset> { GetCharDataSet(viewModel.SoldProducts) } };
-                doughnutChartOptions = new();
-                doughnutChartOptions.Responsive = true;
-                doughnutChartOptions.Plugins.Title!.Text = "Top productos vendidos";
-                doughnutChartOptions.Plugins.Title.Display = true;
-                await doughnutChart.InitializeAsync(chartData, doughnutChartOptions);
+
+                // Cache the data
+                await localStorage.SaveStorage(CACHE_KEY, viewModel);
+                await localStorage.SaveStorage(CACHE_TIMESTAMP_KEY, DateTime.Now.ToString("o"));
+                
+                isLoading = false;
+                StateHasChanged();
+                await Task.Delay(1);
+
+                await InitializeChart();
             }
             else
             {
@@ -81,7 +261,7 @@ else
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
+            isLoading = false;
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",
@@ -91,9 +271,36 @@ else
         }
     }
 
+    private async Task RefreshDashboard()
+    {
+        await LoadDashboardData(forceRefresh: true);
+    }
+
+    private async Task InitializeChart()
+    {
+        backgroundColors = ColorBuilder.CategoricalTwelveColors;
+        chartData = new ChartData
+            {
+                Labels = viewModel.SoldProducts.Select(p => p.ProductName).ToList(),
+                Datasets = new
+            List<IChartDataset> { GetCharDataSet(viewModel.SoldProducts) }
+            };
+        doughnutChartOptions = new();
+        doughnutChartOptions.Responsive = true;
+        doughnutChartOptions.Plugins.Title!.Text = "Top productos vendidos";
+        doughnutChartOptions.Plugins.Title.Display = true;
+        await doughnutChart.InitializeAsync(chartData, doughnutChartOptions);
+    }
+
     private IChartDataset GetCharDataSet(List<SoldProductQuantityViewModel> products)
     {
-        return new DoughnutChartDataset() { Label = "Ventas", Data = products.Select(p => Convert.ToDouble(p.Quantity)).ToList(), BackgroundColor = GetRandomBackgroundColors(products.Count) };
+        return new DoughnutChartDataset()
+            {
+                Label = "Ventas",
+                Data = products.Select(p =>
+            Convert.ToDouble(p.Quantity)).ToList(),
+                BackgroundColor = GetRandomBackgroundColors(products.Count)
+            };
     }
 
     private List<string> GetRandomBackgroundColors(int productCount)

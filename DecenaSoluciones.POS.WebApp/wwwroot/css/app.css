@@ -1,32 +1,152 @@
-h3 {
-    color: #000080
+body {
+    font-family: var(--font-family-base);
+    background-color: var(--body-bg);
+    color: var(--text-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
 }
 
 .validation-message {
-    color: #dc3545 !important;
+    color: var(--color-danger) !important;
     flex: 0 0 66.666667%;
     max-width: 66.666667%;
 }
 
+/* Remove #app styles that break layout after load */
 .loadingDiv {
-    margin: auto;
-    width: 50%;
-    padding: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 }
 
 .loadingDiv .logo {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
+    max-width: 300px;
+    width: 80%;
+    height: auto;
+    margin-bottom: var(--spacing-md);
 }
 
 .loadingDiv .loading {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 15%;
+    width: 50px;
+    height: auto;
 }
-.headerRow {
-    background-color: #000080 !important;
+
+.headerRow,
+.headerRow th {
+    background-color: var(--color-primary) !important;
+    color: var(--color-white) !important;
+    border-bottom: none !important;
+}
+
+/* Ensure tables have white background */
+.table {
+    background-color: var(--color-white) !important;
+    --bs-table-bg: var(--color-white) !important;
+}
+
+/* Force Sidebar Header Color */
+.bb-sidebar .top-row,
+.bb-sidebar .navbar-brand {
+    background-color: var(--color-primary) !important;
+    color: var(--color-white) !important;
+    border-bottom: 1px solid var(--color-primary) !important;
+}
+
+.bb-sidebar .top-row .navbar-brand {
+    color: var(--color-white) !important;
+}
+
+/* Force Hamburger Menu White */
+.bb-sidebar .navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.bb-sidebar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Force Nav Item Colors */
+.bb-sidebar .nav-item .nav-link.active,
+.bb-sidebar .nav-item .nav-link:hover {
+    color: var(--color-primary) !important;
+    background-color: rgba(0, 0, 128, 0.1) !important;
+    /* Light Navy Blue */
+}
+
+/* Blazor Bootstrap Sidebar Overrides */
+:root {
+    --bb-sidebar-width: 270px;
+    --bb-sidebar-collapsed-width: 50px;
+    /* Main Background: White */
+    --bb-sidebar-background-color: var(--color-white);
+
+    /* Top Brand Area: Navy Blue (#000080) */
+    --bb-sidebar-top-row-background-color: var(--color-primary);
+    --bb-sidebar-top-row-border-color: var(--color-primary);
+
+    /* Brand Text/Icon: White (to contrast with Navy Blue) */
+    --bb-sidebar-title-text-color: var(--color-white);
+    --bb-sidebar-brand-icon-color: var(--color-white);
+
+    --bb-sidebar-brand-image-width: 30px;
+    --bb-sidebar-brand-image-height: 30px;
+    --bb-sidebar-title-badge-text-color: var(--color-white);
+    --bb-sidebar-title-badge-background-color: var(--color-warning);
+
+    /* Toggler (Hamburger): White */
+    --bb-sidebar-navbar-toggler-icon-color: var(--color-white);
+    --bb-sidebar-navbar-toggler-background-color: rgba(255, 255, 255, 0.1);
+
+    --bb-sidebar-content-border-color: var(--border-color);
+
+    /* Nav Items (Links) */
+    --bb-sidebar-nav-item-text-color: var(--text-color);
+    --bb-sidebar-nav-item-text-active-color-rgb: var(--color-primary-rgb);
+    --bb-sidebar-nav-item-text-hover-color: var(--color-primary);
+    --bb-sidebar-nav-item-text-active-color: var(--color-primary);
+    --bb-sidebar-nav-item-background-hover-color: var(--color-light);
+    --bb-sidebar-nav-item-group-background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Global Focus Indicators for Accessibility */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Indent Sub-menu Items */
+.bb-sidebar .nav-item .nav-item .nav-link {
+    padding-left: 2.5rem !important;
+}
+
+/* Animation for Skeleton Transition */
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }

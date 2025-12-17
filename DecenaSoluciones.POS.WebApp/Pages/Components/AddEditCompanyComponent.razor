@@ -74,7 +74,8 @@
                         @user.Role
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(async () => await removeUser(user))">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" aria-label="Eliminar usuario"
+                        @onclick="(async () => await removeUser(user))">
                             <Icon Name="IconName.Trash" />
                         </button>
                     </td>
@@ -201,8 +202,8 @@
 
     private async Task LoadCompanyUsers()
     {
-        if(CompanyId > 0)
-        {           
+        if (CompanyId > 0)
+        {
             try
             {
                 var response = await authService.GetUsersList(CompanyId);
@@ -228,7 +229,7 @@
                         Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener los usuarios."),
                         Icon = SweetAlertIcon.Error
                     });
-            } 
+            }
         }
     }
 
@@ -239,7 +240,7 @@
 
     private async Task OnValidSubmit()
     {
-        if(string.IsNullOrEmpty(newCompany.Name))
+        if (string.IsNullOrEmpty(newCompany.Name))
         {
             await Swal.FireAsync(new SweetAlertOptions
                 {
@@ -306,7 +307,7 @@
             }
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -319,7 +320,7 @@
         }
 
     }
-    
+
     private async Task RemoveCompany()
     {
         try
@@ -359,7 +360,7 @@
                 }
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             PreloadService!.Hide();
             await Swal.FireAsync(new SweetAlertOptions
@@ -368,7 +369,7 @@
                     Text = ex.Message.HandleErrorMessage(),
                     Icon = SweetAlertIcon.Error
                 });
-            
+
         }
     }
 }

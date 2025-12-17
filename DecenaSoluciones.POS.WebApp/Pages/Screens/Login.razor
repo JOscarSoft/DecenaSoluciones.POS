@@ -17,50 +17,131 @@
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
 
-<div class="row mt-5 text-center">
+<style>
+    .login-container {
+        min-height: 100vh;
+        background-color: #f5f7fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
 
-    <div class="col-lg-4 offset-lg-4 border" style="width:28%">
+    .login-logo {
+        width: 180px;
+        margin-bottom: 1.5rem;
+        align-self: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
 
-        <img src="/images/logo/LoginLogo.svg" alt="logo" style="width:50%;margin-bottom:10px">
+    .login-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        /* Softer shadow for light theme */
+        width: 100%;
+        max-width: 450px;
+        text-align: center;
+    }
+
+    .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+
+    .form-control:focus {
+        border-color: #000080;
+        box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.1);
+    }
+
+    .btn-login {
+        padding: 0.75rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1.5rem 0;
+        color: #6c757d;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .divider:not(:empty)::before {
+        margin-right: .5em;
+    }
+
+    .divider:not(:empty)::after {
+        margin-left: .5em;
+    }
+
+    .text-muted-label {
+        text-align: left;
+        display: block;
+    }
+</style>
+
+<div class="login-container">
+
+    <div class="login-card">
+        <img src="/images/logo/LoginLogo.svg" alt="Decena Soluciones" class="login-logo">
 
         @if (OnCompanySelection)
         {
+            <h4 class="text-center mb-4 text-primary">Seleccionar Compañía</h4>
+
             <div class="mb-3">
-                <RadzenDropDown 
-                    Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies" 
-                    AllowFiltering="true" @bind-Value=selectedCompany Data=@filteredCompanies TextProperty="Name" 
-                    ValueProperty="Id" Style="width: 75%;" Name="DropDownCompanies" />
+                <RadzenDropDown Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies"
+                    AllowFiltering="true" @bind-Value=selectedCompany Data=@filteredCompanies TextProperty="Name"
+                    ValueProperty="Id" Style="width: 100%; padding: 5px;" Name="DropDownCompanies" />
             </div>
-            <div class="mb-3" style="margin-top:50px">
-                <button @onclick="SubmitCompanyLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Acceder a Compañía</button>
-            </div>
-            <div class="divider"></div>
-            <div class="row" >
-                <div class="col"><hr></div>
-                <div class="col-auto">O</div>
-                <div class="col"><hr></div>
-            </div>
-            <div class="mb-3" style="margin-top:10px">
-                <button @onclick="SubmitAdminLogin" class="btn btn-lg btn-dark btn-block" style="width:75%">Modulo Administrativo</button>
-            </div>
+
+            <button @onclick="SubmitCompanyLogin" class="btn btn-primary w-100 btn-login">
+                Acceder a Compañía
+            </button>
+
+            <div class="divider">O</div>
+
+            <button @onclick="SubmitAdminLogin" class="btn btn-outline-dark w-100 btn-login">
+                Módulo Administrativo
+            </button>
         }
         else
         {
+            <h4 class="text-center mb-4 text-primary">Iniciar Sesión</h4>
+
             <div class="mb-3">
-                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+                <label class="form-label text-muted small fw-bold text-muted-label">Usuario</label>
+                <input @bind="model.Username" class="form-control" placeholder="Ingrese su usuario"
+                @onkeyup="@EnterLogin" />
             </div>
 
             <div class="mb-3">
-                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+                <label class="form-label text-muted small fw-bold text-muted-label">Contraseña</label>
+                <input type="password" @bind="model.Password" class="form-control" placeholder="Ingrese su contraseña"
+                @onkeyup="@EnterLogin" />
             </div>
 
-            <div class="mb-3" style="margin-top:50px">
-                <button @onclick="SubmitLogin" class="btn btn-lg btn-primary btn-block" style="width:75%">Login</button>
-            </div>
+            <button @onclick="SubmitLogin" class="btn btn-primary w-100 btn-login">
+                Ingresar
+            </button>
         }
-
     </div>
-
 </div>
 
 

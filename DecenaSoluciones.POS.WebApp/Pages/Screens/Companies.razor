@@ -25,44 +25,52 @@
 </div>
 
 <div style="margin-top:25px">
-    <Grid @ref="companiesGrid" TItem="CompanyViewModel"
-          Class="table table-hover"
-          HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
-          Data="companyList"
-          AllowFiltering="true"
-          AllowPaging="true"
-          PageSize="50"
-          AllowSorting="true"
-          AllowSelection="false"
-          Responsive="true"
-          PageSizeSelectorVisible="true"
-          ItemsPerPageText="Clientes por página"
-          PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
-          PaginationItemsTextFormat="{0} - {1} de {2} productos"
-          EmptyText="No se encontraron registros para mostrar"
-          AllowRowClick="true"
-          OnRowClick="OnRowClick">
+    @if (isLoading)
+    {
+            <SkeletonTable Headers='new List<string> { "Nombre", "Contacto", "Teléfono", "Activa", "Fin suscripción" }' />
+    }
 
-        <GridColumn TItem="CompanyViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
-            @context.Name
-        </GridColumn>
-        <GridColumn TItem="CompanyViewModel" HeaderText="Contacto" PropertyName="ContactName" SortKeySelector="item => item.ContactName" HeaderTextAlignment="Alignment.Center">
-            @(context.ContactName)
-        </GridColumn>
-        <GridColumn TItem="CompanyViewModel" HeaderText="Teléfono" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" HeaderTextAlignment="Alignment.Center">
-            @(context.ContactPhone)
-        </GridColumn>
-        <GridColumn TItem="CompanyViewModel" HeaderText="Activa" PropertyName="Active" SortKeySelector="item => item.Active" HeaderTextAlignment="Alignment.Center">
-            @(context.Active ? "Yes" : "No")
-        </GridColumn>
-        <GridColumn TItem="CompanyViewModel" HeaderText="Fin suscripción" PropertyName="SubscriptionExpiration" SortKeySelector="item => item.SubscriptionExpiration" HeaderTextAlignment="Alignment.Center">
-            @(context.SubscriptionExpiration.ToString("dd/MM/yyyy"))
-        </GridColumn>
-    </Grid>
+    <div class="fade-in" style="@(isLoading ? "display:none" : "")">
+        <Grid @ref="companiesGrid" TItem="CompanyViewModel"
+              Class="table table-hover"
+              HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow"
+              Data="companyList"
+              AllowFiltering="true"
+              AllowPaging="true"
+              PageSize="50"
+              AllowSorting="true"
+              AllowSelection="false"
+              Responsive="true"
+              PageSizeSelectorVisible="true"
+              ItemsPerPageText="Clientes por página"
+              PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }"
+              PaginationItemsTextFormat="{0} - {1} de {2} productos"
+              EmptyText="No se encontraron registros para mostrar"
+              AllowRowClick="true"
+              OnRowClick="OnRowClick">
+
+            <GridColumn TItem="CompanyViewModel" HeaderText="Nombre" PropertyName="Name" SortKeySelector="item => item.Name" HeaderTextAlignment="Alignment.Center">
+                @context.Name
+            </GridColumn>
+            <GridColumn TItem="CompanyViewModel" HeaderText="Contacto" PropertyName="ContactName" SortKeySelector="item => item.ContactName" HeaderTextAlignment="Alignment.Center">
+                @(context.ContactName)
+            </GridColumn>
+            <GridColumn TItem="CompanyViewModel" HeaderText="Teléfono" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" HeaderTextAlignment="Alignment.Center">
+                @(context.ContactPhone)
+            </GridColumn>
+            <GridColumn TItem="CompanyViewModel" HeaderText="Activa" PropertyName="Active" SortKeySelector="item => item.Active" HeaderTextAlignment="Alignment.Center">
+                @(context.Active ? "Yes" : "No")
+            </GridColumn>
+            <GridColumn TItem="CompanyViewModel" HeaderText="Fin suscripción" PropertyName="SubscriptionExpiration" SortKeySelector="item => item.SubscriptionExpiration" HeaderTextAlignment="Alignment.Center">
+                @(context.SubscriptionExpiration.ToString("dd/MM/yyyy"))
+            </GridColumn>
+        </Grid>
+    </div>
 </div>
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
+    private bool isLoading = true;
     List<CompanyViewModel> companyList = new List<CompanyViewModel>();
     Grid<CompanyViewModel> companiesGrid = default!;
     private Modal addEditCompanyModal = default!;
@@ -76,12 +84,12 @@
     {
         try
         {
-            PreloadService!.Show();
+            isLoading = true;
             var response = await companyService.GetCompanyList();
-            PreloadService.Hide();
+            isLoading = false;
             if (response.Success)
             {
-                companyList = response.Result!.OrderBy(p=> p.Active).OrderBy(p => p.Name).ToList() ?? new List<CompanyViewModel>();
+                companyList = response.Result!.OrderBy(p => p.Active).OrderBy(p => p.Name).ToList() ?? new List<CompanyViewModel>();
                 await companiesGrid.RefreshDataAsync();
             }
             else
@@ -96,7 +104,7 @@
         }
         catch (Exception ex)
         {
-            PreloadService!.Hide();
+            isLoading = false;
             await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Error",

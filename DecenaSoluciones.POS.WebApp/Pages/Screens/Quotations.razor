@@ -16,15 +16,17 @@
 
 <div class="row" style="margin-top:50px">
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
-        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end" @onclick="() => GoToNewQuotation()">Nueva cotización</Button>
+        <Button Type="BlazorBootstrap.ButtonType.Button" Color="ButtonColor.Primary" Class="float-end"
+            @onclick="() => GoToNewQuotation()">Nueva cotización</Button>
     </div>
 </div>
 
-<SaleListComponent salesDataProvider="SalesDataProvider" quotations="1"></SaleListComponent>
+<SaleListComponent salesDataProvider="SalesDataProvider" quotations="1" IsLoading="isLoading"></SaleListComponent>
 
 @code {
-    [Inject] protected PreloadService? PreloadService { get; set; }
-    GridResponse<SalesViewModel>? salesList = default!;
+        [Inject] protected PreloadService? PreloadService { get; set; }
+        GridResponse<SalesViewModel>? salesList = default!;
+private bool isLoading = true;
     string quotationsUrl = "/newsale";
 
     private void GoToNewQuotation()
@@ -32,69 +34,71 @@
         navegation.NavigateTo($"{quotationsUrl}/0/1");
     }
 
-    public async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel> request)
+    public async Task<GridDataProviderResult<SalesViewModel>> SalesDataProvider(GridDataProviderRequest<SalesViewModel>
+    request)
     {
         try
         {
-            if (salesList == null)
-                PreloadService!.Show();
+            isLoading = true;
+            StateHasChanged();
 
-            string sortString = "CreationDate";
-            string sortDirection = "desc";
+                string sortString = "CreationDate";
+                string sortDirection = "desc";
 
-            if (request.Sorting is not null && request.Sorting.Any())
-            {
-                // Note: Multi column sorting is not supported at this moment
-                sortString = request.Sorting.FirstOrDefault()!.SortString;
-                sortDirection = request.Sorting.FirstOrDefault()!.SortDirection == SortDirection.Descending ? "desc" : "asc";
-            }
-
-            var response = await saleService.GetFilteredQuotationsList(new GridRequest()
+                if (request.Sorting is not null && request.Sorting.Any())
                 {
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize,
-                    SortColumn = sortString,
-                    SortDirection = sortDirection,
-                    Filters = request.Filters.Select(p => new ColumnFilter
-                    {
-                        Field = p.PropertyName,
-                        Operator = (DecenaSoluciones.POS.Shared.Enums.FilterOperator)(int)p.Operator,
-                        Value = p.Value
-                    }).ToList()
-                });
+                    // Note: Multi column sorting is not supported at this moment
+                    sortString = request.Sorting.FirstOrDefault()!.SortString;
+                    sortDirection = request.Sorting.FirstOrDefault()!.SortDirection == SortDirection.Descending ? "desc" : "asc";
+                }
 
-            if (response.Success)
-            {
-                salesList = response.Result;
+                var response = await saleService.GetFilteredQuotationsList(new GridRequest()
+                    {
+                        PageNumber = request.PageNumber,
+                        PageSize = request.PageSize,
+                        SortColumn = sortString,
+                        SortDirection = sortDirection,
+                        Filters = request.Filters.Select(p => new ColumnFilter
+                        {
+                            Field = p.PropertyName,
+                            Operator = (DecenaSoluciones.POS.Shared.Enums.FilterOperator)(int)p.Operator,
+                            Value = p.Value
+                        }).ToList()
+                    });
+
+                if (response.Success)
+                {
+                    salesList = response.Result;
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
             }
-            else
+            catch (Exception ex)
             {
                 await Swal.FireAsync(new SweetAlertOptions
                     {
                         Title = "Error",
-                        Text = response.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
+                        Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
                         Icon = SweetAlertIcon.Error
                     });
             }
-        }
-        catch (Exception ex)
-        {
-            await Swal.FireAsync(new SweetAlertOptions
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+
+            return await Task.FromResult(new GridDataProviderResult<SalesViewModel>
                 {
-                    Title = "Error",
-                    Text = ex.Message.HandleErrorMessage("Se produjo un error al obtener las cotizaciones."),
-                    Icon = SweetAlertIcon.Error
+                    Data = salesList?.Items ?? new List<SalesViewModel>(),
+                    TotalCount = salesList?.TotalCount ?? 0
                 });
         }
-        finally
-        {
-            PreloadService!.Hide();
-        }
-
-        return await Task.FromResult(new GridDataProviderResult<SalesViewModel>
-            {
-                Data = salesList?.Items ?? new List<SalesViewModel>(),
-                TotalCount = salesList?.TotalCount ?? 0
-            });
-    }
 }
