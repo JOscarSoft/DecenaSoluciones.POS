@@ -13,6 +13,7 @@
 @using System.Globalization;
 
 @attribute [Authorize]
+@implements IDisposable
 @inject SweetAlertService Swal;
 @inject IProductService productService;
 @inject ICustomerService customerService;
@@ -66,59 +67,64 @@
 }
 
 <div class="col-md-3" style="margin-top:45px;margin-bottom:25px;">
-    <InputText class="form-control" @bind-Value="newCode" maxlength="15" @onkeydown="@EnterCode" placeholder="Buscar por código" @oninput="@(e => {newCode = e.Value!.ToString() ?? "";})"></InputText>
+    <input class="form-control" @bind="newCode" @bind:event="oninput" placeholder="Buscar por código" @onkeydown="@EnterCode" @ref="searchInputRef" maxlength="15" />
 </div>
 <EditForm Model="model" OnValidSubmit="(() => OnValidSubmit(false))" class="row g-3">
     <DataAnnotationsValidator></DataAnnotationsValidator>
     <div class="col-lg-8">
-        <table class="table">
-            <thead>
-                <tr class="bg-dark text-white border-bottom-0 headerRow">
-                    <th>Producto</th>
-                    <th>Stock</th>
-                    <th>Cantidad</th>
-                    <th>Precio unitario</th>
-                    <th>Total</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var productSale in model.SaleProducts!)
-                {
-                    <tr>
-                        <td style="width:45%">
-                            <AutoComplete @bind-Value="productSale.ProductDescription"
-                            TItem="ProductViewModel"
-                            DataProvider="ProductsDataProvider"
-                            PropertyName="Description"
-                            Placeholder="Ingresa un producto..."
-                            OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.SaleProducts.ToList().IndexOf(productSale))" />
-                            <InputText hidden="hidden" @bind-Value="productSale.ProductCode" />
-                            <ValidationMessage For="@(() => productSale.ProductCode)"></ValidationMessage>
-                        </td>
-                        <td>
-                            @GetStock(productSale.ProductCode)
-                        </td>
-                        <td style="width:5%">
-                            <RadzenNumeric TValue="decimal" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
-                            <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
-                        </td>
-                        <td>
-                            <RadzenNumeric TValue="decimal" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productSale.UnitPrice />
-                            <ValidationMessage For="@(() => productSale.UnitPrice)"></ValidationMessage>
-                        </td>
-                        <td>
-                            @productSale.Total.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
-                                <Icon Name="IconName.Trash" />
-                            </button>
-                        </td>
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table align-middle" style="z-index: 1000; position: relative;">
+                <thead>
+                    <tr class="bg-dark text-white border-bottom-0 headerRow">
+                        <th>Producto</th>
+                        <th class="text-center">Stock</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Total</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var productSale in model.SaleProducts!)
+                    {
+                        var stock = GetStockValue(productSale.ProductCode);
+                        BadgeColor badgeColor = stock <= 5 ? BadgeColor.Danger : (stock <= 10 ? BadgeColor.Warning : BadgeColor.Success);
+                        
+                        <tr>
+                            <td style="width:40%; overflow: visible; position: relative; z-index: 100;">
+                                <AutoComplete @bind-Value="productSale.ProductDescription"
+                                              TItem="ProductViewModel"
+                                              DataProvider="ProductsDataProvider"
+                                              PropertyName="Description"
+                                              Placeholder="Ingresa un producto..."
+                                              OnChanged="(ProductViewModel selected) => OnChangeProduct(selected, model.SaleProducts.ToList().IndexOf(productSale))" />
+                                <InputText hidden="hidden" @bind-Value="productSale.ProductCode" />
+                                <ValidationMessage For="@(() => productSale.ProductCode)"></ValidationMessage>
+                            </td>
+                            <td class="text-center">
+                                <Badge Color="badgeColor">@stock</Badge>
+                            </td>
+                            <td style="width:10%">
+                                <RadzenNumeric TValue="decimal" @bind-Value="productSale.Quantity" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" Culture="@CultureInfo.CreateSpecificCulture("en-US")" />
+                                <ValidationMessage For="@(() => productSale.Quantity)"></ValidationMessage>
+                            </td>
+                            <td>
+                                <RadzenNumeric TValue="decimal" @onchange="(() => OnChangeProductDetail(model.SaleProducts.ToList().IndexOf(productSale)))" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@productSale.UnitPrice />
+                                <ValidationMessage For="@(() => productSale.UnitPrice)"></ValidationMessage>
+                            </td>
+                            <td>
+                                @productSale.Total.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="(() => removeProduct(model.SaleProducts.ToList().IndexOf(productSale)))">
+                                    <Icon Name="IconName.Trash" />
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
         <div class="d-md-flex justify-content-md-end">
             <div style="margin-top:15px">
@@ -239,49 +245,70 @@
     </div>
     @if (!model.Dismissed)
     {
-        <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
-        <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
-        <Switch @bind-Value="isCashSale" Label="Venta al contado" @onchange="(() => {model.CreditSale = !isCashSale;})" />
-    }
-    @if (TCPayment || DepositPayment)
-    {
-        <div class="col-lg-4">
-            <div class="col-md-12">
-                <label class="form-label">Monto efectivo:</label>
-                <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.CashAmount />
-                <ValidationMessage For="@(() => model.CashAmount)"></ValidationMessage>
-            </div>
-        </div>
-    }
-    @if (TCPayment)
-    {
-        <div class="col-lg-4">
-            <div class="col-md-12">
-                <label class="form-label">Monto TC:</label>
-                <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.TCAmount />
-                <ValidationMessage For="@(() => model.TCAmount)"></ValidationMessage>
-            </div>
-            <div class="col-md-12" style="margin-top:15px!important">
-                <label class="form-label">Referencia transacción:</label>
-                <InputText class="form-control" @bind-Value="model.TCReference" maxlength="50"></InputText>
-                <ValidationMessage For="@(() => model.TCReference)"></ValidationMessage>
-            </div>
-        </div>
-    }
-    @if (DepositPayment)
-    {
-        <div class="col-lg-4">
-            <div class="col-md-12">
-                <label class="form-label">Monto deposito:</label>
-                <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.DepositsAmount />
-                <ValidationMessage For="@(() => model.DepositsAmount)"></ValidationMessage>
-            </div>
-            <div class="col-md-12" style="margin-top:15px!important">
-                <label class="form-label">Referencia transacción:</label>
-                <InputText class="form-control" @bind-Value="model.DepositReference" maxlength="50"></InputText>
-                <ValidationMessage For="@(() => model.DepositReference)"></ValidationMessage>
-            </div>
-        </div>
+        <Card Class="mt-3">
+            <CardHeader>
+                <h6 class="mb-0 py-1">Métodos de pago</h6>
+            </CardHeader>
+            <CardBody>
+                <div class="d-flex flex-column gap-3">
+                    <Switch @bind-Value="DepositPayment" Label="Pago con depósito" @onchange="(() => {model.DepositsAmount = null;model.DepositReference = null;})" />
+                    <Switch @bind-Value="TCPayment" Label="Pago con TC" @onchange="(() => {model.TCAmount = null;model.TCReference = null;})" />
+                    <Switch @bind-Value="isCashSale" Label="Venta al contado" @onchange="(() => {model.CreditSale = !isCashSale;})" />
+                </div>
+                
+                @if (TCPayment || DepositPayment)
+                {
+                    <div class="row g-3 mt-2">
+                         @if (TCPayment)
+                        {
+                             <div class="col-md-6">
+                                <div class="card bg-light border-0 p-3">
+                                    <h6 class="text-primary mb-3"><Icon Name="IconName.CreditCard" Class="me-2"/>Tarjeta de Crédito</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Monto TC:</label>
+                                        <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.TCAmount />
+                                        <ValidationMessage For="@(() => model.TCAmount)"></ValidationMessage>
+                                    </div>
+                                    <div>
+                                        <label class="form-label small text-muted">Referencia:</label>
+                                        <InputText class="form-control" @bind-Value="model.TCReference" maxlength="50"></InputText>
+                                        <ValidationMessage For="@(() => model.TCReference)"></ValidationMessage>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (DepositPayment)
+                        {
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0 p-3">
+                                    <h6 class="text-primary mb-3"><Icon Name="IconName.Bank" Class="me-2"/>Depósito Bancario</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Monto depósito:</label>
+                                        <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.DepositsAmount />
+                                        <ValidationMessage For="@(() => model.DepositsAmount)"></ValidationMessage>
+                                    </div>
+                                    <div>
+                                        <label class="form-label small text-muted">Referencia:</label>
+                                        <InputText class="form-control" @bind-Value="model.DepositReference" maxlength="50"></InputText>
+                                        <ValidationMessage For="@(() => model.DepositReference)"></ValidationMessage>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (TCPayment || DepositPayment)
+                        {
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Restante en efectivo:</label>
+                                <RadzenNumeric TValue="decimal?" class="form-control form-control-lg bg-white" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@model.CashAmount />
+                                <ValidationMessage For="@(() => model.CashAmount)"></ValidationMessage>
+                            </div>
+                        }
+                    </div>
+                }
+            </CardBody>
+        </Card>
     }
 
     <div class="d-grid gap-2 d-md-flex mt-2" style="margin-top:25px!important">
@@ -323,6 +350,8 @@
     private void ShowMessage(string message) => messages.Add(CreateToastMessage(ToastType.Warning, message));
 
     string newCode = string.Empty;
+    private ElementReference searchInputRef;
+    private DotNetObjectReference<NewSale>? dotNetHelper;
     string processSaleText = "Procesar venta";
     string processQuotationText = "Generar cotización";
     string title = "Nueva venta";
@@ -338,6 +367,7 @@
 
     private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
     private string GetStock(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock.ToString() ?? "0";
+    private decimal GetStockValue(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock ?? 0M;
     private void BackToList() => navegation.NavigateTo(inQuotation != null && inQuotation > 0 ? "quotations" : "sales"); 
     private void GoToDismissed() => navegation.NavigateTo($"/newsale/{model.DismissedBySaleId}/0", true);
     private void GoNewSale() => navegation.NavigateTo($"/newsale", true);
@@ -430,6 +460,38 @@
         }
 
         PreloadService.Hide();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerKeyboardShortcuts", dotNetHelper);
+            await searchInputRef.FocusAsync();
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleHotKey(string key)
+    {
+        switch (key)
+        {
+            case "F2":
+                await searchInputRef.FocusAsync();
+                break;
+            case "F9":
+                await OnValidSubmit(false);
+                break;
+            case "Escape":
+                BackToList();
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        dotNetHelper?.Dispose();
     }
 
     private async Task LoadSale()

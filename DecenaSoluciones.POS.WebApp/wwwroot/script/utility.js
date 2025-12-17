@@ -29,3 +29,25 @@ window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     anchorElement.remove();
     URL.revokeObjectURL(url);
 }
+
+window.registerKeyboardShortcuts = (dotNetHelper) => {
+    document.addEventListener('keydown', (e) => {
+        // F2: Focus Search
+        if (e.key === 'F2') {
+            e.preventDefault();
+            dotNetHelper.invokeMethodAsync('HandleHotKey', 'F2');
+        }
+        // F9: Process Sale
+        else if (e.key === 'F9') {
+            e.preventDefault();
+            dotNetHelper.invokeMethodAsync('HandleHotKey', 'F9');
+        }
+        // Escape: Cancel/Back
+        else if (e.key === 'Escape') {
+            // Only prevent default if we want to block standard escape behavior (like closing modals)
+            // But usually good to prevent default to avoid unexpected browser behavior
+            // e.preventDefault(); 
+            dotNetHelper.invokeMethodAsync('HandleHotKey', 'Escape');
+        }
+    });
+};
