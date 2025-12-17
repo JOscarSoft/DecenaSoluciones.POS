@@ -7,6 +7,7 @@
 *.rsuser
 *.suo
 *.user
+!DecenaSoluciones.POS.slnLaunch.user
 *.userosscache
 *.sln.docstates
 
