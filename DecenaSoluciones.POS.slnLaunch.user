@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "Run entire project",
+    "Projects": [
+      {
+        "Path": "DecenaSoluciones.POS.API\\DecenaSoluciones.POS.API.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "DecenaSoluciones.POS.WebApp\\DecenaSoluciones.POS.WebApp.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]

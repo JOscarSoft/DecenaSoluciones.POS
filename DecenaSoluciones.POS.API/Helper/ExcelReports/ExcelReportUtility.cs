@@ -3,7 +3,7 @@ using DecenaSoluciones.POS.Shared.Dtos;
 
 namespace DecenaSoluciones.POS.API.Helper.ExcelReports
 {
-    internal class ExcelUtility
+    internal class ExcelReportUtility
     {
         public static XLWorkbook GenerateSoldProductExcelReport(List<SoldProductsReportViewModel> report)
         {
