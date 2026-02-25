@@ -79,7 +79,7 @@
             @if (customer.NextMaintenance.HasValue)
             {
                 <div style="margin-top:-6px;margin-bottom:8px;padding:0 16px;">
-                    <button type="button" class="reschedule-link" style="font-size:0.78rem;color:#000080;font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:2px 0;" @onclick="() => ShowRescheduleModal(customer)">
+                    <button type="button" class="reschedule-link" style="font-size:0.78rem;color:var(--primary-color);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:2px 0;" @onclick="() => ShowRescheduleModal(customer)">
                         Reprogramar mantenimiento
                     </button>
                 </div>
