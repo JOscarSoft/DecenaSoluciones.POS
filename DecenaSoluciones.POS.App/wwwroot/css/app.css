@@ -14,19 +14,19 @@
     padding: 10px;
 }*/
 
-    .loadingDiv .logo {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-    }
+.loadingDiv .logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
 
-    .loadingDiv .loading {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 15%;
-    }
+.loadingDiv .loading {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 15%;
+}
 
 .headerRow {
     background-color: #000080 !important;
@@ -49,4 +49,520 @@
     right: 40px !important;
     min-height: 4rem !important;
     min-width: 4rem !important;
+}
+
+/* ===== NewSale Page — Mobile-First Redesign ===== */
+
+.newsale-page {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 60px);
+    padding-bottom: 0;
+    position: relative;
+}
+
+/* --- Customer Section --- */
+.newsale-customer-bar {
+    background: #f8f9fc;
+    border: 1px solid #e2e6ef;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.newsale-customer-bar .customer-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #000080;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.newsale-customer-bar .customer-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: #555;
+    margin-top: 4px;
+}
+
+.newsale-customer-bar .customer-details .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.newsale-customer-bar .customer-details .detail-item .rzi {
+    font-size: 0.9rem;
+    color: #000080;
+}
+
+/* --- Product Search --- */
+.newsale-search-container {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.newsale-search-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border: 2px solid #e2e6ef;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    color: #333;
+}
+
+.newsale-search-input:focus {
+    border-color: #000080;
+    box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.1);
+}
+
+.newsale-search-input::placeholder {
+    color: #aab;
+}
+
+.newsale-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #000080;
+    pointer-events: none;
+}
+
+/* --- Search Results Dropdown --- */
+.newsale-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e2e6ef;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    max-height: 260px;
+    overflow-y: auto;
+    animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.newsale-search-results .search-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f1f5;
+    transition: background-color 0.15s ease;
+}
+
+.newsale-search-results .search-result-item:last-child {
+    border-bottom: none;
+}
+
+.newsale-search-results .search-result-item:hover,
+.newsale-search-results .search-result-item:active {
+    background-color: #f0f3ff;
+}
+
+.newsale-search-results .result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.newsale-search-results .result-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.newsale-search-results .result-code {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.newsale-search-results .result-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.newsale-search-results .result-price {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #000080;
+}
+
+.newsale-search-results .result-stock {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.newsale-search-results .no-results {
+    padding: 20px 16px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* --- Product Cards List --- */
+.newsale-products-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+}
+
+.newsale-products-list .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #aaa;
+}
+
+.newsale-products-list .empty-state .rzi {
+    font-size: 3rem;
+    margin-bottom: 8px;
+    color: #ccc;
+}
+
+.newsale-products-list .empty-state p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* --- Product Card --- */
+.newsale-product-card {
+    background: #fff;
+    border: 1px solid #e8eaf0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    animation: cardIn 0.2s ease-out;
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.newsale-product-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 128, 0.06);
+    border-color: #d0d4e4;
+}
+
+.newsale-product-card .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.newsale-product-card .product-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #222;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 8px;
+}
+
+.newsale-product-card .btn-remove {
+    background: none;
+    border: none;
+    color: #cc3333;
+    font-size: 1.2rem;
+    padding: 0 4px;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.newsale-product-card .btn-remove:hover {
+    opacity: 1;
+}
+
+.newsale-product-card .card-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Quantity stepper */
+.newsale-qty-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #dde;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8f9fc;
+}
+
+.newsale-qty-stepper button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #000080;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s;
+    padding: 0;
+}
+
+.newsale-qty-stepper button:hover {
+    background: rgba(0, 0, 128, 0.08);
+}
+
+.newsale-qty-stepper button:active {
+    background: rgba(0, 0, 128, 0.15);
+}
+
+.newsale-qty-stepper .qty-value {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #333;
+    padding: 0 4px;
+    border-left: 1px solid #dde;
+    border-right: 1px solid #dde;
+    line-height: 36px;
+    background: #fff;
+}
+
+.newsale-product-card .unit-price {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.newsale-product-card .line-total {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #000080;
+    text-align: right;
+}
+
+/* Unit price inline edit */
+.newsale-product-card .price-edit-input {
+    width: 90px;
+    border: 1px solid #000080;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    text-align: right;
+    outline: none;
+    color: #333;
+}
+
+.newsale-product-card .unit-price-display {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.newsale-product-card .unit-price-display:hover {
+    background: rgba(0, 0, 128, 0.06);
+}
+
+/* --- Totals & Actions Footer --- */
+.newsale-footer {
+    background: #fff;
+    border-top: 1px solid #e2e6ef;
+    padding: 16px;
+    margin: 0 -16px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+    border-radius: 20px 20px 0 0;
+}
+
+.newsale-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.newsale-totals .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.newsale-totals .total-row.editable-row {
+    gap: 8px;
+}
+
+.newsale-totals .total-row .total-label {
+    font-weight: 500;
+}
+
+.newsale-totals .total-row .total-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.newsale-totals .total-row.grand-total {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #000080;
+    border-top: 2px solid #e2e6ef;
+    padding-top: 10px;
+    margin-top: 4px;
+}
+
+.newsale-totals .total-row.grand-total .total-value {
+    color: #000080;
+    font-size: 1.3rem;
+}
+
+.newsale-totals .editable-input {
+    width: 110px;
+    border: 1px solid #dde;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.2s;
+    color: #333;
+}
+
+.newsale-totals .editable-input:focus {
+    border-color: #000080;
+    box-shadow: 0 0 0 2px rgba(0, 0, 128, 0.08);
+}
+
+/* Action Buttons */
+.newsale-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.newsale-actions .btn-primary-sale {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: #000080;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.3px;
+}
+
+.newsale-actions .btn-primary-sale:hover {
+    background: #0000a0;
+}
+
+.newsale-actions .btn-primary-sale:active {
+    transform: scale(0.98);
+}
+
+.newsale-actions .btn-secondary-sale {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #000080;
+    border-radius: 12px;
+    background: transparent;
+    color: #000080;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.newsale-actions .btn-secondary-sale:hover {
+    background: rgba(0, 0, 128, 0.05);
+}
+
+.newsale-actions .btn-link-sale {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #000080;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Product count badge */
+.newsale-products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.newsale-products-header .products-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #000080;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.newsale-products-header .products-count {
+    background: #000080;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
 }

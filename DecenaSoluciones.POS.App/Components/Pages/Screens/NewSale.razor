@@ -19,176 +19,193 @@
 @inject ILocalStorage _localStorage
 @inject IResourceService resourceService
 
+<div class="newsale-page">
 
-<EditForm Model="newSale" OnValidSubmit="(() => OnValidSubmit(false))" Context="EditFormContext">
-    <DataAnnotationsValidator></DataAnnotationsValidator>
-    <div class="rz-p-sm-12">
-        <RadzenAccordion Style="margin: 50px 0">
-            <Items>
-                <RadzenAccordionItem Text="Datos del cliente" Icon="account_balance_wallet"
-                                     ExpandTitle="Ver cliente"
-                                     ExpandAriaLabel="Ver cliente">
-                    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
-                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                            <RadzenFormField Text="Cliente" Variant="@variant" Style="width:100%">
-                                <ChildContent>
-                                    <RadzenDropDown TValue="int"
-                                                    Value=@newSale.Customer!.Id
-                                                    Data=@CustomerList
-                                                    TextProperty="Name"
-                                                    ValueProperty="Id"
-                                                    Change="((customerId) =>  {
-                                                    if(customerId != null) {OnChangeCustomer(Convert.ToInt32(customerId));}
-                                                    })" />
-                                </ChildContent>
-                                <Helper>
-                                    <ValidationMessage For="@(() => newSale.Customer!.Id)"></ValidationMessage>
-                                </Helper>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12">
-                            <RadzenFormField Text="Teléfono" Variant="@variant" Style="width:100%">
-                                <ChildContent>
-                                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newSale.Customer.PhoneNumber Disabled="true" />
-                                </ChildContent>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12">
-                            <RadzenFormField Text="Dirección" Variant="@variant" Style="width:100%">
-                                <ChildContent>
-                                    <RadzenTextBox @bind-Value=@newSale.Customer.Direction Disabled="true" />
-                                </ChildContent>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                    </RadzenRow>
-                </RadzenAccordionItem>
-                <RadzenAccordionItem Text="@($"Productos ({productsCount})")" Icon="account_balance_wallet"
-                                     ExpandTitle="Ver productos"
-                                     ExpandAriaLabel="Ver productos">
-                    @foreach (var saleProduct in newSale.SaleProducts!)
+    @* ===== 1. CUSTOMER SECTION ===== *@
+    <div class="newsale-customer-bar">
+        <span class="customer-label">Cliente</span>
+        <RadzenDropDown TValue="int"
+                        Value=@newSale.Customer!.Id
+                        Data=@CustomerList
+                        TextProperty="Name"
+                        ValueProperty="Id"
+                        Placeholder="Seleccionar cliente..."
+                        Style="width:100%"
+                        Change="((customerId) => {
+                            if(customerId != null) {OnChangeCustomer(Convert.ToInt32(customerId));}
+                        })" />
+        @if (!string.IsNullOrEmpty(newSale.Customer?.PhoneNumber) || !string.IsNullOrEmpty(newSale.Customer?.Direction))
+        {
+            <div class="customer-details">
+                @if (!string.IsNullOrEmpty(newSale.Customer?.PhoneNumber))
+                {
+                    <span class="detail-item">
+                        <i class="rzi rzi-phone"></i> @newSale.Customer.PhoneNumber
+                    </span>
+                }
+                @if (!string.IsNullOrEmpty(newSale.Customer?.Direction))
+                {
+                    <span class="detail-item">
+                        <i class="rzi rzi-map-pin"></i> @newSale.Customer.Direction
+                    </span>
+                }
+            </div>
+        }
+    </div>
+
+    @* ===== 2. PRODUCT SEARCH ===== *@
+    <div class="newsale-search-container">
+        <i class="rzi rzi-search newsale-search-icon"></i>
+        <input type="text"
+               class="newsale-search-input"
+               placeholder="Buscar producto por nombre o código..."
+               @bind="searchText"
+               @bind:event="oninput"
+               @onfocus="() => showSearchResults = true" />
+
+        @if (showSearchResults && !string.IsNullOrWhiteSpace(searchText))
+        {
+            <div class="newsale-search-results">
+                @{
+                    var filtered = GetFilteredProducts();
+                }
+                @if (filtered.Any())
+                {
+                    @foreach (var product in filtered.Take(15))
                     {
-                        <RadzenFieldset AllowCollapse="true" Style="width: 100%" ExpandTitle="Mas detalles"
-                                        CollapseTitle="Menos detalles" ExpandAriaLabel="Ver detalles" CollapseAriaLabel="Menos detalles">
-                            <HeaderTemplate>
-                                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">@saleProduct.ProductDescription</RadzenText>
-                                </HeaderTemplate>
-                                <ChildContent>
-                                    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
-                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                            <RadzenFormField Text="Producto" Variant="@variant" Style="width:100%">
-                                                <ChildContent>
-                                                <AutoComplete @bind-Value="saleProduct.ProductDescription"
-                                                              TItem="ProductViewModel"
-                                                              DataProvider="ProductsDataProvider"
-                                                              PropertyName="Description"
-                                                              Placeholder="Ingresa un producto..."
-                                                              OnChanged="(ProductViewModel selected) => OnChangeProduct(selected.Code, newSale.SaleProducts.ToList().IndexOf(saleProduct))" />
-                                                </ChildContent>
-                                                <Helper>
-                                                    <ValidationMessage For="@(() => saleProduct.ProductCode)"></ValidationMessage>
-                                                </Helper>
-                                            </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="12">
-                                        <RadzenFormField Text="Stock" Variant="@variant" Style="width:100%">
-                                            <ChildContent>
-                                                <RadzenTextBox Disabled="true" class="form-control" Value=@GetStock(saleProduct.ProductCode) />
-                                            </ChildContent>
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                        <RadzenColumn Size="12">
-                                            <RadzenFormField Text="Cantidad" Variant="@variant" Style="width:100%">
-                                                <ChildContent>
-                                                    <RadzenNumeric @bind-Value=@saleProduct.Quantity @onchange="(() => OnChangeProductDetail(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" />
-                                                </ChildContent>
-                                                <Helper>
-                                                    <ValidationMessage For="@(() => saleProduct.Quantity)"></ValidationMessage>
-                                                </Helper>
-                                            </RadzenFormField>
-                                        </RadzenColumn>
-                                        <RadzenColumn Size="12">
-                                            <RadzenFormField Text="Precio unitario" Variant="@variant" Style="width:100%">
-                                                <ChildContent>
-                                                    <RadzenNumeric @onchange="(() => OnChangeProductDetail(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@saleProduct.UnitPrice />
-                                                </ChildContent>
-                                                <Helper>
-                                                    <ValidationMessage For="@(() => saleProduct.UnitPrice)"></ValidationMessage>
-                                                </Helper>
-                                            </RadzenFormField>
-                                        </RadzenColumn>
-                                        <RadzenColumn Size="12">
-                                            <RadzenFormField Text="Total" Variant="@variant" Style="width:100%">
-                                                <ChildContent>
-                                                    <RadzenNumeric Disabled="true" TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" Value=@saleProduct.Total />
-                                                </ChildContent>
-                                            </RadzenFormField>
-                                        </RadzenColumn>
-                                        <RadzenButton Click="(() => removeProduct(newSale.SaleProducts.ToList().IndexOf(saleProduct)))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar" Style="width: 100%" />
-                                    </RadzenRow>
-                                </ChildContent>
-                            </RadzenFieldset>
+                        <div class="search-result-item" @onclick="() => AddProductFromSearch(product)">
+                            <div class="result-info">
+                                <span class="result-name">@product.Description</span>
+                                <span class="result-code">@product.Code</span>
+                            </div>
+                            <div class="result-meta">
+                                <span class="result-price">@ToMoneyString(product.Price)</span>
+                                <span class="result-stock">Stock: @product.stock</span>
+                            </div>
+                        </div>
                     }
-                </RadzenAccordionItem>
-            </Items>
-        </RadzenAccordion>
-    </div>
-    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Subtotal" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox Value="@subTotal" Disabled="true" />
-                </ChildContent>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Impuestos" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox Value="@totalTaxes" Disabled="true" />
-                </ChildContent>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Mano de obra" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newSale.WorkForceValue />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newSale.WorkForceValue)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Descuento" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric TValue="decimal?" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newSale.Discount />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newSale.Discount)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Total" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox Value="@totalAmount" Disabled="true" />
-                </ChildContent>
-            </RadzenFormField>
-        </RadzenColumn>
-    </RadzenRow>
-
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
-        @if (newSale.Id <= 0 || !newSale.IsAQuotation)
-        {
-            <RadzenButton Click="@(() => OnValidSubmit(false))" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Procesar venta" Style="width: 100%" />
+                }
+                else
+                {
+                    <div class="no-results">No se encontraron productos</div>
+                }
+            </div>
         }
-
-        @if (newSale.Id <= 0 || newSale.IsAQuotation)
-        {
-            <RadzenButton Click="@(() => OnValidSubmit(true))" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Dark" Text="Generar cotización" Style="width: 100%" />
-        }
-        <RadzenButton Click="@(() => navManager.NavigateTo("/sales"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de ventas" Style="width: 100%" />
     </div>
-</EditForm>
+
+    @* ===== 3. PRODUCTS LIST ===== *@
+    <div class="newsale-products-header">
+        <span class="products-title">Productos agregados</span>
+        @if (ActiveProducts.Any())
+        {
+            <span class="products-count">@ActiveProducts.Count()</span>
+        }
+    </div>
+
+    <div class="newsale-products-list">
+        @if (!ActiveProducts.Any())
+        {
+            <div class="empty-state">
+                <i class="rzi rzi-shopping-cart"></i>
+                <p>Busca y agrega productos a la venta</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var saleProduct in ActiveProducts.ToList())
+            {
+                var idx = newSale.SaleProducts!.ToList().IndexOf(saleProduct);
+                <div class="newsale-product-card">
+                    <div class="card-top-row">
+                        <span class="product-name" title="@saleProduct.ProductDescription">@saleProduct.ProductDescription</span>
+                        <button type="button" class="btn-remove" @onclick="() => removeProduct(idx)" title="Eliminar">✕</button>
+                    </div>
+                    <div class="card-bottom-row">
+                        <div class="newsale-qty-stepper">
+                            <button type="button" @onclick="() => DecrementQty(idx)">−</button>
+                            <span class="qty-value">@saleProduct.Quantity</span>
+                            <button type="button" @onclick="() => IncrementQty(idx)">+</button>
+                        </div>
+
+                        <div>
+                            @if (editingPriceIndex == idx)
+                            {
+                                <input type="number"
+                                       class="price-edit-input"
+                                       step="0.01"
+                                       value="@saleProduct.UnitPrice"
+                                       @onchange="(e) => UpdateUnitPrice(idx, e)"
+                                       @onblur="() => editingPriceIndex = -1" />
+                            }
+                            else
+                            {
+                                <span class="unit-price unit-price-display" @onclick="() => editingPriceIndex = idx" title="Toca para editar precio">
+                                    @ToMoneyString(saleProduct.UnitPrice) c/u
+                                </span>
+                            }
+                        </div>
+
+                        <span class="line-total">@ToMoneyString(saleProduct.Total)</span>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @* ===== 4. TOTALS & ACTIONS FOOTER ===== *@
+    <div class="newsale-footer">
+        <div class="newsale-totals">
+            <div class="total-row">
+                <span class="total-label">Subtotal</span>
+                <span class="total-value">@subTotal</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Impuestos</span>
+                <span class="total-value">@totalTaxes</span>
+            </div>
+            <div class="total-row editable-row">
+                <span class="total-label">Mano de obra</span>
+                <input type="number" step="0.01" class="editable-input"
+                       value="@(newSale.WorkForceValue ?? 0)"
+                       @onchange="(e) => { newSale.WorkForceValue = ParseDecimal(e.Value?.ToString()); }" />
+            </div>
+            <div class="total-row editable-row">
+                <span class="total-label">Descuento</span>
+                <input type="number" step="0.01" class="editable-input"
+                       value="@(newSale.Discount ?? 0)"
+                       @onchange="(e) => { newSale.Discount = ParseDecimal(e.Value?.ToString()); }" />
+            </div>
+            <div class="total-row grand-total">
+                <span class="total-label">Total</span>
+                <span class="total-value">@totalAmount</span>
+            </div>
+        </div>
+
+        <div class="newsale-actions">
+            @if (newSale.Id <= 0 || !newSale.IsAQuotation)
+            {
+                <button type="button" class="btn-primary-sale" @onclick="@(() => OnValidSubmit(false))">
+                    Procesar venta
+                </button>
+            }
+            @if (newSale.Id <= 0 || newSale.IsAQuotation)
+            {
+                <button type="button" class="btn-secondary-sale" @onclick="@(() => OnValidSubmit(true))">
+                    Generar cotización
+                </button>
+            }
+            <button type="button" class="btn-link-sale" @onclick="@(() => navManager.NavigateTo("/sales"))">
+                Ver listado de ventas
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Invisible overlay to close search results when tapping outside *@
+@if (showSearchResults && !string.IsNullOrWhiteSpace(searchText))
+{
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;" @onclick="() => { showSearchResults = false; }"></div>
+}
 
 @code {
     [Inject] protected PreloadService? PreloadService { get; set; }
@@ -205,7 +222,16 @@
     bool DepositPayment = false;
     bool isCashSale = true;
 
-    private int productsCount => newSale.SaleProducts!.Count() == 0 ? 0 : newSale.SaleProducts!.Count() - 1;
+    // New UX state
+    private string searchText = string.Empty;
+    private bool showSearchResults = false;
+    private int editingPriceIndex = -1;
+
+    // Active products (excluding the empty placeholder row used by the original logic)
+    private IEnumerable<AddEditSaleProduct> ActiveProducts =>
+        newSale.SaleProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+
+    private int productsCount => ActiveProducts.Count();
 
     string totalAmount => ToMoneyString(GetTotalAmount());
     string totalTaxes => ToMoneyString(newSale.SaleProducts!.Sum(p => p.ITBIS));
@@ -213,6 +239,13 @@
 
     private string ToMoneyString(decimal value) => $"{value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))}";
     private string GetStock(string productCode) => ProductList.FirstOrDefault(p => p.Code == productCode)?.stock.ToString() ?? "0";
+
+    private decimal? ParseDecimal(string? value)
+    {
+        if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            return result;
+        return null;
+    }
 
     private decimal GetTotalAmount()
     {
@@ -222,6 +255,88 @@
         calc -= newSale.Discount ?? 0.0M;
         return calc;
     }
+
+    // --- Product Search & Filtering ---
+    private List<ProductViewModel> GetFilteredProducts()
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return new List<ProductViewModel>();
+
+        var term = searchText.Trim().ToLowerInvariant();
+        return ProductList
+            .Where(p => p.Description.ToLowerInvariant().Contains(term) ||
+                        p.Code.ToLowerInvariant().Contains(term))
+            .OrderBy(p => p.Description)
+            .ToList();
+    }
+
+    private void AddProductFromSearch(ProductViewModel product)
+    {
+        // Check if product is already in the sale
+        var existing = newSale.SaleProducts!.FirstOrDefault(p => p.ProductCode == product.Code);
+        if (existing != null)
+        {
+            // Increment quantity
+            existing.Quantity += 1;
+            var existingIdx = newSale.SaleProducts!.ToList().IndexOf(existing);
+            OnChangeProductDetail(existingIdx);
+        }
+        else
+        {
+            // Find the empty placeholder row (last item) and fill it, then add a new empty one
+            var emptySlot = newSale.SaleProducts!.LastOrDefault(p => string.IsNullOrEmpty(p.ProductCode));
+            if (emptySlot != null)
+            {
+                var slotIdx = newSale.SaleProducts!.ToList().IndexOf(emptySlot);
+                emptySlot.ProductId = product.Id;
+                emptySlot.ProductCode = product.Code;
+                emptySlot.ProductDescription = product.Description;
+                emptySlot.Quantity = 1;
+                emptySlot.UnitPrice = product.Price;
+                emptySlot.ITBIS = product.ITBIS > 0 ? product.Price * (product.ITBIS / 100) : 0M;
+            }
+            // Always add a new empty placeholder at the end (original pattern)
+            newSale.SaleProducts!.Add(new AddEditSaleProduct());
+        }
+
+        // Clear search
+        searchText = string.Empty;
+        showSearchResults = false;
+    }
+
+    // --- Quantity Stepper ---
+    private void IncrementQty(int productIndex)
+    {
+        var element = newSale.SaleProducts!.ElementAt(productIndex);
+        element.Quantity += 1;
+        OnChangeProductDetail(productIndex);
+    }
+
+    private void DecrementQty(int productIndex)
+    {
+        var element = newSale.SaleProducts!.ElementAt(productIndex);
+        if (element.Quantity <= 1)
+        {
+            // Remove the product when decrementing below 1
+            removeProduct(productIndex);
+            return;
+        }
+        element.Quantity -= 1;
+        OnChangeProductDetail(productIndex);
+    }
+
+    // --- Unit Price Inline Edit ---
+    private void UpdateUnitPrice(int productIndex, ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var newPrice))
+        {
+            newSale.SaleProducts!.ElementAt(productIndex).UnitPrice = newPrice;
+            OnChangeProductDetail(productIndex);
+        }
+        editingPriceIndex = -1;
+    }
+
+    // --- Original Business Logic (preserved) ---
 
     private async Task<AutoCompleteDataProviderResult<ProductViewModel>> ProductsDataProvider(AutoCompleteDataProviderRequest<ProductViewModel> request)
     {
