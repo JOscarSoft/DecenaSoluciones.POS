@@ -14,91 +14,82 @@
 
 <EditForm Model="newProduct" OnValidSubmit="OnValidSubmit" Context="EditFormContext">
     <DataAnnotationsValidator></DataAnnotationsValidator>
-    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Nombre" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox MaxLength="250" @bind-Value=@newProduct.Description Style="width: 50%"/>
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Precio de compra" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Cost />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Precio de venta" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric TValue="decimal" class="form-control" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Price />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="% ITBIS" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric TValue="decimal" @bind-Value=@newProduct.ITBIS />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Stock" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric @bind-Value=@newProduct.stock />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Tiempo de garantía (Meses)" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric @bind-Value=@newProduct.WarrantyTime />
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Periodo de mantenimientos (Meses)" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenNumeric @bind-Value=@newProduct.MaintenancePeriods/>
-                </ChildContent>
-                <Helper>
-                    <ValidationMessage For="@(() => newProduct.MaintenancePeriods)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-            <RadzenSwitch @bind-Value="newProduct.Assignable" />
-            <RadzenLabel Text="Asignable a clientes" />
-        </RadzenStack>
-    </RadzenRow>
-    
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
-        <AuthorizeView Roles="admin, manager" Context="authContext">
-            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Guardar" Style="width: 100%" />
-        </AuthorizeView>
-        <RadzenButton Click="@(() => navManager.NavigateTo("/products"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de productos" Style="width: 100%" />
-        <AuthorizeView Roles="admin" Context="authContext">
-            <RadzenButton Click="RemoveProduct" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar Producto" Style="width: 100%" />
-        </AuthorizeView>
+
+    <div class="form-page">
+
+        @* Basic Info Section *@
+        <div class="form-card">
+            <div class="form-section-title">Información básica</div>
+            <div class="form-field">
+                <label>Nombre del producto</label>
+                <RadzenTextBox MaxLength="250" @bind-Value=@newProduct.Description Style="width:100%;padding:12px 14px;border:1.5px solid #e2e6ef;border-radius:10px;font-size:0.95rem;" />
+                <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
+            </div>
+        </div>
+
+        @* Pricing Section *@
+        <div class="form-card">
+            <div class="form-section-title">Precios</div>
+            <div class="form-field">
+                <label>Precio de compra</label>
+                <RadzenNumeric TValue="decimal" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Cost Style="width:100%" />
+                <ValidationMessage For="@(() => newProduct.Cost)"></ValidationMessage>
+            </div>
+            <div class="form-field">
+                <label>Precio de venta</label>
+                <RadzenNumeric TValue="decimal" Culture="@CultureInfo.CreateSpecificCulture("en-US")" Format="C2" ShowUpDown="false" @bind-Value=@newProduct.Price Style="width:100%" />
+                <ValidationMessage For="@(() => newProduct.Price)"></ValidationMessage>
+            </div>
+            <div class="form-field" style="margin-bottom:0">
+                <label>% ITBIS</label>
+                <RadzenNumeric TValue="decimal" @bind-Value=@newProduct.ITBIS Style="width:100%" />
+            </div>
+        </div>
+
+        @* Inventory Section *@
+        <div class="form-card">
+            <div class="form-section-title">Inventario</div>
+            <div class="form-field" style="margin-bottom:0">
+                <label>Stock</label>
+                <RadzenNumeric @bind-Value=@newProduct.stock Style="width:100%" />
+            </div>
+        </div>
+
+        @* Configuration Section *@
+        <div class="form-card">
+            <div class="form-section-title">Configuración</div>
+            <div class="form-field">
+                <label>Tiempo de garantía (meses)</label>
+                <RadzenNumeric @bind-Value=@newProduct.WarrantyTime Style="width:100%" />
+            </div>
+            <div class="form-field">
+                <label>Periodo de mantenimiento (meses)</label>
+                <RadzenNumeric @bind-Value=@newProduct.MaintenancePeriods Style="width:100%" />
+                <ValidationMessage For="@(() => newProduct.MaintenancePeriods)"></ValidationMessage>
+            </div>
+            <div class="form-toggle-row">
+                <span class="toggle-label">Asignable a clientes</span>
+                <RadzenSwitch @bind-Value="newProduct.Assignable" />
+            </div>
+        </div>
+
+        @* Action Buttons *@
+        <div class="form-actions">
+            <AuthorizeView Roles="admin, manager" Context="authContext">
+                <button type="submit" class="btn-save">Guardar</button>
+            </AuthorizeView>
+            <button type="button" class="btn-outline" @onclick="@(() => navManager.NavigateTo("/products"))">
+                Ver listado de productos
+            </button>
+            @if (ProductId > 0)
+            {
+                <AuthorizeView Roles="admin" Context="authContext2">
+                    <button type="button" class="btn-danger-text" @onclick="RemoveProduct">
+                        Eliminar producto
+                    </button>
+                </AuthorizeView>
+            }
+        </div>
     </div>
 </EditForm>
 

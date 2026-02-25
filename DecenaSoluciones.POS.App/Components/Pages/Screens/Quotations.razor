@@ -11,63 +11,59 @@
 @inject SweetAlertService Swal;
 @inject NavigationManager navManager;
 @inject ISaleService quotationService;
+@inject IJSRuntime JS;
 
-<style>
-    .danger-Quotation {
-        min-height: 72px;
-        background-color: var(--rz-secondary-lighter);
-    }
-</style>
+<div class="list-page">
 
-<div class="text-center">
-    <RadzenStack Gap="0.3rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Style="margin-bottom:15px">
-        <RadzenFormField Text="Cliente..." Variant="Variant.Text" Style="margin-right:20px">
-            <RadzenTextBox @bind-Value=@searchText />
-        </RadzenFormField>
-        <RadzenButton Click=@(FilterQuotations) Icon="search" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" />
-        <RadzenButton Click=@(() => {
-                      searchText = string.Empty;
-                      FilterQuotations();
-                      }) Icon="cancel" ButtonStyle="ButtonStyle.Secondary" Disabled=@(!filtered) Size="ButtonSize.Large" />
-    </RadzenStack>
-    @if (filteredQuotationsList != null && filteredQuotationsList.Count() > 0)
+    @* Search Bar *@
+    <div class="list-search-bar">
+        <i class="rzi rzi-search search-icon"></i>
+        <input type="text"
+               placeholder="Buscar por cliente..."
+               @bind="searchText"
+               @bind:event="oninput"
+               @onkeyup="OnSearchKeyUp" />
+    </div>
+
+    @if (filteredQuotationsList != null && filteredQuotationsList.Any())
     {
-        <RadzenDataList AllowVirtualization=false
-                        WrapItems=true
-                        AllowPaging=true
-                        Data="@filteredQuotationsList"
-                        TItem="SalesViewModel"
-                        PageSize="15"
-                        PagerHorizontalAlign="HorizontalAlign.Left">
-            <Template Context="quotation">
-                <RadzenCard Style="width: 100%; padding: 0;">
-                    <RadzenRow Gap="0">
-                        <RadzenColumn Size="6" Class="danger-Quotation rz-p-4 product-title " @onclick="(() => GoToQuotation(quotation))">
-                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H5">@($"{(string.IsNullOrEmpty(quotation.CustomerName) ? quotation.Code : quotation.CustomerName)}")</RadzenText>
-                        </RadzenColumn>
-                        <RadzenColumn Size="6" Class="rz-p-4">
-                            <RadzenRow Gap="0">
-                                <RadzenColumn Size="12" Class="rz-text-align-lg-end">
-                                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Fecha de venta</RadzenText>
-                                    <RadzenText TextStyle="TextStyle.Body2">@quotation.CreationDate.ToString("dd/MM/yyyy")</RadzenText>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="12" Class="rz-text-align-lg-end">
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" class="price-badge" Shade="Shade.Lighter" Style="font-size:14px" Text="@(quotation.Total != null ? quotation.Total.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "0.00")" />
-                                    </RadzenColumn>
-                                </RadzenRow>
-                            </RadzenColumn>
-                        </RadzenRow>
-                    </RadzenCard>
-                </Template>
-            </RadzenDataList>
+        <div class="list-results-count">@filteredQuotationsList.Count() cotizaciones</div>
+
+        @foreach (var quotation in GetPagedItems())
+        {
+            <div class="list-card" @onclick="(() => GoToQuotation(quotation))">
+                <div class="card-main">
+                    <span class="card-title">@(string.IsNullOrEmpty(quotation.CustomerName) ? quotation.Code : quotation.CustomerName)</span>
+                    <span class="card-subtitle">@quotation.Code</span>
+                </div>
+                <div class="card-right">
+                    <span class="card-amount">@(quotation.Total != null ? quotation.Total.Value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")) : "$0.00")</span>
+                    <span class="card-date">@quotation.CreationDate.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+        }
+
+        @if (TotalPages > 1)
+        {
+            <div class="list-pagination">
+                <button type="button" disabled="@(currentPage <= 1)" @onclick="() => ChangePage(currentPage - 1)">‹</button>
+                @for (int i = Math.Max(1, Math.Min(currentPage - 2, TotalPages - 4)); i <= Math.Min(TotalPages, Math.Max(currentPage + 2, 5)); i++)
+                {
+                    var pg = i;
+                    <button type="button" class="@(pg == currentPage ? "active" : "")" @onclick="() => ChangePage(pg)">@pg</button>
+                }
+                <button type="button" disabled="@(currentPage >= TotalPages)" @onclick="() => ChangePage(currentPage + 1)">›</button>
+            </div>
+        }
     }
     else
     {
-        <RadzenStack AlignItems="AlignItems.Center" Class="rz-mx-auto rz-my-12">
-            <RadzenImage Path="images/NoResults.png" Style="width: 15rem;" AlternateText="community" />
-            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H5" Class="rz-mb-0">No se encontraron cotizacioness para mostrar</RadzenText>
-        </RadzenStack>
+        <div class="list-empty-state">
+            <img src="images/NoResults.png" alt="Sin resultados" />
+            <p>No se encontraron cotizaciones para mostrar</p>
+        </div>
     }
+
     <AuthorizeView Roles="admin, manager" Context="authContext">
         <RadzenButton Click="@(() => navManager.NavigateTo("/newsale"))" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Shade="Shade.Darker" class="rz-border-radius-10 rz-shadow-10 floatButtom" />
     </AuthorizeView>
@@ -79,7 +75,19 @@
     IQueryable<SalesViewModel> filteredQuotationsList { get; set; }
     [Parameter] public int quotations { get; set; } = 0;
     string searchText = "";
-    bool filtered = false;
+    int currentPage = 1;
+    int pageSize = 15;
+
+    int TotalPages => filteredQuotationsList == null ? 1 : (int)Math.Ceiling(filteredQuotationsList.Count() / (double)pageSize);
+
+    IEnumerable<SalesViewModel> GetPagedItems() =>
+        filteredQuotationsList?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<SalesViewModel>();
+
+    private async Task ChangePage(int newPage)
+    {
+        currentPage = newPage;
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,19 +130,13 @@
         }
     }
 
-    private void FilterQuotations()
+    private void OnSearchKeyUp()
     {
-        preloadService!.Show();
-        filtered = false;
+        currentPage = 1;
         if (string.IsNullOrEmpty(searchText))
             filteredQuotationsList = quotationList;
         else
-        {
-            filtered = true;
             filteredQuotationsList = quotationList.Where(p => p.CustomerName != null && p.CustomerName.ToLower().Contains(searchText.Trim().ToLower()));
-        }
-
-        preloadService.Hide();
     }
 
     private void GoToQuotation(SalesViewModel quotation)
