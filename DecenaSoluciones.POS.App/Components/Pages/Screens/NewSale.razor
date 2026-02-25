@@ -26,11 +26,14 @@
         <span class="customer-label">Cliente</span>
         <RadzenDropDown TValue="int"
                         Value=@newSale.Customer!.Id
-                        Data=@CustomerList
+                        Data=@filteredCustomerList
                         TextProperty="Name"
                         ValueProperty="Id"
                         Placeholder="Seleccionar cliente..."
-                        Style="width:100%"
+                        AllowFiltering="true"
+                        AllowClear="true"
+                        LoadData="FilterCustomers"
+                        Style="width:100%; border-radius: 12px;"
                         Change="((customerId) => {
                             if(customerId != null) {OnChangeCustomer(Convert.ToInt32(customerId));}
                         })" />
@@ -214,6 +217,7 @@
 
     List<ProductViewModel> ProductList { get; set; } = new List<ProductViewModel>();
     List<CustomerViewModel> CustomerList { get; set; } = new List<CustomerViewModel>();
+    List<CustomerViewModel> filteredCustomerList { get; set; } = new List<CustomerViewModel>();
 
     AddEditSale newSale = new AddEditSale();
     Variant variant = Variant.Outlined;
@@ -367,6 +371,16 @@
         newSale.Customer = new AddEditCustomer();
     }
 
+    void FilterCustomers(LoadDataArgs args)
+    {
+        filteredCustomerList = CustomerList;
+
+        if (!string.IsNullOrEmpty(args.Filter))
+            filteredCustomerList = CustomerList.Where(c => c.Name.ToLower().Contains(args.Filter.ToLower())).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
     private void OnChangeProduct(string? selectedCode, int productIndex)
     {
         if (!string.IsNullOrEmpty(selectedCode))
@@ -411,6 +425,7 @@
             if (response.Success)
             {
                 CustomerList = response.Result ?? new List<CustomerViewModel>();
+                filteredCustomerList = CustomerList;
             }
             else
             {

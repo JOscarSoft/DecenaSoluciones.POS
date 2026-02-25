@@ -22,7 +22,7 @@
             <div class="form-section-title">Información básica</div>
             <div class="form-field">
                 <label>Nombre del producto</label>
-                <RadzenTextBox MaxLength="250" @bind-Value=@newProduct.Description Style="width:100%;padding:12px 14px;border:1.5px solid #e2e6ef;border-radius:10px;font-size:0.95rem;" />
+                <RadzenTextBox MaxLength="250" @bind-Value=@newProduct.Description Style="width:100%;padding:12px 14px;border:1.5px solid var(--border-color);border-radius:10px;font-size:0.95rem;" />
                 <ValidationMessage For="@(() => newProduct.Description)"></ValidationMessage>
             </div>
         </div>
