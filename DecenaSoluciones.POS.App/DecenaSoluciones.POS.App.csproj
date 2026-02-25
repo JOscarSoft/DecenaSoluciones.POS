@@ -25,7 +25,7 @@
         <ApplicationTitle>DesolApp</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.decenasoluciones.pos.app</ApplicationId>
+        <ApplicationId>com.decenasoluciones.pos.app</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.5</ApplicationDisplayVersion>
