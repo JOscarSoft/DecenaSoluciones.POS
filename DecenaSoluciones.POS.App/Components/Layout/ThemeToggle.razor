@@ -1,11 +1,7 @@
 @inject IJSRuntime JSRuntime
 
 <div class="theme-toggle" @onclick="ToggleTheme" title="Cambiar Tema">
-    @if (currentMode == "system")
-    {
-        <i class="bi bi-display"></i>
-    }
-    else if (currentMode == "dark")
+    @if (currentMode == "dark")
     {
         <i class="bi bi-moon-fill"></i>
     }
@@ -31,14 +27,14 @@
     {
         switch (currentMode)
         {
-            case "system":
-                currentMode = "light";
-                break;
             case "light":
                 currentMode = "dark";
                 break;
             case "dark":
-                currentMode = "system";
+                currentMode = "light";
+                break;
+            default:
+                currentMode = "light";
                 break;
         }
 

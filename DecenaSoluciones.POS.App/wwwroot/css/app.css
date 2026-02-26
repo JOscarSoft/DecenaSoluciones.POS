@@ -136,6 +136,14 @@
     background-color: var(--bg-input) !important;
 }
 
+[data-theme='dark'] .sidebar-logo {
+    content: url('/images/logo/MenuLogoDark.jpeg');
+}
+
+.sidebar-logo {
+    content: url('/images/logo/MenuLogo.jpeg');
+}
+
 [data-theme='dark'] .rz-dropdown-label,
 [data-theme='dark'] .rz-dropdown-label-content,
 [data-theme='dark'] .rz-multiselect-label,
@@ -1298,6 +1306,15 @@ h3 {
     width: 100%;
     max-width: 400px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    .000
+}
+
+[data-theme='dark'] .auth-logo {
+    content: url('/images/logo/LoginLogoDark.jpeg');
+}
+
+.auth-logo {
+    content: url('/images/logo/LoginLogo.jpeg');
 }
 
 .auth-card .auth-logo {
