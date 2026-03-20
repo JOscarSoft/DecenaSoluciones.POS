@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14 # Usamos una Mac real en la nube de GitHub
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,13 +15,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: 8.0.x
 
       - name: Install MAUI iOS Workload
-        run: dotnet workload install ios android wasm-tools
-
-      - name: Install dependencies
-        run: dotnet restore ./DecenaSoluciones.POS.App/DecenaSoluciones.POS.App.csproj
+        run: |
+          dotnet workload install ios android wasm-tools --ignore-failed-sources
+          dotnet workload restore
 
       - name: Build and Generate IPA
         run: |
@@ -32,7 +31,9 @@ jobs:
           -p:BuildIpa=true \
           -p:CodesignKey="-" \
           -p:CodesignProvision="-" \
-          -p:ArchiveOnBuild=false
+          -p:ArchiveOnBuild=false \
+          -p:CheckEolWorkloads=false \
+          -p:TargetPlatformIdentifier=ios
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
