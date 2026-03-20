@@ -17,9 +17,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Install MAUI iOS Workload
+      - name: Install MAUI Workloads
         run: |
-          dotnet workload install ios android wasm-tools --ignore-failed-sources
+          dotnet workload install maui --ignore-failed-sources
 
       - name: Build and Generate IPA
         run: |
