@@ -18,7 +18,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install MAUI iOS Workload
-        run: dotnet workload install
+        run: dotnet workload install ios android wasm-tools
 
       - name: Install dependencies
         run: dotnet restore ./DecenaSoluciones.POS.App/DecenaSoluciones.POS.App.csproj
