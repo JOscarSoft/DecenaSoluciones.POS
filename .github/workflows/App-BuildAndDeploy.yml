@@ -20,7 +20,6 @@ jobs:
       - name: Install MAUI iOS Workload
         run: |
           dotnet workload install ios android wasm-tools --ignore-failed-sources
-          dotnet workload restore
 
       - name: Build and Generate IPA
         run: |
@@ -31,9 +30,7 @@ jobs:
           -p:BuildIpa=true \
           -p:CodesignKey="-" \
           -p:CodesignProvision="-" \
-          -p:ArchiveOnBuild=false \
-          -p:CheckEolWorkloads=false \
-          -p:TargetPlatformIdentifier=ios
+          -p:CheckEolWorkloads=false
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
