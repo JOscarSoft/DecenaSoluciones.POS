@@ -17,8 +17,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Install MAUI Workloads
+      - name: Enable Workloads for .NET 8
         run: |
+          dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
           dotnet workload install maui --ignore-failed-sources
 
       - name: Build and Generate IPA
