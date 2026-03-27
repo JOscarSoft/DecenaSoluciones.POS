@@ -54,7 +54,7 @@
                             SortKeySelector="item => item.Description" IsDefaultSortColumn="true">
                     @context.Description
                 </GridColumn>
-                @if (showCost)
+                @if (showDetails)
                 {
                     <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost"
                                 SortKeySelector="item => item.Cost">
@@ -80,11 +80,11 @@
     List<ProductViewModel> productList = new List<ProductViewModel>();
     Grid<ProductViewModel> productsGrid = default!;
     private Modal addEditProductModal = default!;
-    private bool showCost = true;
+    private bool showDetails = true;
 
     protected override async Task OnInitializedAsync()
     {
-        showCost = await checkShowCost();
+        showDetails = await checkShowCost();
         await UpdateData();
     }
 
@@ -142,12 +142,15 @@
 
     private async Task ShowAddEditProductModal(ProductViewModel? product)
     {
-        var productParam = product ?? new ProductViewModel();
-        var parameters = new Dictionary<string, object>();
-        parameters.Add("Product", productParam);
-        parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
-        await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productParam.Id > 0 ? "Actualizar producto" :
-        "Agregar nuevo producto", parameters: parameters);
+        if (showDetails)
+        {
+            var productParam = product ?? new ProductViewModel();
+            var parameters = new Dictionary<string, object>();
+            parameters.Add("Product", productParam);
+            parameters.Add("OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, HideAddEditProductModal));
+            await addEditProductModal.ShowAsync<AddEditProductComponent>(title: productParam.Id > 0 ? "Actualizar producto" :
+            "Agregar nuevo producto", parameters: parameters);
+        }
     }
 
     private async Task GenerateProductsReport()
