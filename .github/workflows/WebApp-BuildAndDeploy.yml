@@ -40,5 +40,5 @@ jobs:
         server: ${{ secrets.WEPAPP_FTP_SERVER }}
         username: ${{ secrets.WEBAPP_FTP_USERNAME }}
         password: ${{ secrets.WEPAPP_FTP_PASSWORD }}
-        local-dir: "./publishWebApp"
+        local-dir: "./publishWebApp/"
         server-dir: "./"
