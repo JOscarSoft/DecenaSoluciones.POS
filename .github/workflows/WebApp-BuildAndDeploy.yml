@@ -35,10 +35,9 @@ jobs:
         ApiUrl: ${{ secrets.API_URL }}
     
     - name: Upload to ftp      
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      uses: sebastianpopp/ftp-action@releases/v2
       with:
-        server: ${{ secrets.WEPAPP_FTP_SERVER }}
-        username: ${{ secrets.WEBAPP_FTP_USERNAME }}
+        host: ${{ secrets.WEPAPP_FTP_SERVER }}
+        user: ${{ secrets.WEBAPP_FTP_USERNAME }}
         password: ${{ secrets.WEPAPP_FTP_PASSWORD }}
-        local-dir: "./publishWebApp/"
-        server-dir: "./"
+        localDir: "./publishWebApp"
