@@ -34,6 +34,14 @@ jobs:
       env:
         ConnectionStrings.DefaultConnection: ${{ secrets.DEFAULT_CONNECTION_STRING }}
         AppSettings.TestingPeriod: ${{ secrets.TESTING_PERIOD }}
+
+    - name: Verify FTP Configuration
+      run: |
+        if [ -z "${{ secrets.API_FTP_SERVER }}" ]; then
+          echo "ERROR: API_FTP_SERVER secret is not set"
+          exit 1
+        fi
+        echo "FTP Server: ${{ secrets.API_FTP_SERVER }}"
     
     - name: Upload to ftp      
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
