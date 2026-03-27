@@ -1,0 +1,43 @@
+@inject IJSRuntime JSRuntime
+
+<div class="theme-toggle" @onclick="ToggleTheme" title="Cambiar Tema">
+    @if (currentMode == "dark")
+    {
+        <i class="bi bi-moon-fill"></i>
+    }
+    else
+    {
+        <i class="bi bi-brightness-high-fill"></i>
+    }
+</div>
+
+@code {
+    private string currentMode = "system";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentMode = await JSRuntime.InvokeAsync<string>("themeHelper.getTheme");
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        switch (currentMode)
+        {
+            case "light":
+                currentMode = "dark";
+                break;
+            case "dark":
+                currentMode = "light";
+                break;
+            default:
+                currentMode = "light";
+                break;
+        }
+
+        await JSRuntime.InvokeVoidAsync("themeHelper.setTheme", currentMode);
+    }
+}

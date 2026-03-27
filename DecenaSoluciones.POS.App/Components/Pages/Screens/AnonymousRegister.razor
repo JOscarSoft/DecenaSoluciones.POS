@@ -15,61 +15,76 @@
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
 
-<div class="row mt-5 text-center">
+<div class="auth-wrapper">
+    <div class="auth-card">
 
-    <div class="col-lg-4 offset-lg-4" style="width:100%; margin: auto">
+        <img src="/images/logo/LoginLogo.jpeg" alt="logo" class="auth-logo" />
 
-        <img src="/images/logo/LoginLogo.jpeg" alt="logo" style="width:50%;margin-bottom:50px">
+        @* Step indicator *@
+        <div class="auth-step-indicator">
+            <span class="step-dot @(OnCompanyCreation ? "active" : "")"></span>
+            <span class="step-dot @(!OnCompanyCreation ? "active" : "")"></span>
+        </div>
 
         @if (OnCompanyCreation)
         {
-            <div class="mb-3">
-                <input @bind="model.CompanyName" class="form-control" placeholder="Nombre de la Compañía o Negocio" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            <div class="auth-title">Datos de tu negocio</div>
+
+            <div class="auth-input-group">
+                <i class="rzi rzi-home auth-icon"></i>
+                <input @bind="model.CompanyName" placeholder="Nombre de la Compañía o Negocio" @onkeyup="@EnterNextView" />
             </div>
 
-            <div class="mb-3">
-                <input @bind="model.ContactEmail" class="form-control" placeholder="Correo electrónico" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-envelope-closed auth-icon"></i>
+                <input @bind="model.ContactEmail" placeholder="Correo electrónico" @onkeyup="@EnterNextView" />
             </div>
 
-            <div class="mb-3">
-                <input @bind="model.ContactPhone" class="form-control" placeholder="Teléfono" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterNextView" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-phone auth-icon"></i>
+                <input @bind="model.ContactPhone" placeholder="Teléfono" @onkeyup="@EnterNextView" />
             </div>
 
-            <div class="mb-3" style="margin-top:50px">
-                <RadzenButton Icon="check_circle" Click="SwitchNextView" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Continuar" Style="width: 75%" />
-            </div>
+            <button type="button" class="auth-btn-primary" @onclick="SwitchNextView">
+                Continuar →
+            </button>
         }
         else
         {
-            <div class="mb-3">
-                <input @bind="model.FirstName" class="form-control" placeholder="Nombre" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            <div class="auth-title">Crea tu cuenta</div>
+
+            <div class="auth-input-group">
+                <i class="rzi rzi-user auth-icon"></i>
+                <input @bind="model.FirstName" placeholder="Nombre" @onkeyup="@EnterRegistration" />
             </div>
 
-            <div class="mb-3">
-                <input @bind="model.LastName" class="form-control" placeholder="Apellido" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-user auth-icon"></i>
+                <input @bind="model.LastName" placeholder="Apellido" @onkeyup="@EnterRegistration" />
             </div>
 
-            <div class="mb-3">
-                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-person auth-icon"></i>
+                <input @bind="model.Username" placeholder="Usuario" @onkeyup="@EnterRegistration" />
             </div>
 
-            <div class="mb-3">
-                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-lock auth-icon"></i>
+                <input type="password" @bind="model.Password" placeholder="Contraseña" @onkeyup="@EnterRegistration" />
             </div>
 
-            <div class="mb-3">
-                <input type="password" @bind="PasswordConfirmation" class="form-control" placeholder="Confirmar contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterRegistration" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-lock auth-icon"></i>
+                <input type="password" @bind="PasswordConfirmation" placeholder="Confirmar contraseña" @onkeyup="@EnterRegistration" />
             </div>
 
-
-            <div class="mb-3" style="margin-top:50px">
-                <RadzenButton Icon="arrow_back" Click="GoBack" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Secondary" Text="Regresar" Style="width: 37.5%" />
-                <RadzenButton Click="SubmitRegistration" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Registrarme" Style="width: 37.5%" />
+            <div class="auth-btn-row">
+                <button type="button" class="auth-btn-back" @onclick="GoBack">← Regresar</button>
+                <button type="button" class="auth-btn-primary" @onclick="SubmitRegistration">Registrarme</button>
             </div>
         }
 
     </div>
-
 </div>
 
 

@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @* @using BlazorBootstrap.Utilities; *@
 @using CurrieTechnologies.Razor.SweetAlert2;
 @using DecenaSoluciones.POS.Shared.Dtos;
@@ -9,15 +9,71 @@
 @attribute [Authorize]
 @inject IReportService reportService;
 @inject SweetAlertService Swal;
+@inject NavigationManager navManager;
 
-<style>
-    div:has(.charDiv) {
-        margin: 0 auto;
+<div class="dashboard-page">
+
+    @* Welcome Header *@
+    @if (!string.IsNullOrEmpty(viewModel.CompanyName))
+    {
+        <div class="dashboard-welcome">👋 @viewModel.CompanyName</div>
     }
-</style>
 
-<div class="text-center">
-    <DoughnutChart @ref="doughnutChart" Width="350" Class="charDiv" />
+    @* KPI Cards *@
+    <div class="dashboard-kpi-row @(viewModel.ExpiredMaintenances > 0 ? "" : "dashboard-kpi-row-center")">
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-primary">
+                <i class="rzi rzi-cart4"></i>
+            </div>
+            <span class="kpi-value">@viewModel.SoldProductsPerWeek</span>
+            <span class="kpi-label">Vendidos esta semana</span>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-warning">
+                <i class="rzi rzi-box-seam"></i>
+            </div>
+            <span class="kpi-value">@viewModel.ProductsWithEmptyStock</span>
+            <span class="kpi-label">Sin stock</span>
+        </div>
+    
+        @if (@viewModel.ExpiredMaintenances > 0)
+        {
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-danger">
+                    <i class="rzi rzi-exclamation-triangle"></i>
+                </div>
+                <span class="kpi-value">@viewModel.ExpiredMaintenances</span>
+                <span class="kpi-label">Mantenimientos vencidos</span>
+            </div>
+        }
+    </div>
+
+    @* Chart *@
+    <div class="dashboard-chart-card">
+        <div class="chart-title">Top productos vendidos</div>
+        <div style="display:flex;justify-content:center;">
+            <DoughnutChart @ref="doughnutChart" Width="300" Class="charDiv" />
+        </div>
+    </div>
+
+    @* Quick Actions *@
+    <AuthorizeView Roles="admin, manager" Context="authContext">
+        <div class="dashboard-quick-actions">
+            <button type="button" @onclick='() => navManager.NavigateTo("/newsale")'>
+                <span class="action-icon">🛒</span>
+                Nueva Venta
+            </button>
+            <button type="button" @onclick='() => navManager.NavigateTo("/newcustomer")'>
+                <span class="action-icon">👤</span>
+                Nuevo Cliente
+            </button>
+            <button type="button" @onclick='() => navManager.NavigateTo("/newproduct")'>
+                <span class="action-icon">📦</span>
+                Nuevo Producto
+            </button>
+        </div>
+    </AuthorizeView>
+
 </div>
 
 @code{
@@ -44,7 +100,7 @@
                 doughnutChartOptions = new();
                 doughnutChartOptions.Responsive = true;
                 doughnutChartOptions.Plugins.Title!.Text = "Top productos vendidos";
-                doughnutChartOptions.Plugins.Title.Display = true;
+                doughnutChartOptions.Plugins.Title.Display = false;
                 await doughnutChart.InitializeAsync(chartData, doughnutChartOptions);
             }
             else

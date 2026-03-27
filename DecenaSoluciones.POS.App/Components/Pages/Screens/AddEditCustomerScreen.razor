@@ -1,4 +1,4 @@
-﻿@page "/newcustomer"
+@page "/newcustomer"
 @page "/newcustomer/{CustomerId:int}"
 
 @using BlazorInputMask
@@ -14,157 +14,152 @@
 
 <EditForm Model="newCustomer" OnValidSubmit="OnValidSubmit" Context="EditFormContext">
     <DataAnnotationsValidator></DataAnnotationsValidator>
-    <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem">
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Nombre" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox @bind-Value=@newCustomer.Name Style="width: 50%"/>
-                </ChildContent>
-                <Helper>
+
+    <div class="form-page">
+
+        @* Customer Info Section *@
+        <div class="form-card">
+            <button type="button"
+                    class="form-section-title form-section-toggle @(showCustomerInfo ? "" : "is-collapsed")"
+                    @onclick="ToggleCustomerInfo"
+                    aria-expanded="@showCustomerInfo">
+                <span>Datos del cliente</span>
+                <span class="form-section-chevron">@((showCustomerInfo) ? "▾" : "▸")</span>
+            </button>
+
+            @if (showCustomerInfo)
+            {
+                <div class="form-field">
+                    <label>Nombre</label>
+                    <RadzenTextBox @bind-Value=@newCustomer.Name Style="width:100%" />
                     <ValidationMessage For="@(() => newCustomer.Name)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Apellido" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox @bind-Value=@newCustomer.LastName />
-                </ChildContent>
-                <Helper>
+                </div>
+                <div class="form-field">
+                    <label>Apellido</label>
+                    <RadzenTextBox @bind-Value=@newCustomer.LastName Style="width:100%" />
                     <ValidationMessage For="@(() => newCustomer.LastName)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12" >
-            <RadzenFormField Text="Teléfono" Variant="@variant" Style="width:100%">
-                    <ChildContent>
-                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newCustomer.PhoneNumber />
-                    </ChildContent>
-                    <Helper>
-                        <ValidationMessage For="@(() => newCustomer.PhoneNumber)"></ValidationMessage>
-                    </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-        <RadzenColumn Size="12">
-            <RadzenFormField Text="Dirección" Variant="@variant" Style="width:100%">
-                <ChildContent>
-                    <RadzenTextBox @bind-Value=@newCustomer.Direction />
-                </ChildContent>
-                <Helper>
+                </div>
+                <div class="form-field">
+                    <label>Teléfono</label>
+                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" @bind-Value=@newCustomer.PhoneNumber Style="width:100%" />
+                    <ValidationMessage For="@(() => newCustomer.PhoneNumber)"></ValidationMessage>
+                </div>
+                <div class="form-field" style="margin-bottom:0">
+                    <label>Dirección</label>
+                    <RadzenTextBox @bind-Value=@newCustomer.Direction Style="width:100%" />
                     <ValidationMessage For="@(() => newCustomer.Direction)"></ValidationMessage>
-                </Helper>
-            </RadzenFormField>
-        </RadzenColumn>
-    </RadzenRow>
-    <div class="rz-p-sm-12">
-        <RadzenAccordion Style="margin: 50px 0">
-            <Items>
-                <RadzenAccordionItem Text="@($"Productos ({productsCount})")" Icon="account_balance_wallet"
-                                     ExpandTitle="Ver productos"
-                                     ExpandAriaLabel="Ver productos">
-                    @foreach (var customerProduct in newCustomer.CustomerProducts!)
-                    {
-                        <RadzenFieldset AllowCollapse="true" Style="width: 100%" ExpandTitle="Mas detalles"
-                                        CollapseTitle="Menos detalles" ExpandAriaLabel="Ver detalles" CollapseAriaLabel="Menos detalles">
-                            <HeaderTemplate>
-                                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">@customerProduct.ProductDescription</RadzenText>
-                                </HeaderTemplate>
-                                <ChildContent>
-                                <RadzenRow AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
-                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                            <RadzenFormField Text="Producto" Variant="@variant" Style="width:100%">
-                                            <ChildContent>
-                                                <RadzenDropDown 
-                                                    TValue="string"
-                                                    Value=@customerProduct.ProductCode 
-                                                    Data=@assignableProducts 
-                                                    TextProperty="Description" 
-                                                    ValueProperty="Code"
-                                                    Change="((productCode) => OnChangeProduct(productCode as string, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))" />
-                                            </ChildContent>
-                                            <Helper>
-                                                <ValidationMessage For="@(() => customerProduct.ProductCode)"></ValidationMessage>
-                                            </Helper>
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                                            <RadzenSwitch @bind-Value="customerProduct.SoldByUs" />
-                                        <RadzenLabel Text="Vendido por nosotros" />
-                                    </RadzenStack>
-                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                                            <RadzenSwitch @bind-Value="customerProduct.NeedMaintenance" />
-                                        <RadzenLabel Text="Necesita mantenimientos" />
-                                    </RadzenStack>
-                                        <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                                            <RadzenSwitch @bind-Value="customerProduct.HasWarranty" />
-                                        <RadzenLabel Text="Tiene garantía" />
-                                    </RadzenStack>
-                                    @if (customerProduct.NeedMaintenance)
-                                    {
+                </div>
+            }
+        </div>
 
-                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                            <RadzenFormField Text="Último mantenimiento" Variant="@variant">
-                                                <ChildContent>
-                                                    <RadzenDatePicker @bind-Value=@(customerProduct.LastMaintenance) DateFormat="dd/MM/yyyy" ShowCalendarWeek Change="(e) => {OnUpdateMaintenance(e, newCustomer.CustomerProducts.ToList().IndexOf(customerProduct));}"/>
-                                                 </ChildContent>
-                                                 <Helper>
-                                                     <ValidationMessage For="@(() => customerProduct.LastMaintenance)"></ValidationMessage>
-                                                 </Helper>
-                                             </RadzenFormField>
-                                         </RadzenColumn>
-                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                            <RadzenFormField Text="Próximo mantenimiento" Variant="@variant">
-                                                <ChildContent>
-                                                    <RadzenDatePicker @bind-Value=@(customerProduct.NextMaintenance) DateFormat="dd/MM/yyyy" ShowCalendarWeek />
-                                                 </ChildContent>
-                                                 <Helper>
-                                                     <ValidationMessage For="@(() => customerProduct.NextMaintenance)"></ValidationMessage>
-                                                 </Helper>
-                                             </RadzenFormField>
-                                         </RadzenColumn>
-                                    }
-                                     <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                        <RadzenFormField Text="Serial" Variant="@variant" Style="width:100%">
-                                             <ChildContent>
-                                                 <RadzenTextBox @bind-Value=@customerProduct.Serial />
-                                             </ChildContent>
-                                             <Helper>
-                                                 <ValidationMessage For="@(() => customerProduct.Serial)"></ValidationMessage>
-                                             </Helper>
-                                         </RadzenFormField>
-                                     </RadzenColumn>
+        @* Products Section *@
+        <div class="form-card">
+            <button type="button"
+                    class="form-section-title form-section-toggle @(showProducts ? "" : "is-collapsed")"
+                    @onclick="ToggleProducts"
+                    aria-expanded="@showProducts">
+                <span>Productos (@productsCount)</span>
+                <span class="form-section-chevron">@((showProducts) ? "▾" : "▸")</span>
+            </button>
 
-                                    @if (customerProduct.HasWarranty)
-                                    {
-                                        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
-                                            <RadzenFormField Text="Vencimiento garantía" Variant="@variant">
-                                                <ChildContent>
-                                                    <RadzenDatePicker @bind-Value=@(customerProduct.WarrantyEndDate) DateFormat="dd/MM/yyyy" ShowCalendarWeek />
-                                                 </ChildContent>
-                                                 <Helper>
-                                                     <ValidationMessage For="@(() => customerProduct.WarrantyEndDate)"></ValidationMessage>
-                                                 </Helper>
-                                             </RadzenFormField>
-                                         </RadzenColumn>
-                                    }
-                                    <RadzenButton Click="(() => removeProduct(newCustomer.CustomerProducts.ToList().IndexOf(customerProduct)))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar" Style="width: 100%" />
-                                </RadzenRow>
-                             </ChildContent>
-                         </RadzenFieldset>
-                    }
-                </RadzenAccordionItem>
-            </Items>
-        </RadzenAccordion>
-    </div>
-    
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2" style="margin-top:50px">
-        <AuthorizeView Roles="admin, manager" Context="authContext">
-            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Guardar" Style="width: 100%" />
-        </AuthorizeView>
-        <RadzenButton Click="@(() => navManager.NavigateTo("/customers"))" Variant="Variant.Outlined" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Listado de clientes" Style="width: 100%" />
-        <AuthorizeView Roles="admin" Context="authContext">
-            <RadzenButton Click="RemoveCustomer" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Secondary" Text="Eliminar Cliente" Style="width: 100%" />
-        </AuthorizeView>
+            @if (showProducts)
+            {
+                @* Add product dropdown *@
+                <div class="form-field">
+                    <label>Agregar producto</label>
+                    <RadzenDropDown TValue="string"
+                                    Data=@assignableProducts
+                                    TextProperty="Description"
+                                    ValueProperty="Code"
+                                    Placeholder="Seleccionar producto..."
+                                    Style="width:100%"
+                                    Change="((productCode) => AddProductByCode(productCode as string))" />
+                </div>
+
+                @* Product Cards *@
+                @foreach (var customerProduct in ActiveProducts.ToList())
+                {
+                    var idx = newCustomer.CustomerProducts!.ToList().IndexOf(customerProduct);
+                    <div class="customer-product-card">
+                        <div class="product-card-header">
+                            <span class="product-card-title" title="@customerProduct.ProductDescription">@customerProduct.ProductDescription</span>
+                            <button type="button" class="btn-remove" style="background:none;border:none;color:#cc3333;font-size:1.2rem;cursor:pointer;opacity:0.6;padding:0 4px;" @onclick="() => removeProduct(idx)">✕</button>
+                        </div>
+
+                        <div class="product-card-fields">
+                            @* Toggles *@
+                            <div class="form-toggle-row">
+                                <span class="toggle-label">Vendido por nosotros</span>
+                                <RadzenSwitch @bind-Value="customerProduct.SoldByUs" />
+                            </div>
+                            <div class="form-toggle-row">
+                                <span class="toggle-label">Necesita mantenimiento</span>
+                                <RadzenSwitch @bind-Value="customerProduct.NeedMaintenance" />
+                            </div>
+                            <div class="form-toggle-row">
+                                <span class="toggle-label">Tiene garantía</span>
+                                <RadzenSwitch @bind-Value="customerProduct.HasWarranty" />
+                            </div>
+
+                            @* Serial *@
+                            <div class="form-field" style="margin-bottom:8px">
+                                <label>Serial</label>
+                                <RadzenTextBox @bind-Value=@customerProduct.Serial Style="width:100%" />
+                            </div>
+
+                            @* Maintenance dates *@
+                            @if (customerProduct.NeedMaintenance)
+                            {
+                                <div class="field-row">
+                                    <div class="form-field" style="margin-bottom:4px">
+                                        <label>Último mantenim.</label>
+                                        <RadzenDatePicker @bind-Value=@(customerProduct.LastMaintenance) DateFormat="dd/MM/yyyy" Style="width:100%" ShowCalendarWeek Change="(e) => {OnUpdateMaintenance(e, idx);}" />
+                                    </div>
+                                    <div class="form-field" style="margin-bottom:4px">
+                                        <label>Próximo mantenim.</label>
+                                        <RadzenDatePicker @bind-Value=@(customerProduct.NextMaintenance) DateFormat="dd/MM/yyyy" Style="width:100%" ShowCalendarWeek />
+                                    </div>
+                                </div>
+                            }
+
+                            @* Warranty date *@
+                            @if (customerProduct.HasWarranty)
+                            {
+                                <div class="form-field" style="margin-bottom:4px">
+                                    <label>Vencimiento garantía</label>
+                                    <RadzenDatePicker @bind-Value=@(customerProduct.WarrantyEndDate) DateFormat="dd/MM/yyyy" Style="width:100%" ShowCalendarWeek />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!ActiveProducts.Any())
+                {
+                    <div style="text-align:center;padding:20px 0;color:#aaa;font-size:0.88rem;">
+                        Selecciona un producto para asignarlo al cliente
+                    </div>
+                }
+            }
+        </div>
+
+        @* Action Buttons *@
+        <div class="form-actions">
+            <AuthorizeView Roles="admin, manager" Context="authContext">
+                <button type="submit" class="btn-save">Guardar</button>
+            </AuthorizeView>
+            <button type="button" class="btn-outline" @onclick="@(() => navManager.NavigateTo("/customers"))">
+                Ver listado de clientes
+            </button>
+            @if (CustomerId > 0)
+            {
+                <AuthorizeView Roles="admin" Context="authContext2">
+                    <button type="button" class="btn-danger-text" @onclick="RemoveCustomer">
+                        Eliminar cliente
+                    </button>
+                </AuthorizeView>
+            }
+        </div>
     </div>
 </EditForm>
 
@@ -177,7 +172,16 @@
     List<ProductViewModel> assignableProducts = new List<ProductViewModel>();
     Variant variant = Variant.Outlined;
 
-    private int productsCount => newCustomer.CustomerProducts!.Count() == 0 ? 0 : newCustomer.CustomerProducts!.Count() - 1;
+    bool showCustomerInfo = true;
+    bool showProducts = false;
+
+    private IEnumerable<AddEditCustomerProduct> ActiveProducts =>
+        newCustomer.CustomerProducts!.Where(p => !string.IsNullOrEmpty(p.ProductCode));
+
+    private int productsCount => ActiveProducts.Count();
+
+    private void ToggleCustomerInfo() => showCustomerInfo = !showCustomerInfo;
+    private void ToggleProducts() => showProducts = !showProducts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -185,6 +189,33 @@
         await LoadAssignableProducts();
         await LoadCustomer();
         PreloadService.Hide();
+    }
+
+    private void AddProductByCode(string? selectedCode)
+    {
+        if (string.IsNullOrEmpty(selectedCode))
+            return;
+
+        // Check if already assigned
+        var existing = newCustomer.CustomerProducts!.FirstOrDefault(p => p.ProductCode == selectedCode);
+        if (existing != null)
+            return;
+
+        var selected = assignableProducts.FirstOrDefault(p => p.Code == selectedCode);
+        if (selected == null)
+            return;
+
+        // Find empty placeholder or add new
+        var emptySlot = newCustomer.CustomerProducts!.LastOrDefault(p => string.IsNullOrEmpty(p.ProductCode));
+        if (emptySlot != null)
+        {
+            emptySlot.ProductId = selected.Id;
+            emptySlot.ProductCode = selected.Code;
+            emptySlot.ProductDescription = selected.Description;
+            emptySlot.NextMaintenance = DateTime.Now.AddMonths(selected.MaintenancePeriods ?? 6);
+            emptySlot.WarrantyEndDate = DateTime.Now.AddMonths(selected.WarrantyTime ?? 12);
+        }
+        newCustomer.CustomerProducts!.Add(new AddEditCustomerProduct());
     }
 
     private void OnChangeProduct(string? selectedCode, int productIndex)

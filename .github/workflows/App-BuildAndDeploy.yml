@@ -1,0 +1,40 @@
+name: Build APP For Pull Request (Generates .ipa)
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Enable Workloads for .NET 8
+        run: |
+          dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
+          dotnet workload install maui --ignore-failed-sources
+
+      - name: Build and Generate IPA
+        run: |
+          dotnet publish ./DecenaSoluciones.POS.App/DecenaSoluciones.POS.App.csproj \
+          -f net8.0-ios \
+          -c Release \
+          -r ios-arm64 \
+          -p:BuildIpa=true \
+          -p:CodesignKey="-" \
+          -p:CodesignProvision="-" \
+          -p:CheckEolWorkloads=false
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiApp-iOS
+          path: ./DecenaSoluciones.POS.App/bin/Release/net8.0-ios/ios-arm64/publish/*.ipa

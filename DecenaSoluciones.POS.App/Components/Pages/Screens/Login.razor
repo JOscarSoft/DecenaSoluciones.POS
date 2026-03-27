@@ -17,53 +17,46 @@
 
 <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
 
-<div class="row mt-5 text-center">
+<div class="auth-wrapper">
+    <div class="auth-card">
 
-    <div class="col-lg-4 offset-lg-4" style="width:100%; margin: auto">
-
-        <img src="/images/logo/LoginLogo.jpeg" alt="logo" style="width:50%;margin-bottom:50px">
+        <img src="/images/logo/LoginLogo.jpeg" alt="logo" class="auth-logo" />
 
         @if (OnCompanySelection)
         {
-            <div class="mb-3">
+            <div class="auth-title">Selecciona tu compañía</div>
+
+            <div class="auth-input-group" style="margin-bottom:20px">
                 <RadzenDropDown Placeholder="Seleccione una compañía..." AllowClear="true" LoadData="FilterCompanies"
                                 AllowFiltering="true" @bind-Value=selectedCompany Data=@filteredCompanies TextProperty="Name"
-                                ValueProperty="Id" Style="width: 75%;" Name="DropDownCompanies" />
+                                ValueProperty="Id" Style="width: 100%; border-radius: 12px;" Name="DropDownCompanies" />
             </div>
-            <div class="mb-3" style="margin-top:50px">
-                <RadzenButton Click="SubmitCompanyLogin" Variant="Variant.Flat" Shade="Shade.Darker"
-                              ButtonStyle="ButtonStyle.Primary" Text="Acceder a Compañía" Style="width: 75%" />
-            </div>
+
+            <button type="button" class="auth-btn-primary" @onclick="SubmitCompanyLogin">
+                Acceder a Compañía
+            </button>
         }
         else
         {
-
-            <div class="mb-3">
-                <input @bind="model.Username" class="form-control" placeholder="Usuario" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-user auth-icon"></i>
+                <input @bind="model.Username" placeholder="Usuario" @onkeyup="@EnterLogin" />
             </div>
 
-            <div class="mb-3">
-                <input type="password" @bind="model.Password" class="form-control" placeholder="Contraseña" style="width:75%;display: block;margin: 0 auto;" @onkeyup="@EnterLogin" />
+            <div class="auth-input-group">
+                <i class="rzi rzi-lock auth-icon"></i>
+                <input type="password" @bind="model.Password" placeholder="Contraseña" @onkeyup="@EnterLogin" />
             </div>
 
-            <div class="mb-3" style="margin-top:50px">
-                <RadzenButton Click="SubmitLogin" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Primary" Text="Login" Style="width: 75%" />
-            </div>
-            <div class="divider"></div>
-            <div class="row">
-                <div class="col"><hr></div>
-                <div class="col-auto">O</div>
-                <div class="col"><hr></div>
-            </div>
-            <div class="mb-3" style="margin-top:10px">
-                <RadzenButton Click="GoRegistration" Variant="Variant.Flat" Shade="Shade.Darker" ButtonStyle="ButtonStyle.Secondary" Text="Registrate!" Style="width: 75%" />
-            </div>
+            <button type="button" class="auth-btn-primary" @onclick="SubmitLogin">Login</button>
+
+            <div class="auth-divider">O</div>
+
+            <button type="button" class="auth-btn-secondary" @onclick="GoRegistration">Regístrate!</button>
         }
 
     </div>
-
 </div>
-
 
 
 @code {
