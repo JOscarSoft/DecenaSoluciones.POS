@@ -36,9 +36,10 @@ jobs:
         AppSettings.TestingPeriod: ${{ secrets.TESTING_PERIOD }}
     
     - name: Upload to ftp      
-      uses: sebastianpopp/ftp-action@releases/v2
+      uses: kevinpainchaud/simple-ftp-deploy-action@v1.2.1
       with:
         host: ${{ secrets.API_FTP_SERVER }}
         user: ${{ secrets.API_FTP_USERNAME }}
         password: ${{ secrets.API_FTP_PASSWORD }}
-        localDir: "./publishApi"
+        local_dir: "./publishApi"
+        remote_dir: "./"
