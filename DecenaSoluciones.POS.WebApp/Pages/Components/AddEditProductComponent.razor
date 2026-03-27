@@ -39,7 +39,7 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Stock:</label>
-        <RadzenNumeric TValue="decimal" @bind-Value="newProduct.stock" Culture="@CultureInfo.CreateSpecificCulture("en-US")" ShowUpDown="false"/>
+        <RadzenNumeric TValue="decimal" class="form-control" @bind-Value="newProduct.stock" Culture="@CultureInfo.CreateSpecificCulture("en-US")" ShowUpDown="false" />
         <ValidationMessage For="@(() => newProduct.stock)"></ValidationMessage>
     </div>
     <div class="col-md-4">
