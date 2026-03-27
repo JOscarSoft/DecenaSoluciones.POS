@@ -14,6 +14,7 @@
 @inject IProductService productService;
 @inject IReportService reportService;
 @inject IJSRuntime JS;
+@inject ILocalStorage _localStorage
 
 <h3>Productos</h3>
 
@@ -35,38 +36,42 @@
     {
         <SkeletonTable Headers='new List<string> { "Código", "Descripción", "Precio compra", "Precio venta", "Stock" }' />
     }
+    else
+    {
+        <div class="fade-in" style="@(isLoading ? "display:none" : "")">
+            <Grid @ref="productsGrid" TItem="ProductViewModel" Class="table table-hover"
+                  HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow" Data="productList" AllowFiltering="true"
+                  AllowPaging="true" PageSize="50" AllowSorting="true" AllowSelection="false" Responsive="true"
+                  PageSizeSelectorVisible="true" ItemsPerPageText="Productos por página"
+                  PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }" PaginationItemsTextFormat="{0} - {1} de {2} productos"
+                  EmptyText="No se encontraron registros para mostrar" AllowRowClick="true" OnRowClick="OnRowClick">
 
-    <div class="fade-in" style="@(isLoading ? "display:none" : "")">
-        <Grid @ref="productsGrid" TItem="ProductViewModel" Class="table table-hover"
-            HeaderRowCssClass="bg-dark text-white border-bottom-0 headerRow" Data="productList" AllowFiltering="true"
-            AllowPaging="true" PageSize="50" AllowSorting="true" AllowSelection="false" Responsive="true"
-            PageSizeSelectorVisible="true" ItemsPerPageText="Productos por página"
-            PageSizeSelectorItems="new int[] { 10, 20, 50, 100 }" PaginationItemsTextFormat="{0} - {1} de {2} productos"
-            EmptyText="No se encontraron registros para mostrar" AllowRowClick="true" OnRowClick="OnRowClick">
-
-            <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code"
-                SortKeySelector="item => item.Code" HeaderTextAlignment="Alignment.Center">
-                @context.Code
-            </GridColumn>
-            <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description"
-                SortKeySelector="item => item.Description" IsDefaultSortColumn="true"
-                HeaderTextAlignment="Alignment.Center">
-                @context.Description
-            </GridColumn>
-            <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost"
-                SortKeySelector="item => item.Cost" HeaderTextAlignment="Alignment.Center">
-                @context.Cost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-            </GridColumn>
-            <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price"
-                SortKeySelector="item => item.Price" HeaderTextAlignment="Alignment.Center">
-                @context.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
-            </GridColumn>
-            <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true"
-                SortKeySelector="item => item.stock" Filterable="false" HeaderTextAlignment="Alignment.Center">
-                @context.stock
-            </GridColumn>
-        </Grid>
-    </div>
+                <GridColumn TItem="ProductViewModel" HeaderText="Código" PropertyName="Code"
+                            SortKeySelector="item => item.Code">
+                    @context.Code
+                </GridColumn>
+                <GridColumn TItem="ProductViewModel" HeaderText="Descripción" PropertyName="Description"
+                            SortKeySelector="item => item.Description" IsDefaultSortColumn="true">
+                    @context.Description
+                </GridColumn>
+                @if (showCost)
+                {
+                    <GridColumn TItem="ProductViewModel" HeaderText="Precio compra" PropertyName="Cost"
+                                SortKeySelector="item => item.Cost">
+                        @context.Cost.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+                    </GridColumn>
+                }
+                <GridColumn TItem="ProductViewModel" HeaderText="Precio venta" PropertyName="Price"
+                            SortKeySelector="item => item.Price">
+                    @context.Price.ToString("C2", CultureInfo.CreateSpecificCulture("en-US"))
+                </GridColumn>
+                <GridColumn TItem="ProductViewModel" HeaderText="Stock" PropertyName="stock" Sortable="true"
+                            SortKeySelector="item => item.stock" Filterable="false">
+                    @context.stock
+                </GridColumn>
+            </Grid>
+        </div>
+    }
 </div>
 
 @code {
@@ -75,10 +80,24 @@
     List<ProductViewModel> productList = new List<ProductViewModel>();
     Grid<ProductViewModel> productsGrid = default!;
     private Modal addEditProductModal = default!;
+    private bool showCost = true;
 
     protected override async Task OnInitializedAsync()
     {
+        showCost = await checkShowCost();
         await UpdateData();
+    }
+
+    private async Task<bool> checkShowCost()
+    {
+
+        var userSession = await _localStorage.GetStorage<UserInfoExtension>("userSession");
+        if (userSession != null)
+        {
+            return userSession.Roles.Any(p => p == UserRoles.Admin || p == UserRoles.Manager);
+        }
+
+        return true;
     }
 
     private async Task UpdateData()
@@ -91,7 +110,13 @@
             if (response.Success)
             {
                 productList = response.Result ?? new List<ProductViewModel>();
-                await productsGrid.RefreshDataAsync();
+
+                try
+                {
+                    //Since the grid is not showing on load, this trigger an error
+                    await productsGrid.RefreshDataAsync();
+                }
+                catch {}
             }
             else
             {
