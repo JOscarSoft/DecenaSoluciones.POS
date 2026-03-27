@@ -41,5 +41,5 @@ jobs:
         server: ${{ secrets.API_FTP_SERVER }}
         username: ${{ secrets.API_FTP_USERNAME }}
         password: ${{ secrets.API_FTP_PASSWORD }}
-        local-dir: "./publishApi"
+        local-dir: "./publishApi/"
         server-dir: "./"
